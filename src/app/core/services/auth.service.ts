@@ -61,11 +61,11 @@ export class AuthService {
   redirectByRole(): void {
     const rol = this._user()?.rol;
     switch (rol) {
-      case 'PADRE':        this.router.navigate(['/padre/dashboard']); break;
-      case 'DOCENTE':      this.router.navigate(['/docente/dashboard']); break;
-      case 'ADMINISTRADOR': this.router.navigate(['/admin/dashboard']); break;
-      case 'NINO':         this.router.navigate(['/juegos']); break;
-      default:             this.router.navigate(['/auth/login']);
+      case 'PADRE':         this.router.navigate(['/padre/dashboard']); break;
+      case 'DOCENTE':       this.router.navigate(['/docente/dashboard']); break;
+      case 'ADMINISTRADOR': this.router.navigate(['/admin/usuarios']); break;
+      case 'NINO':          this.router.navigate(['/juegos']); break;
+      default:              this.router.navigate(['/auth/login']);
     }
   }
 }
