@@ -260,9 +260,6 @@ interface Miembro {
                [href]="m.linkedin" target="_blank" rel="noopener noreferrer">
               <div class="team-avatar" [style.background]="'linear-gradient(135deg,' + m.color + 'cc,' + m.color + '66)'">
                 <span class="team-iniciales">{{ m.iniciales }}</span>
-                @if (m.destacado) {
-                  <div class="team-crown">👑</div>
-                }
               </div>
               <div class="team-info">
                 <h4>{{ m.nombre }}</h4>
@@ -445,8 +442,8 @@ interface Miembro {
     /* ── SCIENCE ── */
     .science-section { background:#05050F; }
     .science-inner { display:grid; grid-template-columns:1fr 1fr; gap:60px; align-items:center; }
-    .science-text { display:flex; flex-direction:column; gap:20px; }
-    .science-text h2 { font-size:36px; font-weight:800; color:white; margin:0; }
+    .science-text { display:flex; flex-direction:column; gap:20px; align-items:flex-start; min-width:0; }
+    .science-text h2 { font-size:36px; font-weight:800; color:white; margin:0; line-height:1.2; word-break:break-word; }
     .science-text p { font-size:16px; color:#475569; line-height:1.75; margin:0; }
     .science-domains { display:flex; flex-wrap:wrap; gap:10px; }
     .domain-tag { background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.09); color:#64748B; padding:6px 14px; border-radius:100px; font-size:13px; }
