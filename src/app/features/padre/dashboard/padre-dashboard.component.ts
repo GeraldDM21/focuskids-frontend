@@ -31,12 +31,11 @@ import { ChildProfile } from '../perfiles/child-profile.model';
       <mat-card *ngFor="let p of perfiles" class="perfil-card">
         <mat-card-header>
           <mat-icon mat-card-avatar>child_care</mat-icon>
-          <mat-card-title>{{ p.name }}</mat-card-title>
+          <mat-card-title>{{ p.nombre }}</mat-card-title>
           <mat-card-subtitle>{{ p.edad ? p.edad + ' años' : '' }}</mat-card-subtitle>
         </mat-card-header>
         <mat-card-content>
-          <p *ngIf="p.condicion">{{ p.condicion }}</p>
-          <p class="last-game" *ngIf="p.lastGameName">Último juego: {{ p.lastGameName }}</p>
+          <p *ngIf="p.diagnostico">{{ p.diagnostico }}</p>
         </mat-card-content>
         <mat-card-actions>
           <button mat-button color="primary" routerLink="/padre/perfiles/selector">

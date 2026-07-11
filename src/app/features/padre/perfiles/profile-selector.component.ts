@@ -22,7 +22,7 @@ export class ProfileSelectorComponent implements OnInit {
   showProfileModal = false;
   isEditing = false;
   selectedProfile: ChildProfile | null = null;
-  profileForm: ChildProfileRequest = { name: '', avatar: 'fox', edad: null, condicion: null };
+  profileForm: ChildProfileRequest = { nombre: '', avatar: 'fox', edad: null, diagnostico: null };
   availableAvatars = AVATAR_EMOJIS;
   formError = '';
 
@@ -51,7 +51,7 @@ export class ProfileSelectorComponent implements OnInit {
   }
 
   onSelectProfile(profile: ChildProfile): void {
-    if (!profile.active) return;
+    if (!profile.activo) return;
     this.profileService.switchProfile(profile.id, this.padreId).subscribe({
       next: () => this.router.navigate(['/padre/dashboard']),
       error: () => { this.errorMessage = 'No se pudo cambiar el perfil.'; }
@@ -60,7 +60,7 @@ export class ProfileSelectorComponent implements OnInit {
 
   openCreateModal(): void {
     this.isEditing = false; this.selectedProfile = null;
-    this.profileForm = { name: '', avatar: 'fox', edad: null, condicion: null };
+    this.profileForm = { nombre: '', avatar: 'fox', edad: null, diagnostico: null };
     this.formError = '';
     this.showProfileModal = true;
   }
@@ -68,7 +68,7 @@ export class ProfileSelectorComponent implements OnInit {
   openEditModal(profile: ChildProfile, event: Event): void {
     event.stopPropagation();
     this.isEditing = true; this.selectedProfile = profile;
-    this.profileForm = { name: profile.name, avatar: profile.avatar, edad: profile.edad, condicion: profile.condicion };
+    this.profileForm = { nombre: profile.nombre, avatar: profile.avatar, edad: profile.edad, diagnostico: profile.diagnostico };
     this.formError = '';
     this.showProfileModal = true;
   }
@@ -76,12 +76,12 @@ export class ProfileSelectorComponent implements OnInit {
   onSelectAvatar(avatar: string): void { this.profileForm.avatar = avatar; }
 
   saveProfile(): void {
-    if (!this.profileForm.name.trim()) { this.formError = 'El nombre es obligatorio.'; return; }
+    if (!this.profileForm.nombre.trim()) { this.formError = 'El nombre es obligatorio.'; return; }
     const req: ChildProfileRequest = {
-      name: this.profileForm.name.trim(),
+      nombre: this.profileForm.nombre.trim(),
       avatar: this.profileForm.avatar,
       edad: this.profileForm.edad,
-      condicion: this.profileForm.condicion?.trim() || null
+      diagnostico: this.profileForm.diagnostico?.trim() || null
     };
     if (this.isEditing && this.selectedProfile) {
       this.profileService.updateProfile(this.selectedProfile.id, req, this.padreId).subscribe({

@@ -18,26 +18,20 @@
 
   <div class="profiles-grid" *ngIf="!isLoading">
     <div *ngFor="let profile of profiles"
-         class="profile-card" [class.inactive]="!profile.active"
+         class="profile-card" [class.inactive]="!profile.activo"
          (click)="onSelectProfile(profile)">
 
-      <span class="badge-inactive" *ngIf="!profile.active">Desactivado</span>
+      <span class="badge-inactive" *ngIf="!profile.activo">Desactivado</span>
       <div class="avatar-circle">{{ profile.avatar }}</div>
-      <h2 class="profile-name">{{ profile.name }}</h2>
+      <h2 class="profile-name">{{ profile.nombre }}</h2>
       <p class="profile-edad" *ngIf="profile.edad">{{ profile.edad }} años</p>
-      <p class="profile-condicion" *ngIf="profile.condicion">{{ profile.condicion }}</p>
-
-      <div class="last-game" *ngIf="profile.lastGameName">
-        <span>Ultimo juego:</span><strong>{{ profile.lastGameName }}</strong>
-      </div>
-      <div class="last-game muted" *ngIf="!profile.lastGameName">Nunca ha jugado</div>
-      <p class="last-game-date">{{ formatLastPlayed(profile.lastGamePlayedAt) }}</p>
+      <p class="profile-condicion" *ngIf="profile.diagnostico">{{ profile.diagnostico }}</p>
 
       <div class="card-actions" (click)="$event.stopPropagation()">
         <button class="btn-action btn-edit" (click)="openEditModal(profile,$event)">Editar</button>
-        <button class="btn-action" [class.btn-deactivate]="profile.active" [class.btn-activate]="!profile.active"
+        <button class="btn-action" [class.btn-deactivate]="profile.activo" [class.btn-activate]="!profile.activo"
                 (click)="toggleStatus(profile,$event)">
-          {{ profile.active ? 'Desactivar' : 'Activar' }}
+          {{ profile.activo ? 'Desactivar' : 'Activar' }}
         </button>
         <button class="btn-action btn-delete" (click)="openDeleteModal(profile,$event)">Eliminar</button>
       </div>
@@ -58,7 +52,7 @@
 
       <div class="form-group">
         <label for="profileName">Nombre del nino *</label>
-        <input id="profileName" type="text" [(ngModel)]="profileForm.name"
+        <input id="profileName" type="text" [(ngModel)]="profileForm.nombre"
                placeholder="Ej: Mateo" maxlength="100" class="form-input"/>
       </div>
 
@@ -70,7 +64,7 @@
         </div>
         <div class="form-group">
           <label for="profileCondicion">Condicion (opcional)</label>
-          <input id="profileCondicion" type="text" [(ngModel)]="profileForm.condicion"
+          <input id="profileCondicion" type="text" [(ngModel)]="profileForm.diagnostico"
                  placeholder="Ej: TDAH leve" maxlength="255" class="form-input"/>
         </div>
       </div>
@@ -100,7 +94,7 @@
       <h2 class="modal-title">Eliminar perfil</h2>
       <p class="delete-message" *ngIf="profileToDelete">
         Se eliminaran todos los datos de progreso de
-        <strong>{{ profileToDelete.name }}</strong>.
+        <strong>{{ profileToDelete.nombre }}</strong>.
         Esta accion no se puede deshacer.
       </p>
       <div class="modal-actions">
