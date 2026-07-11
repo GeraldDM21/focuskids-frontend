@@ -1,22 +1,19 @@
 // Estructura de datos de un perfil de nino que viene del backend
 export interface ChildProfile {
   id: number;
-  name: string;
+  nombre: string;
   avatar: string;
   edad: number | null;
-  condicion: string | null;
-  active: boolean;
-  lastGameName: string | null;
-  lastGamePlayedAt: string | null;
-  createdAt: string;
+  diagnostico: string | null;
+  activo: boolean;
 }
 
 // Datos que se envian al backend para crear o editar un perfil
 export interface ChildProfileRequest {
-  name: string;
+  nombre: string;
   avatar: string;
   edad: number | null;
-  condicion: string | null;
+  diagnostico: string | null;
 }
 
 // Guarda cual es el perfil de nino que esta activo en este momento
