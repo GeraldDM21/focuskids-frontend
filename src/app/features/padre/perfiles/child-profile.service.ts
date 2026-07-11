@@ -7,7 +7,7 @@ import { ChildProfile, ChildProfileRequest, ActiveProfileState } from './child-p
 @Injectable({ providedIn: 'root' })
 export class ChildProfileService {
 
-  private readonly API_URL = 'http://localhost:8080/api/parent/profiles';
+  private readonly API_URL = 'http://localhost:8080/api/perfil';
 
   // Guarda cual perfil de nino esta activo en este momento (sin cerrar sesion del padre)
   private activeProfileSubject = new BehaviorSubject<ActiveProfileState>({
@@ -22,12 +22,12 @@ export class ChildProfileService {
     return this.http.get<ChildProfile[]>(`${this.API_URL}/padre/${padreId}`);
   }
 
-  // Cambia el perfil activo y guarda cual quedo seleccionado
+  // Cambia el perfil activo y guarda cual quedo seleccionado (solo actualiza estado local)
   switchProfile(profileId: number, padreId: number): Observable<ChildProfile> {
-    return this.http.post<ChildProfile>(`${this.API_URL}/${profileId}/switch/padre/${padreId}`, {}).pipe(
+    return this.http.get<ChildProfile>(`${this.API_URL}/${profileId}`).pipe(
       tap(profile => this.activeProfileSubject.next({
         profileId: profile.id,
-        profileName: profile.name,
+        profileName: profile.nombre,
         profileAvatar: profile.avatar
       }))
     );
@@ -40,17 +40,17 @@ export class ChildProfileService {
 
   // Edita un perfil existente
   updateProfile(profileId: number, request: ChildProfileRequest, padreId: number): Observable<ChildProfile> {
-    return this.http.put<ChildProfile>(`${this.API_URL}/${profileId}/padre/${padreId}`, request);
+    return this.http.put<ChildProfile>(`${this.API_URL}/${profileId}`, request);
   }
 
   // Activa o desactiva un perfil
   toggleStatus(profileId: number, padreId: number): Observable<ChildProfile> {
-    return this.http.patch<ChildProfile>(`${this.API_URL}/${profileId}/status/${padreId}`, {});
+    return this.http.patch<ChildProfile>(`${this.API_URL}/${profileId}/toggle`, {});
   }
 
   // Elimina un perfil (el frontend ya pidio confirmacion antes de llamar esto)
   deleteProfile(profileId: number, padreId: number): Observable<void> {
-    return this.http.delete<void>(`${this.API_URL}/${profileId}/padre/${padreId}`);
+    return this.http.delete<void>(`${this.API_URL}/${profileId}`);
   }
 
   // Limpia el perfil activo, por ejemplo cuando el padre cierra sesion
