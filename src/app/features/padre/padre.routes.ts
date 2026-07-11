@@ -8,7 +8,8 @@ export const padreRoutes: Routes = [
   },
   {
     path: 'perfiles',
-    loadComponent: () => import('./perfiles/perfil-list.component').then(m => m.PerfilListComponent)
+    redirectTo: 'perfiles/selector',
+    pathMatch: 'full'
   },
   {
     path: 'perfiles/nuevo',
@@ -17,5 +18,10 @@ export const padreRoutes: Routes = [
   {
     path: 'perfiles/editar/:id',
     loadComponent: () => import('./perfiles/perfil-form.component').then(m => m.PerfilFormComponent)
+  },
+  // CA-01 a CA-05: gestion multi-perfil de la cuenta padre
+  {
+    path: 'perfiles/selector',
+    loadComponent: () => import('./perfiles/profile-selector.component').then(m => m.ProfileSelectorComponent)
   }
 ];

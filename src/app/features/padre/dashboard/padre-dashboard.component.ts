@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { NgFor, NgIf } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
@@ -6,7 +6,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthService } from '../../../core/services/auth.service';
-import { PerfilService, PerfilNino } from '../../../core/services/perfil.service';
+import { ChildProfileService } from '../perfiles/child-profile.service';
+import { ChildProfile } from '../perfiles/child-profile.model';
 
 @Component({
   selector: 'app-padre-dashboard',
@@ -16,10 +17,10 @@ import { PerfilService, PerfilNino } from '../../../core/services/perfil.service
     <h2>Bienvenido, {{ auth.userName() }}</h2>
 
     <div class="actions">
-      <button mat-raised-button color="primary" routerLink="/padre/perfiles/nuevo">
+      <button mat-raised-button color="primary" routerLink="/padre/perfiles/selector">
         <mat-icon>add</mat-icon> Agregar perfil
       </button>
-      <button mat-stroked-button routerLink="/padre/perfiles">
+      <button mat-stroked-button routerLink="/padre/perfiles/selector">
         <mat-icon>list</mat-icon> Ver todos los perfiles
       </button>
     </div>
@@ -30,14 +31,15 @@ import { PerfilService, PerfilNino } from '../../../core/services/perfil.service
       <mat-card *ngFor="let p of perfiles" class="perfil-card">
         <mat-card-header>
           <mat-icon mat-card-avatar>child_care</mat-icon>
-          <mat-card-title>{{ p.nombre }}</mat-card-title>
-          <mat-card-subtitle>{{ p.edad }} años</mat-card-subtitle>
+          <mat-card-title>{{ p.name }}</mat-card-title>
+          <mat-card-subtitle>{{ p.edad ? p.edad + ' años' : '' }}</mat-card-subtitle>
         </mat-card-header>
         <mat-card-content>
-          <p *ngIf="p.diagnostico">{{ p.diagnostico }}</p>
+          <p *ngIf="p.condicion">{{ p.condicion }}</p>
+          <p class="last-game" *ngIf="p.lastGameName">Último juego: {{ p.lastGameName }}</p>
         </mat-card-content>
         <mat-card-actions>
-          <button mat-button color="primary" [routerLink]="['/padre/perfiles/editar', p.id]">
+          <button mat-button color="primary" routerLink="/padre/perfiles/selector">
             <mat-icon>edit</mat-icon> Editar
           </button>
         </mat-card-actions>
@@ -45,9 +47,9 @@ import { PerfilService, PerfilNino } from '../../../core/services/perfil.service
 
       <mat-card *ngIf="perfiles.length === 0" class="empty-card">
         <mat-card-content>
-          <mat-icon>info</mat-icon>
+          <mat-icon>person_add</mat-icon>
           <p>Aún no ha creado perfiles de niños.</p>
-          <button mat-raised-button color="primary" routerLink="/padre/perfiles/nuevo">
+          <button mat-raised-button color="primary" routerLink="/padre/perfiles/selector">
             Crear primer perfil
           </button>
         </mat-card-content>
@@ -59,6 +61,7 @@ import { PerfilService, PerfilNino } from '../../../core/services/perfil.service
     .actions { display: flex; gap: 12px; margin-bottom: 24px; }
     .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
     .perfil-card mat-icon[mat-card-avatar] { font-size: 40px; width: 40px; height: 40px; color: #3f51b5; }
+    .last-game { font-size: 12px; color: #888; margin: 4px 0 0; }
     .empty-card mat-card-content {
       display: flex; flex-direction: column; align-items: center;
       gap: 12px; padding: 32px; text-align: center; color: #888;
@@ -68,17 +71,21 @@ import { PerfilService, PerfilNino } from '../../../core/services/perfil.service
   `]
 })
 export class PadreDashboardComponent implements OnInit {
-  perfiles: PerfilNino[] = [];
+  perfiles: ChildProfile[] = [];
   loading = true;
 
-  constructor(public auth: AuthService, private perfilService: PerfilService) {}
+  constructor(
+    public auth: AuthService,
+    private childProfileService: ChildProfileService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit() {
     const user = this.auth.user();
     if (user) {
-      this.perfilService.listarPorPadre(user.usuarioId).subscribe({
-        next: data => { this.perfiles = data; this.loading = false; },
-        error: () => { this.loading = false; }
+      this.childProfileService.getProfiles(user.usuarioId).subscribe({
+        next: data => { this.perfiles = data; this.loading = false; this.cdr.detectChanges(); },
+        error: () => { this.loading = false; this.cdr.detectChanges(); }
       });
     }
   }

@@ -4,7 +4,13 @@ import { roleGuard } from './guards/role.guard';
 import { ShellComponent } from './shared/shell/shell.component';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'auth/login', pathMatch: 'full' },
+  // Landing page pública
+  {
+    path: '',
+    loadComponent: () =>
+      import('./features/landing/landing.component').then(m => m.LandingComponent),
+    pathMatch: 'full'
+  },
 
   // Rutas públicas
   {
