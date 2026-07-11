@@ -40,6 +40,10 @@ export const routes: Routes = [
         loadChildren: () => import('./features/docente/docente.routes').then(m => m.docenteRoutes)
       },
       {
+        path: 'nino',
+        loadChildren: () => import('./features/nino/nino.routes').then(m => m.ninoRoutes)
+      },
+      {
         path: 'unauthorized',
         loadComponent: () =>
           import('./shared/unauthorized/unauthorized.component').then(m => m.UnauthorizedComponent)

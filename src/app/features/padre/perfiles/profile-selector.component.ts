@@ -53,7 +53,7 @@ export class ProfileSelectorComponent implements OnInit {
   onSelectProfile(profile: ChildProfile): void {
     if (!profile.activo) return;
     this.profileService.switchProfile(profile.id, this.padreId).subscribe({
-      next: () => this.router.navigate(['/padre/dashboard']),
+      next: () => this.router.navigate(['/nino/juegos']),
       error: () => { this.errorMessage = 'No se pudo cambiar el perfil.'; }
     });
   }
