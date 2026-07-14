@@ -1,0 +1,106 @@
+<div class="page-wrapper">
+  <header class="page-header">
+    <div class="logo"><span class="logo-icon">FK</span><span class="logo-text">FocusKids</span></div>
+    <div class="header-title">
+      <h1>Quien va a jugar hoy?</h1>
+      <p>Selecciona un perfil para continuar</p>
+    </div>
+    <button class="btn-add" (click)="openCreateModal()">+ Nuevo perfil</button>
+  </header>
+
+  <div class="alert-error" *ngIf="errorMessage">
+    {{ errorMessage }}<button (click)="errorMessage = ''">x</button>
+  </div>
+
+  <div class="loading-state" *ngIf="isLoading">
+    <div class="spinner"></div><p>Cargando perfiles...</p>
+  </div>
+
+  <div class="profiles-grid" *ngIf="!isLoading">
+    <div *ngFor="let profile of profiles"
+         class="profile-card" [class.inactive]="!profile.activo"
+         (click)="onSelectProfile(profile)">
+
+      <span class="badge-inactive" *ngIf="!profile.activo">Desactivado</span>
+      <div class="avatar-circle">{{ profile.avatar }}</div>
+      <h2 class="profile-name">{{ profile.nombre }}</h2>
+      <p class="profile-edad" *ngIf="profile.edad">{{ profile.edad }} años</p>
+      <p class="profile-condicion" *ngIf="profile.diagnostico">{{ profile.diagnostico }}</p>
+
+      <div class="card-actions" (click)="$event.stopPropagation()">
+        <button class="btn-action btn-edit" (click)="openEditModal(profile,$event)">Editar</button>
+        <button class="btn-action" [class.btn-deactivate]="profile.activo" [class.btn-activate]="!profile.activo"
+                (click)="toggleStatus(profile,$event)">
+          {{ profile.activo ? 'Desactivar' : 'Activar' }}
+        </button>
+        <button class="btn-action btn-delete" (click)="openDeleteModal(profile,$event)">Eliminar</button>
+      </div>
+    </div>
+
+    <div class="profile-card add-card" *ngIf="profiles.length === 0" (click)="openCreateModal()">
+      <div class="avatar-circle add-avatar">+</div>
+      <h2 class="profile-name">Agregar perfil</h2>
+      <p class="muted">Crea el primer perfil de nino</p>
+    </div>
+  </div>
+
+  <!-- Modal crear/editar -->
+  <div class="modal-overlay" *ngIf="showProfileModal" (click)="closeModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <h2 class="modal-title">{{ isEditing ? 'Editar perfil' : 'Nuevo perfil' }}</h2>
+      <p class="form-error" *ngIf="formError">{{ formError }}</p>
+
+      <div class="form-group">
+        <label for="profileName">Nombre del nino *</label>
+        <input id="profileName" type="text" [(ngModel)]="profileForm.nombre"
+               placeholder="Ej: Mateo" maxlength="100" class="form-input"/>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="profileEdad">Edad *</label>
+          <input id="profileEdad" type="number" [(ngModel)]="profileForm.edad"
+                 placeholder="Ej: 5" min="1" max="18" class="form-input"/>
+        </div>
+        <div class="form-group">
+          <label for="profileCondicion">Condicion (opcional)</label>
+          <input id="profileCondicion" type="text" [(ngModel)]="profileForm.diagnostico"
+                 placeholder="Ej: TDAH leve" maxlength="255" class="form-input"/>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Elige un avatar</label>
+        <div class="avatar-grid">
+          <button *ngFor="let av of availableAvatars" type="button"
+                  class="avatar-option" [class.selected]="profileForm.avatar === av"
+                  (click)="onSelectAvatar(av)">{{ av }}</button>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-secondary" (click)="closeModal()">Cancelar</button>
+        <button class="btn-primary" (click)="saveProfile()">
+          {{ isEditing ? 'Guardar cambios' : 'Crear perfil' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal eliminar -->
+  <div class="modal-overlay" *ngIf="showDeleteModal">
+    <div class="modal modal-danger">
+      <div class="delete-icon">!</div>
+      <h2 class="modal-title">Eliminar perfil</h2>
+      <p class="delete-message" *ngIf="profileToDelete">
+        Se eliminaran todos los datos de progreso de
+        <strong>{{ profileToDelete.nombre }}</strong>.
+        Esta accion no se puede deshacer.
+      </p>
+      <div class="modal-actions">
+        <button class="btn-secondary" (click)="cancelDelete()">Cancelar</button>
+        <button class="btn-danger" (click)="confirmDelete()">Si, eliminar</button>
+      </div>
+    </div>
+  </div>
+</div>

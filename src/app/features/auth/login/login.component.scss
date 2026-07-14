@@ -1,0 +1,229 @@
+// ============================================================
+// FocusKids — Login
+// Diseño adaptado para niños con TDAH: paleta calmada pero
+// alegre, tipografía redondeada y de alta legibilidad, formas
+// suaves, poca decoración (sin saturar) y sin animaciones
+// continuas que puedan distraer.
+// ============================================================
+
+.login-page {
+  position: relative;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+
+  // Fondo suave en degradado (evita el blanco puro / azul intenso original)
+  background: linear-gradient(160deg, #eaf6ff 0%, #f1ecff 55%, #fff6e8 100%);
+
+  // Re-tematizamos Angular Material 3 SOLO dentro de esta página,
+  // sin tocar el tema global (azul) que usan el resto de vistas.
+  --mat-sys-primary: #1e9a85;
+  --mat-sys-on-primary: #ffffff;
+  --mat-sys-primary-container: #d7f4ee;
+  --mat-sys-on-primary-container: #0e4f42;
+  --mat-sys-secondary: #ff8c61;
+  --mat-sys-on-secondary: #ffffff;
+  --mat-sys-error: #e8607a;
+  --mat-sys-on-error: #ffffff;
+  --mat-sys-outline: #bfe0d8;
+  --mat-sys-outline-variant: #dceef7;
+  --mat-sys-surface: #ffffff;
+  --mat-sys-on-surface: #33415c;
+  --mat-sys-on-surface-variant: #6b7a99;
+}
+
+// --- Decoración de fondo: manchas suaves, estáticas (sin animación) ---
+.bg-decor {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.55;
+}
+
+.blob-1 { width: 240px; height: 240px; background: #ffe1ce; top: -70px;  left: -70px; }
+.blob-2 { width: 170px; height: 170px; background: #cff3ea; bottom: 30px; right: -50px; }
+.blob-3 { width: 120px; height: 120px; background: #ffefbe; bottom: -40px; left: 18%; }
+
+// Animalitos decorativos, muy sutiles, sin animación
+.animal {
+  position: absolute;
+  opacity: 0.16;
+}
+
+// Huellitas de fondo: mismo tono neutro en todas, muy tenues
+.paw {
+  position: absolute;
+  fill: currentColor;
+  color: #33415c;
+  opacity: 0.11;
+}
+
+.animal-lion {
+  top: 18px;
+  right: -18px;
+  width: 110px;
+  height: 110px;
+}
+
+.animal-whale {
+  bottom: 46px;
+  left: -34px;
+  width: 150px;
+  height: 95px;
+  transform: rotate(-6deg);
+}
+
+// A los costados del formulario (no en las esquinas)
+.animal-turtle {
+  top: 44%;
+  left: -14px;
+  width: 96px;
+  height: 68px;
+}
+
+.animal-bird {
+  top: 40%;
+  right: -12px;
+  width: 82px;
+  height: 82px;
+}
+
+.login-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 430px;
+  max-height: 92vh;
+  overflow-y: auto;
+  border-radius: 28px !important;
+  box-shadow: 0 14px 34px rgba(30, 154, 133, 0.18), 0 3px 10px rgba(51, 65, 92, 0.08) !important;
+}
+
+.logo-section {
+  width: 100%;
+  text-align: center;
+  padding: 30px 16px 6px;
+}
+
+.logo-badge {
+  position: relative;
+  width: 74px;
+  height: 74px;
+  margin: 0 auto 14px;
+  border-radius: 22px;
+  background: linear-gradient(135deg, #1e9a85, #3fd6be);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 20px rgba(30, 154, 133, 0.35);
+}
+
+.logo-icon {
+  color: #ffffff;
+  width: 36px;
+  height: 36px;
+  font-size: 36px;
+}
+
+// Si assets/logo.png existe, se muestra encima del ícono decorativo;
+// si falla (onerror), el ícono queda visible como respaldo.
+.logo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 22px;
+}
+
+.app-title {
+  font-family: 'Baloo 2', 'Quicksand', sans-serif;
+  font-size: 30px;
+  font-weight: 700;
+  color: #128075;
+  margin: 0;
+}
+
+.app-subtitle {
+  font-family: 'Quicksand', sans-serif;
+  font-size: 14.5px;
+  font-weight: 500;
+  color: #6b7a99;
+  margin: 6px 0 0;
+}
+
+mat-card-content {
+  padding: 14px 26px 28px !important;
+}
+
+.full-width {
+  width: 100%;
+}
+
+mat-form-field {
+  width: 100%;
+  margin-bottom: 8px;
+  font-family: 'Quicksand', sans-serif;
+}
+
+::ng-deep .login-page .mat-mdc-form-field-subscript-wrapper,
+::ng-deep .login-page .mat-mdc-form-field-error,
+::ng-deep .login-page mat-label {
+  font-family: 'Quicksand', sans-serif;
+}
+
+.error-msg {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fdecef;
+  color: #c43d57;
+  font-family: 'Quicksand', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  margin: 4px 0 14px;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+}
+
+.submit-btn {
+  margin-top: 8px;
+  height: 52px;
+  border-radius: 16px !important;
+  font-family: 'Baloo 2', 'Quicksand', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: transform 0.15s ease;
+
+  &:not([disabled]):hover {
+    transform: translateY(-1px) scale(1.01);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .submit-btn {
+    transition: none;
+  }
+}
