@@ -201,8 +201,12 @@ export class NinoJuegosComponent implements OnInit {
   }
 
   irAJuego(juego: Juego): void {
-    // Por ahora muestra un alert — cada juego se implementará en su propia ruta
-    alert(`¡${juego.nombre} próximamente! 🎮`);
+    const implementados = ['/nino/juego/espejo-mental'];
+    if (implementados.includes(juego.ruta)) {
+      this.router.navigate([juego.ruta]);
+    } else {
+      alert(`¡${juego.nombre} próximamente! 🎮`);
+    }
   }
 
   volverPerfiles(): void {

@@ -31,21 +31,23 @@ export class AuthService {
   login(request: LoginRequest) {
     return this.http.post<AuthResponse>(`${this.apiUrl}/login`, request).pipe(
       tap(response => {
-        this.storage.setToken(response.token);
-        this.storage.setUser(response);
-        this._user.set(response);
+        if (response.token) {
+          this.storage.setToken(response.token);
+          this.storage.setUser(response);
+          this._user.set(response);
+        }
       })
     );
   }
 
   register(request: RegisterRequest) {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/register`, request).pipe(
-      tap(response => {
-        this.storage.setToken(response.token);
-        this.storage.setUser(response);
-        this._user.set(response);
-      })
-    );
+    // No inicia sesión automáticamente: la cuenta queda inactiva
+    // hasta que el usuario verifique su correo.
+    return this.http.post<AuthResponse>(`${this.apiUrl}/register`, request);
+  }
+
+  verify(token: string) {
+    return this.http.get<{ mensaje: string }>(`${this.apiUrl}/verify`, { params: { token } });
   }
 
   logout(): void {
