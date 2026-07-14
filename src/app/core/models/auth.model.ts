@@ -18,9 +18,10 @@ export interface RegisterRequest {
 }
 
 export interface AuthResponse {
-  token: string;
+  token?: string;
   usuarioId: number;
   nombre: string;
   email: string;
   rol: UsuarioRol;
+  mensaje?: string;
 }

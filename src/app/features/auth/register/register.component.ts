@@ -30,7 +30,14 @@ import { AuthService } from '../../../core/services/auth.service';
         </mat-card-header>
 
         <mat-card-content>
-          <form [formGroup]="form" (ngSubmit)="onSubmit()">
+
+          <div class="success-box" *ngIf="successMsg">
+            <mat-icon>mark_email_read</mat-icon>
+            <p>{{ successMsg }}</p>
+            <a routerLink="/auth/login" class="login-link">Ir a iniciar sesión</a>
+          </div>
+
+          <form *ngIf="!successMsg" [formGroup]="form" (ngSubmit)="onSubmit()">
 
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Nombre completo</mat-label>
@@ -54,6 +61,9 @@ import { AuthService } from '../../../core/services/auth.service';
                 <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
               </button>
               <mat-error *ngIf="form.get('password')?.hasError('minlength')">Mínimo 8 caracteres</mat-error>
+              <mat-error *ngIf="form.get('password')?.hasError('pattern') && !form.get('password')?.hasError('minlength')">
+                Debe incluir al menos 1 mayúscula y 1 número
+              </mat-error>
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="full-width">
@@ -129,19 +139,24 @@ import { AuthService } from '../../../core/services/auth.service';
     .error-msg { display: flex; align-items: center; gap: 8px; color: #f44336; font-size: 13px; margin-bottom: 8px; }
     .login-link { text-align: center; margin-top: 16px; font-size: 13px; color: #666; }
     .login-link a { color: #3f51b5; text-decoration: none; font-weight: 500; }
+    .success-box { text-align: center; padding: 16px 0; }
+    .success-box mat-icon { font-size: 48px; width: 48px; height: 48px; color: #4caf50; margin-bottom: 12px; }
+    .success-box p { font-size: 15px; color: #333; margin-bottom: 16px; }
+    .success-box a.login-link { display: inline-block; color: #3f51b5; font-weight: 600; text-decoration: none; }
   `]
 })
 export class RegisterComponent {
   form: FormGroup;
   loading = false;
   errorMsg = '';
+  successMsg = '';
   hidePassword = true;
 
   constructor(private fb: FormBuilder, private auth: AuthService, private router: Router) {
     this.form = this.fb.group({
       nombre:         ['', Validators.required],
       email:          ['', [Validators.required, Validators.email]],
-      password:       ['', [Validators.required, Validators.minLength(8)]],
+      password:       ['', [Validators.required, Validators.minLength(8), Validators.pattern(/^(?=.*[A-Z])(?=.*\d).+$/)]],
       rol:            ['PADRE', Validators.required],
       telefono:       [''],
       relacionConNino:[''],
@@ -156,12 +171,16 @@ export class RegisterComponent {
     this.errorMsg = '';
 
     this.auth.register(this.form.value).subscribe({
-      next: () => { this.loading = false; this.auth.redirectByRole(); },
+      next: (response) => {
+        this.loading = false;
+        this.successMsg = response.mensaje || 'Cuenta creada. Revisa tu correo para verificarla.';
+      },
       error: (err) => {
         this.loading = false;
-        this.errorMsg = err.status === 400
-          ? 'El correo ya está registrado o los datos son inválidos.'
-          : 'Error al crear la cuenta. Intente de nuevo.';
+        const campos = err?.error?.campos;
+        this.errorMsg = err?.error?.error
+          || (campos ? Object.values(campos)[0] as string : null)
+          || 'Error al crear la cuenta. Intente de nuevo.';
       }
     });
   }
