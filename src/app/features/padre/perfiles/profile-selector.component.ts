@@ -6,6 +6,12 @@ import { ChildProfile, ChildProfileRequest, AVATAR_EMOJIS } from './child-profil
 import { ChildProfileService } from './child-profile.service';
 import { AuthService } from '../../../core/services/auth.service';
 
+const AVATAR_MAP: Record<string, string> = {
+  fox:'🦊', frog:'🐸', lion:'🦁', panda:'🐼', koala:'🐨',
+  unicorn:'🦄', dog:'🐶', cat:'🐱', rabbit:'🐰', tiger:'🐯',
+  bear:'🐻', mouse:'🐭'
+};
+
 @Component({
   selector: 'app-profile-selector',
   standalone: true,
@@ -118,6 +124,8 @@ export class ProfileSelectorComponent implements OnInit {
 
   cancelDelete(): void { this.showDeleteModal = false; this.profileToDelete = null; }
   closeModal(): void { this.showProfileModal = false; }
+
+  avatarEmoji(key: string): string { return AVATAR_MAP[key] ?? '🦊'; }
 
   formatLastPlayed(dateStr: string | null): string {
     if (!dateStr) return 'Nunca jugado';
