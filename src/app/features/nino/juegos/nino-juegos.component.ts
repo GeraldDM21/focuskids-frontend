@@ -467,7 +467,7 @@ export class NinoJuegosComponent implements OnInit {
   ngOnInit(): void {
     this.profileService.activeProfile$.subscribe(state => {
       if (!state.profileId) {
-        this.router.navigate(['/padre/perfiles/selector']);
+        this.router.navigate(['/padre/dashboard']);
         return;
       }
       this.profileName   = state.profileName   || 'Niño';
@@ -497,7 +497,7 @@ export class NinoJuegosComponent implements OnInit {
   }
 
   cerrarSesion(): void {
-    this.router.navigate(['/padre/perfiles/selector']);
+    this.router.navigate(['/padre/dashboard']);
   }
 
   get xpPorcentaje(): number {
