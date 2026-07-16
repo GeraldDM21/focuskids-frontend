@@ -201,7 +201,7 @@ export class NinoJuegosComponent implements OnInit {
   }
 
   irAJuego(juego: Juego): void {
-    const implementados = ['/nino/juego/espejo-mental'];
+    const implementados = ['/nino/juego/espejo-mental', '/nino/juego/palabras-ocultas'];
     if (implementados.includes(juego.ruta)) {
       this.router.navigate([juego.ruta]);
     } else {

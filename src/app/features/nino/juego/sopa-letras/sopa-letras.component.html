@@ -1,0 +1,226 @@
+<div class="juego-wrapper">
+
+  <!-- ══ PANTALLA INICIO ══════════════════════════════════════════════════ -->
+  @if (estado === 'inicio') {
+    <div class="pantalla-inicio">
+
+      <!-- Orbes decorativos de fondo -->
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+      <div class="orb orb-3"></div>
+
+      <div class="inicio-content">
+
+        <!-- Mascota con burbuja -->
+        <div class="mascota-area">
+          <div class="sparkles">
+            <span class="sp sp-1">✨</span>
+            <span class="sp sp-2">⭐</span>
+            <span class="sp sp-3">💫</span>
+            <span class="sp sp-4">✨</span>
+          </div>
+          <div class="mascota-ring">
+            <div class="mascota-avatar">🦊</div>
+          </div>
+          <div class="mascota-bubble">
+            ¡Hola! Soy <strong>Foxy</strong> 🦊<br>
+            ¡Encuentra todas las palabras escondidas en la grilla! 🔤
+          </div>
+        </div>
+
+        <!-- Titulo -->
+        <h1 class="titulo-juego">
+          <span class="titulo-parte1">Sopa de</span>
+          <span class="titulo-parte2"> Letras</span>
+        </h1>
+        <p class="titulo-sub">Arrastra las letras para encontrar las palabras</p>
+
+        <!-- Instrucciones -->
+        <div class="instrucciones-grid">
+          <div class="instruccion-card">
+            <span class="ic-num">1</span>
+            <span class="ic-emoji">🎯</span>
+            <span class="ic-texto">Elige un tema de vocabulario</span>
+          </div>
+          <div class="instruccion-card">
+            <span class="ic-num">2</span>
+            <span class="ic-emoji">👆</span>
+            <span class="ic-texto">Arrastra las letras para seleccionarlas</span>
+          </div>
+          <div class="instruccion-card">
+            <span class="ic-num">3</span>
+            <span class="ic-emoji">✅</span>
+            <span class="ic-texto">Verde = correcto, rojo = incorrecto</span>
+          </div>
+          <div class="instruccion-card">
+            <span class="ic-num">4</span>
+            <span class="ic-emoji">⚡</span>
+            <span class="ic-texto">Si eres muy rápido, ¡sube la dificultad!</span>
+          </div>
+        </div>
+
+        <!-- Seleccion de tema (CA-06) -->
+        <div class="tema-seccion">
+          <p class="tema-label">¿De qué tema quieres jugar?</p>
+          <div class="temas-row">
+            @for (tema of temas; track tema.id) {
+              <button class="tema-btn" [class.activo]="temaSeleccionado === tema.id" (click)="seleccionarTema(tema.id)">
+                <span class="tema-emoji">{{ tema.emoji }}</span>
+                <span>{{ tema.label }}</span>
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Boton jugar -->
+        <div class="inicio-botones">
+          <button class="btn-empezar" (click)="iniciarJuego('FACIL')">
+            🔤 ¡Empezar!
+          </button>
+          <button class="btn-sonido" (click)="toggleSonido()" [title]="sonidoActivo ? 'Silenciar' : 'Activar sonido'">
+            {{ sonidoActivo ? '🔊' : '🔇' }}
+          </button>
+        </div>
+
+      </div>
+    </div>
+  }
+
+  <!-- ══ PANTALLA JUGANDO ══════════════════════════════════════════════════ -->
+  @if (estado === 'jugando' && config) {
+    <div class="pantalla-juego">
+
+      <!-- Barra superior -->
+      <div class="juego-topbar">
+        <button class="btn-salir" (click)="volverInicio()">← Salir</button>
+
+        <!-- Timer (CA-04) -->
+        <div class="timer-area">
+          <div class="timer-bar-bg">
+            <div class="timer-bar-fill" [style.width.%]="timerPorcentaje" [style.background]="timerColor"></div>
+          </div>
+          <span class="timer-texto">⏱ {{ formatTiempo(tiempoRestante) }}</span>
+        </div>
+
+        <!-- Contadores -->
+        <div class="contadores">
+          <div class="contador">
+            <span>⭐</span>
+            <span>{{ palabrasEncontradasCount }}</span>
+          </div>
+          <div class="contador rojo">
+            <span>❌</span>
+            <span>{{ errores }}</span>
+          </div>
+        </div>
+
+        <button class="btn-sonido-top" (click)="toggleSonido()">{{ sonidoActivo ? '🔊' : '🔇' }}</button>
+      </div>
+
+      <!-- Info nivel/tema -->
+      <div class="juego-subtitulo">
+        {{ emojiTema }} {{ etiquetaTema }} · {{ nivelLabel }} ·
+        {{ palabrasEncontradasCount }}/{{ palabrasColocadas.length }} palabras
+      </div>
+
+      <!-- Cuerpo: grilla + panel -->
+      <div class="juego-body">
+
+        <!-- Grilla (CA-01, CA-03) -->
+        <div class="grilla-wrap"
+             (mouseup)="onMouseUp()"
+             (mouseleave)="onMouseUp()"
+             (touchstart)="onTouchStart($event)"
+             (touchmove)="onTouchMove($event)"
+             (touchend)="onTouchEnd()">
+
+          <div class="grilla" [style.--cols]="config.gridSize" [style.--sz.px]="cellSize">
+            @for (row of gridIndices; track row) {
+              @for (col of gridIndices; track col) {
+                <div class="celda"
+                     [attr.data-row]="row"
+                     [attr.data-col]="col"
+                     [class.sel]="getCellState(row, col) === 'selected'"
+                     [class.found]="getCellState(row, col) === 'found'"
+                     [class.err]="getCellState(row, col) === 'error'"
+                     (mousedown)="onMouseDown(row, col, $event)"
+                     (mouseenter)="onMouseEnter(row, col)">
+                  {{ grid[row][col] }}
+                </div>
+              }
+            }
+          </div>
+        </div>
+
+        <!-- Panel de palabras -->
+        <div class="palabras-panel">
+          <p class="panel-titulo">Encuentra:</p>
+          @for (pw of palabrasColocadas; track pw.palabra) {
+            <div class="palabra-item" [class.ok]="pw.encontrada">
+              <span class="pw-mark">{{ pw.encontrada ? '✓' : '·' }}</span>
+              <span class="pw-texto">{{ pw.palabra }}</span>
+            </div>
+          }
+        </div>
+
+      </div>
+    </div>
+  }
+
+  <!-- ══ PANTALLA RESULTADO ═══════════════════════════════════════════════ -->
+  @if (estado === 'completado' || estado === 'tiempo-agotado') {
+    <div class="pantalla-resultado">
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+
+      <div class="resultado-card">
+        <div class="res-icono">{{ estado === 'completado' ? '🎉' : '⏰' }}</div>
+        <div class="res-espacio"></div>
+        <h2 class="res-titulo">{{ estado === 'completado' ? '¡Lo lograste!' : '¡Se acabó el tiempo!' }}</h2>
+
+        @if (estado === 'tiempo-agotado' && fraseMotivaconalActual) {
+          <p class="frase-motivacional">{{ fraseMotivaconalActual }}</p>
+        }
+
+        @if (subioNivel) {
+          <div class="ia-badge">
+            🤖 ¡Motor IA: nivel subido a <strong>{{ nivelSugerido }}</strong>!
+          </div>
+        }
+
+        <div class="res-stats">
+          <div class="res-stat">
+            <span class="rs-num verde">{{ palabrasEncontradasCount }}</span>
+            <span class="rs-label">Encontradas</span>
+          </div>
+          <div class="res-stat">
+            <span class="rs-num amarillo">{{ errores }}</span>
+            <span class="rs-label">Errores</span>
+          </div>
+          <div class="res-stat">
+            <span class="rs-num celeste">{{ formatTiempo(tiempoTotal - tiempoRestante) }}</span>
+            <span class="rs-label">Tiempo</span>
+          </div>
+        </div>
+
+        <div class="res-palabras">
+          @for (pw of palabrasColocadas; track pw.palabra) {
+            <span class="pw-badge" [class.pw-ok]="pw.encontrada" [class.pw-no]="!pw.encontrada">
+              {{ pw.encontrada ? '✓' : '✗' }} {{ pw.palabra }}
+            </span>
+          }
+        </div>
+
+        <div class="res-botones">
+          @if (subioNivel && nivelSugerido) {
+            <button class="btn-ia" (click)="subirNivel()">⬆️ Jugar en {{ nivelSugerido }}</button>
+          }
+          <button class="btn-reintentar" (click)="jugarDeNuevo()">🔄 Jugar de nuevo</button>
+          <button class="btn-cambiar" (click)="volverInicio()">🎯 Cambiar tema</button>
+          <button class="btn-volver" (click)="volverLobby()">← Volver a juegos</button>
+        </div>
+      </div>
+    </div>
+  }
+
+</div>
