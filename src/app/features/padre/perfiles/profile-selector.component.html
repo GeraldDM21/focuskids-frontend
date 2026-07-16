@@ -22,7 +22,7 @@
          (click)="onSelectProfile(profile)">
 
       <span class="badge-inactive" *ngIf="!profile.activo">Desactivado</span>
-      <div class="avatar-circle">{{ profile.avatar }}</div>
+      <div class="avatar-circle">{{ avatarEmoji(profile.avatar) }}</div>
       <h2 class="profile-name">{{ profile.nombre }}</h2>
       <p class="profile-edad" *ngIf="profile.edad">{{ profile.edad }} años</p>
       <p class="profile-condicion" *ngIf="profile.diagnostico">{{ profile.diagnostico }}</p>
@@ -74,7 +74,7 @@
         <div class="avatar-grid">
           <button *ngFor="let av of availableAvatars" type="button"
                   class="avatar-option" [class.selected]="profileForm.avatar === av"
-                  (click)="onSelectAvatar(av)">{{ av }}</button>
+                  (click)="onSelectAvatar(av)">{{ avatarEmoji(av) }}</button>
         </div>
       </div>
 
