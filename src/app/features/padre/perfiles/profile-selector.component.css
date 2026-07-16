@@ -21,7 +21,7 @@
 .profile-card:hover:not(.inactive) { transform: translateY(-6px); box-shadow: 0 14px 36px rgba(74,58,122,0.18); border-color: #B8A7F0; }
 .profile-card.inactive { opacity: 0.6; cursor: not-allowed; filter: grayscale(30%); }
 .badge-inactive { position: absolute; top: 14px; right: 14px; background: #7A6A9A; color: white; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 30px; text-transform: uppercase; }
-.avatar-circle { width: 80px; height: 80px; background: linear-gradient(135deg, #B8A7F0, #7ECEC4); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 900; color: white; margin-bottom: 4px; }
+.avatar-circle { width: 80px; height: 80px; background: linear-gradient(135deg, #B8A7F0, #7ECEC4); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 42px; line-height: 1; margin-bottom: 4px; }
 .profile-name { font-size: 20px; font-weight: 900; color: #4A3A7A; margin: 0; text-align: center; }
 .last-game { display: flex; align-items: center; gap: 6px; background: #F5F0FF; border-radius: 10px; padding: 6px 12px; font-size: 13px; font-weight: 700; color: #4A3A7A; }
 .last-game-date { font-size: 12px; color: #7A6A9A; font-weight: 600; margin: 0; }
@@ -44,7 +44,7 @@
 .form-input:focus { border-color: #B8A7F0; box-shadow: 0 0 0 4px rgba(184,167,240,0.15); }
 .form-error { color: #C0524A; font-size: 13px; font-weight: 700; margin: -8px 0 16px; background: #fde8e8; padding: 8px 12px; border-radius: 8px; }
 .avatar-grid { display: grid; grid-template-columns: repeat(6,1fr); gap: 8px; }
-.avatar-option { font-size: 13px; font-weight: 700; width: 52px; height: 52px; border: 3px solid transparent; border-radius: 14px; background: #F5F0FF; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: border-color 0.15s, transform 0.15s; color: #4A3A7A; font-family: "Nunito", sans-serif; }
+.avatar-option { font-size: 28px; line-height: 1; width: 52px; height: 52px; border: 3px solid transparent; border-radius: 14px; background: #F5F0FF; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: border-color 0.15s, transform 0.15s; }
 .avatar-option:hover { transform: scale(1.1); }
 .avatar-option.selected { border-color: #B8A7F0; background: #EDE9FF; }
 .modal-actions { display: flex; gap: 12px; margin-top: 28px; justify-content: flex-end; }
