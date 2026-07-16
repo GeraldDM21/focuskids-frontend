@@ -10,5 +10,10 @@ export const ninoRoutes: Routes = [
     path: 'juego/espejo-mental',
     loadComponent: () =>
       import('./juego/espejo-mental/espejo-mental.component').then(m => m.EspejoMentalComponent)
+  },
+  {
+    path: 'juego/historia-viva',
+    loadComponent: () =>
+      import('./juego/historia-viva/historia-viva.component').then(m => m.HistoriaVivaComponent)
   }
 ];
