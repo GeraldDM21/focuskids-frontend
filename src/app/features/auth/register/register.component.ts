@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { NgIf } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
@@ -9,6 +9,8 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
@@ -17,7 +19,8 @@ import { AuthService } from '../../../core/services/auth.service';
   imports: [
     ReactiveFormsModule, RouterLink, NgIf,
     MatCardModule, MatFormFieldModule, MatInputModule,
-    MatSelectModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule
+    MatSelectModule, MatButtonModule, MatIconModule,
+    MatProgressSpinnerModule, MatCheckboxModule, MatProgressBarModule
   ],
   template: `
     <div class="register-page">
@@ -160,6 +163,40 @@ import { AuthService } from '../../../core/services/auth.service';
               </mat-error>
             </mat-form-field>
 
+            <!-- Barra de fuerza de contraseña -->
+            <div class="strength-wrap" *ngIf="form.get('password')?.value">
+              <div class="strength-labels">
+                <span class="strength-text" [style.color]="strengthColor">{{ strengthLabel }}</span>
+                <span class="strength-hint">{{ strengthHint }}</span>
+              </div>
+              <mat-progress-bar mode="determinate" [value]="strengthPercent"
+                [color]="strengthMatColor" class="strength-bar"></mat-progress-bar>
+              <div class="strength-segments">
+                <span *ngIf="strengthScore >= 1" class="seg active"></span>
+                <span *ngIf="strengthScore < 1" class="seg"></span>
+                <span *ngIf="strengthScore >= 2" class="seg active"></span>
+                <span *ngIf="strengthScore < 2" class="seg"></span>
+                <span *ngIf="strengthScore >= 3" class="seg active"></span>
+                <span *ngIf="strengthScore < 3" class="seg"></span>
+                <span *ngIf="strengthScore >= 4" class="seg active"></span>
+                <span *ngIf="strengthScore < 4" class="seg"></span>
+              </div>
+            </div>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Confirmar contraseña</mat-label>
+              <input matInput formControlName="confirmPassword"
+                     [type]="hideConfirm ? 'password' : 'text'">
+              <button mat-icon-button matSuffix type="button"
+                      (click)="hideConfirm = !hideConfirm">
+                <mat-icon>{{ hideConfirm ? 'visibility_off' : 'visibility' }}</mat-icon>
+              </button>
+              <mat-error *ngIf="form.get('confirmPassword')?.hasError('required')">Requerido</mat-error>
+              <mat-error *ngIf="form.hasError('passwordMismatch') && !form.get('confirmPassword')?.hasError('required')">
+                Las contraseñas no coinciden
+              </mat-error>
+            </mat-form-field>
+
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Tipo de cuenta</mat-label>
               <mat-select formControlName="rol">
@@ -196,6 +233,19 @@ import { AuthService } from '../../../core/services/auth.service';
                 <input matInput formControlName="gradoGrupo" placeholder="Ej: 3° grado A">
               </mat-form-field>
             </ng-container>
+
+            <!-- Términos y condiciones -->
+            <div class="terms-wrap">
+              <mat-checkbox formControlName="aceptaTerminos" color="primary">
+                Acepto los
+                <a routerLink="/terminos" target="_blank">Términos de servicio</a>
+                y la
+                <a routerLink="/privacidad" target="_blank">Política de privacidad</a>
+              </mat-checkbox>
+              <div class="terms-error" *ngIf="form.get('aceptaTerminos')?.invalid && form.get('aceptaTerminos')?.touched">
+                Debes aceptar los términos para continuar
+              </div>
+            </div>
 
             <div class="error-msg" *ngIf="errorMsg">
               <mat-icon>sentiment_dissatisfied</mat-icon> {{ errorMsg }}
@@ -354,6 +404,24 @@ import { AuthService } from '../../../core/services/auth.service';
       font-size: 14px;
     }
 
+    /* Barra de fuerza */
+    .strength-wrap { margin: -4px 0 10px; }
+    .strength-labels { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+    .strength-text { font-family: 'Quicksand', sans-serif; font-size: 12px; font-weight: 700; transition: color .3s; }
+    .strength-hint { font-family: 'Quicksand', sans-serif; font-size: 11px; color: #6b7a99; }
+    .strength-bar { border-radius: 6px; height: 6px !important; margin-bottom: 4px; }
+    ::ng-deep .strength-bar .mdc-linear-progress__buffer-bar { background: #e4eeec; }
+    .strength-segments { display: flex; gap: 4px; }
+    .seg { flex: 1; height: 4px; border-radius: 3px; background: #e0ece9; transition: background .3s; }
+    .seg.active { background: currentColor; }
+
+    /* Términos */
+    .terms-wrap { margin: 2px 0 14px; }
+    .terms-wrap mat-checkbox { font-family: 'Quicksand', sans-serif; font-size: 13px; color: #6b7a99; }
+    .terms-wrap a { color: #1e9a85; font-weight: 700; text-decoration: none; }
+    .terms-wrap a:hover { text-decoration: underline; }
+    .terms-error { color: #e8607a; font-family: 'Quicksand', sans-serif; font-size: 11.5px; margin-top: 4px; padding-left: 4px; }
+
     @media (prefers-reduced-motion: reduce) {
       .submit-btn { transition: none; }
     }
@@ -365,26 +433,76 @@ export class RegisterComponent {
   errorMsg = '';
   successMsg = '';
   hidePassword = true;
+  hideConfirm = true;
 
   constructor(private fb: FormBuilder, private auth: AuthService, private router: Router) {
     this.form = this.fb.group({
-      nombre:         ['', Validators.required],
-      email:          ['', [Validators.required, Validators.email]],
-      password:       ['', [Validators.required, Validators.minLength(8), Validators.pattern(/^(?=.*[A-Z])(?=.*\d).+$/)]],
-      rol:            ['PADRE', Validators.required],
-      telefono:       [''],
-      relacionConNino:[''],
-      institucion:    [''],
-      gradoGrupo:     ['']
-    });
+      nombre:          ['', Validators.required],
+      email:           ['', [Validators.required, Validators.email]],
+      password:        ['', [Validators.required, Validators.minLength(8), Validators.pattern(/^(?=.*[A-Z])(?=.*\d).+$/)]],
+      confirmPassword: ['', Validators.required],
+      rol:             ['PADRE', Validators.required],
+      telefono:        [''],
+      relacionConNino: [''],
+      institucion:     [''],
+      gradoGrupo:      [''],
+      aceptaTerminos:  [false, Validators.requiredTrue]
+    }, { validators: this.passwordMatchValidator });
+  }
+
+  private passwordMatchValidator(group: AbstractControl): ValidationErrors | null {
+    const pass = group.get('password')?.value;
+    const confirm = group.get('confirmPassword')?.value;
+    return pass && confirm && pass !== confirm ? { passwordMismatch: true } : null;
+  }
+
+  // ── Fuerza de contraseña ──
+  get strengthScore(): number {
+    const pw: string = this.form.get('password')?.value || '';
+    let score = 0;
+    if (pw.length >= 8) score++;
+    if (/[A-Z]/.test(pw)) score++;
+    if (/\d/.test(pw)) score++;
+    if (/[^A-Za-z0-9]/.test(pw)) score++;
+    return score;
+  }
+
+  get strengthPercent(): number { return (this.strengthScore / 4) * 100; }
+
+  get strengthLabel(): string {
+    return ['', 'Débil', 'Regular', 'Buena', 'Segura'][this.strengthScore] || '';
+  }
+
+  get strengthHint(): string {
+    const pw: string = this.form.get('password')?.value || '';
+    if (pw.length < 8) return 'Mín. 8 caracteres';
+    if (!/[A-Z]/.test(pw)) return 'Agrega una mayúscula';
+    if (!/\d/.test(pw)) return 'Agrega un número';
+    if (!/[^A-Za-z0-9]/.test(pw)) return 'Agrega un símbolo (!@#...)';
+    return '¡Contraseña segura!';
+  }
+
+  get strengthColor(): string {
+    return ['', '#e8607a', '#f59e0b', '#3b82f6', '#1e9a85'][this.strengthScore] || '#e0ece9';
+  }
+
+  get strengthMatColor(): 'primary' | 'accent' | 'warn' {
+    if (this.strengthScore <= 1) return 'warn';
+    if (this.strengthScore === 2) return 'accent';
+    return 'primary';
   }
 
   onSubmit() {
-    if (this.form.invalid) return;
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
     this.loading = true;
     this.errorMsg = '';
 
-    this.auth.register(this.form.value).subscribe({
+    const { confirmPassword, aceptaTerminos, ...payload } = this.form.value;
+
+    this.auth.register(payload).subscribe({
       next: (response) => {
         this.loading = false;
         this.successMsg = response.mensaje || 'Cuenta creada. Revisa tu correo para verificarla.';

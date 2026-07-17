@@ -17,6 +17,16 @@ export const routes: Routes = [
     path: 'auth',
     loadChildren: () => import('./features/auth/auth.routes').then(m => m.authRoutes)
   },
+  {
+    path: 'terminos',
+    loadComponent: () =>
+      import('./features/legal/terminos.component').then(m => m.TerminosComponent)
+  },
+  {
+    path: 'privacidad',
+    loadComponent: () =>
+      import('./features/legal/privacidad.component').then(m => m.PrivacidadComponent)
+  },
 
   // Padre y Niño — layout propio, fuera del Shell
   {
