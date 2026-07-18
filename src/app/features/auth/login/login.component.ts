@@ -407,8 +407,12 @@ export class LoginComponent {
       },
       error: (err) => {
         this.loading = false;
-        this.errorMsg = err?.error?.error
-          || (err.status === 401 ? 'Correo o contraseña incorrectos' : 'Error al iniciar sesión. Intente de nuevo.');
+        if (err?.name === 'TimeoutError') {
+          this.errorMsg = 'El servidor no responde. Verifica que el backend esté corriendo.';
+        } else {
+          this.errorMsg = err?.error?.error
+            || (err.status === 401 ? 'Correo o contraseña incorrectos' : 'Error al iniciar sesión. Intente de nuevo.');
+        }
       }
     });
   }

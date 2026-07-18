@@ -47,17 +47,19 @@ export const routes: Routes = [
     loadChildren: () => import('./features/docente/docente.routes').then(m => m.docenteRoutes)
   },
 
-  // Admin — dentro del Shell
+  // Admin — layout propio, fuera del Shell
+  {
+    path: 'admin',
+    canActivate: [authGuard, roleGuard(['ADMINISTRADOR'])],
+    loadChildren: () => import('./features/admin/admin.routes').then(m => m.adminRoutes)
+  },
+
+  // Shell solo para rutas que lo necesiten (unauthorized, etc.)
   {
     path: '',
     component: ShellComponent,
     canActivate: [authGuard],
     children: [
-      {
-        path: 'admin',
-        canActivate: [roleGuard(['ADMINISTRADOR'])],
-        loadChildren: () => import('./features/admin/admin.routes').then(m => m.adminRoutes)
-      },
       {
         path: 'unauthorized',
         loadComponent: () =>
