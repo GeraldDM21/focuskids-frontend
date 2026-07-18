@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../../core/services/auth.service';
-import { AdminService, Usuario } from '../../../core/services/admin.service';
+import { AdminService, Usuario, PerfilNinoAdmin } from '../../../core/services/admin.service';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -93,9 +93,9 @@ import { AdminService, Usuario } from '../../../core/services/admin.service';
           <div class="stat-card">
             <span class="stat-ico" style="background:#DCFCE7">🎮</span>
             <div>
-              <p class="stat-val">{{ ninos() }}</p>
-              <p class="stat-lbl">Niños activos</p>
-              <p class="stat-trend trend-up">+12% vs anterior</p>
+              <p class="stat-val">{{ ninosCount() }}</p>
+              <p class="stat-lbl">Niños registrados</p>
+              <p class="stat-trend trend-up">Perfiles activos</p>
             </div>
           </div>
           <div class="stat-card">
@@ -160,35 +160,63 @@ import { AdminService, Usuario } from '../../../core/services/admin.service';
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let u of usuariosFiltrados">
-                <td class="td-user">
-                  <div class="user-avatar">{{ initials(u.nombre) }}</div>
-                  <div>
-                    <p class="user-name">{{ u.nombre }}</p>
-                    <p class="user-email">{{ u.email }}</p>
-                  </div>
-                </td>
-                <td><span class="badge" [ngClass]="rolClass(u.rol)">{{ rolLabel(u.rol) }}</span></td>
-                <td class="td-gray">—</td>
-                <td class="td-gray">{{ u.fechaCreacion | date:'dd/MM/yyyy' }}</td>
-                <td class="td-gray">—</td>
-                <td>
-                  <span class="badge" [ngClass]="u.activo ? 'badge-activo' : 'badge-inactivo'">
-                    {{ u.activo ? 'Activo' : 'Inactivo' }}
-                  </span>
-                </td>
-                <td class="td-actions">
-                  <button class="action-btn edit-btn" title="Editar">
-                    <mat-icon>edit</mat-icon>
-                  </button>
-                  <button class="action-btn del-btn" title="Eliminar">
-                    <mat-icon>delete_outline</mat-icon>
-                  </button>
-                </td>
-              </tr>
-              <tr *ngIf="usuariosFiltrados.length === 0">
-                <td colspan="7" class="empty-row">No hay usuarios para mostrar</td>
-              </tr>
+              <!-- Filas para usuarios (Admin, Docente, Padre) -->
+              <ng-container *ngIf="filtroRol !== 'NINO'">
+                <tr *ngFor="let u of usuariosFiltrados">
+                  <td class="td-user">
+                    <div class="user-avatar">{{ initials(u.nombre) }}</div>
+                    <div>
+                      <p class="user-name">{{ u.nombre }}</p>
+                      <p class="user-email">{{ u.email }}</p>
+                    </div>
+                  </td>
+                  <td><span class="badge" [ngClass]="rolClass(u.rol)">{{ rolLabel(u.rol) }}</span></td>
+                  <td class="td-gray">—</td>
+                  <td class="td-gray">{{ u.fechaCreacion | date:'dd/MM/yyyy' }}</td>
+                  <td class="td-gray">—</td>
+                  <td>
+                    <span class="badge" [ngClass]="u.activo ? 'badge-activo' : 'badge-inactivo'">
+                      {{ u.activo ? 'Activo' : 'Inactivo' }}
+                    </span>
+                  </td>
+                  <td class="td-actions">
+                    <button class="action-btn edit-btn" title="Editar"><mat-icon>edit</mat-icon></button>
+                    <button class="action-btn del-btn" title="Eliminar"><mat-icon>delete_outline</mat-icon></button>
+                  </td>
+                </tr>
+                <tr *ngIf="usuariosFiltrados.length === 0">
+                  <td colspan="7" class="empty-row">No hay usuarios para mostrar</td>
+                </tr>
+              </ng-container>
+
+              <!-- Filas para niños (PerfilNino) -->
+              <ng-container *ngIf="filtroRol === 'NINO'">
+                <tr *ngFor="let n of ninosFiltrados">
+                  <td class="td-user">
+                    <div class="user-avatar nino-av">{{ avatarEmoji(n.avatar) }}</div>
+                    <div>
+                      <p class="user-name">{{ n.nombre }}</p>
+                      <p class="user-email">{{ n.edad }} años{{ n.diagnostico ? ' · ' + n.diagnostico : '' }}</p>
+                    </div>
+                  </td>
+                  <td><span class="badge badge-nino">Niño</span></td>
+                  <td class="td-gray">{{ n.padre?.usuario?.nombre ?? '—' }}</td>
+                  <td class="td-gray">—</td>
+                  <td class="td-gray">—</td>
+                  <td>
+                    <span class="badge" [ngClass]="n.activo ? 'badge-activo' : 'badge-inactivo'">
+                      {{ n.activo ? 'Activo' : 'Inactivo' }}
+                    </span>
+                  </td>
+                  <td class="td-actions">
+                    <button class="action-btn edit-btn" title="Editar"><mat-icon>edit</mat-icon></button>
+                    <button class="action-btn del-btn" title="Eliminar"><mat-icon>delete_outline</mat-icon></button>
+                  </td>
+                </tr>
+                <tr *ngIf="ninosFiltrados.length === 0">
+                  <td colspan="7" class="empty-row">No hay perfiles de niños registrados</td>
+                </tr>
+              </ng-container>
             </tbody>
           </table>
 
@@ -400,6 +428,7 @@ import { AdminService, Usuario } from '../../../core/services/admin.service';
       display: flex; align-items: center; justify-content: center;
       font-size: 13px; font-weight: 800; color: white; flex-shrink: 0;
     }
+    .nino-av { background: linear-gradient(135deg, #A78BFA, #7C3AED); font-size: 20px; }
     .user-name  { font-size: 14px; font-weight: 700; color: #1E293B; margin: 0; }
     .user-email { font-size: 12px; color: #94A3B8; margin: 0; }
 
@@ -447,16 +476,25 @@ import { AdminService, Usuario } from '../../../core/services/admin.service';
 })
 export class AdminDashboardComponent implements OnInit {
   usuarios = signal<Usuario[]>([]);
+  ninos    = signal<PerfilNinoAdmin[]>([]);
   loading = true;
   busqueda = '';
   filtroRol = 'todos';
   usuariosFiltrados: Usuario[] = [];
+  ninosFiltrados:    PerfilNinoAdmin[] = [];
 
   // Stats computadas
-  ninos    = computed(() => this.usuarios().filter(u => u.rol === 'NINO'    && u.activo).length);
-  docentes = computed(() => this.usuarios().filter(u => u.rol === 'DOCENTE').length);
-  padres   = computed(() => this.usuarios().filter(u => u.rol === 'PADRE').length);
+  ninosCount = computed(() => this.ninos().length);
+  docentes   = computed(() => this.usuarios().filter(u => u.rol === 'DOCENTE').length);
+  padres     = computed(() => this.usuarios().filter(u => u.rol === 'PADRE').length);
   alertCount = 0;
+
+  private readonly AVATAR_MAP: Record<string, string> = {
+    fox:'🦊', frog:'🐸', lion:'🦁', panda:'🐼', koala:'🐨',
+    unicorn:'🦄', dog:'🐶', cat:'🐱', rabbit:'🐰', tiger:'🐯',
+    bear:'🐻', mouse:'🐭'
+  };
+  avatarEmoji(key?: string | null): string { return this.AVATAR_MAP[key ?? ''] ?? '👤'; }
 
   get iniciales() {
     const n = this.auth.userName();
@@ -466,6 +504,7 @@ export class AdminDashboardComponent implements OnInit {
   constructor(public auth: AuthService, private adminService: AdminService) {}
 
   ngOnInit() {
+    // Carga usuarios y niños en paralelo
     this.adminService.listarUsuarios().subscribe({
       next: data => {
         this.usuarios.set(data);
@@ -475,6 +514,14 @@ export class AdminDashboardComponent implements OnInit {
       },
       error: () => { this.loading = false; }
     });
+
+    this.adminService.listarNinos().subscribe({
+      next: data => {
+        this.ninos.set(data);
+        this.ninosFiltrados = data;
+      },
+      error: () => {}
+    });
   }
 
   setFiltro(rol: string) {
@@ -483,12 +530,20 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   filtrar() {
+    const q = this.busqueda.trim().toLowerCase();
+
+    if (this.filtroRol === 'NINO') {
+      this.ninosFiltrados = q
+        ? this.ninos().filter(n => n.nombre.toLowerCase().includes(q))
+        : this.ninos();
+      return;
+    }
+
     let lista = this.usuarios();
     if (this.filtroRol !== 'todos') {
       lista = lista.filter(u => u.rol === this.filtroRol);
     }
-    if (this.busqueda.trim()) {
-      const q = this.busqueda.toLowerCase();
+    if (q) {
       lista = lista.filter(u =>
         u.nombre.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
       );
