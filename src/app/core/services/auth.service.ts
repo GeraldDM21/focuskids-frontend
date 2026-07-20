@@ -1,7 +1,7 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { tap } from 'rxjs/operators';
+import { tap, timeout } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { AuthResponse, LoginRequest, RegisterRequest, UsuarioRol } from '../models/auth.model';
 import { StorageService } from './storage.service';
@@ -30,6 +30,7 @@ export class AuthService {
 
   login(request: LoginRequest) {
     return this.http.post<AuthResponse>(`${this.apiUrl}/login`, request).pipe(
+      timeout(15000),   // 15s máximo — evita quedar colgado si el backend no responde
       tap(response => {
         if (response.token) {
           this.storage.setToken(response.token);
@@ -65,7 +66,7 @@ export class AuthService {
     switch (rol) {
       case 'PADRE':         this.router.navigate(['/padre/dashboard']); break;
       case 'DOCENTE':       this.router.navigate(['/docente/dashboard']); break;
-      case 'ADMINISTRADOR': this.router.navigate(['/admin/usuarios']); break;
+      case 'ADMINISTRADOR': this.router.navigate(['/admin']); break;
       case 'NINO':          this.router.navigate(['/juegos']); break;
       default:              this.router.navigate(['/auth/login']);
     }
