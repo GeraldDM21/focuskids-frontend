@@ -5,6 +5,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { PiezasTiempoService, COLORES_PIEZAS, FORMAS_SIMETRICAS } from './piezas-tiempo.service';
 import { ChildProfileService } from '../../../padre/perfiles/child-profile.service';
 import { PiezaData, SlotData, Nivel } from './piezas-tiempo.model';
+import { MascotComponent, MascotMood } from '../../../../shared/components/mascot/mascot.component';
 
 type Estado = 'inicio' | 'jugando' | 'completado' | 'tiempo-agotado';
 
@@ -22,7 +23,7 @@ const SVG_SHAPES: Record<string, string> = {
 @Component({
   selector: 'app-piezas-tiempo',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, MascotComponent],
   templateUrl: './piezas-tiempo.component.html',
   styleUrls: ['./piezas-tiempo.component.css']
 })
@@ -79,6 +80,29 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
     '¡Bien hecho!', '¡Increíble!', '¡Fantástico!', '¡Sigue así!',
     '¡Genial!', '¡Excelente!', '¡Muy bien!', '¡Eso es!', '¡Perfecto!', '¡Brillante!'
   ];
+
+  // Mascota Tigre 🐯
+  mascotMood: MascotMood = 'idle';
+  mascotMsg = '¡Hola! Soy Tigre 🐯 ¡Arrastrá las piezas a sus siluetas!';
+  private mascotTimer: any;
+
+  private readonly TIPS_IDLE = [
+    '💡 Arrastrá la pieza hasta su silueta y soltá.',
+    '🔄 Si la pieza no encaja, ¡rotála con el botón Rotar!',
+    '🎯 Buscá la forma que coincida con la silueta.',
+    '⭐ Las formas simétricas encajan sin importar la rotación.',
+    '🚀 Cuanto más rápido termines, ¡más puntos bonus!',
+  ];
+
+  setMascot(mood: MascotMood, msg: string, durMs = 3500): void {
+    clearTimeout(this.mascotTimer);
+    this.mascotMood = mood;
+    this.mascotMsg  = msg;
+    this.mascotTimer = setTimeout(() => {
+      this.mascotMood = 'idle';
+      this.mascotMsg  = this.TIPS_IDLE[Math.floor(Math.random() * this.TIPS_IDLE.length)];
+    }, durMs);
+  }
 
   private audioCtx: AudioContext | null = null;
   private bgInterval: any = null;
@@ -157,6 +181,8 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
     this.slots.forEach(s => this.slotSvgMap.set(s.id, this.buildSlotSvg(s.forma)));
 
     this.estado = 'jugando';
+    this.mascotMood = 'excited';
+    this.mascotMsg  = '¡Vamos Tigre! 🐯 ¡Arrastrá las piezas a sus siluetas!';
     this.cdr.detectChanges();
     this.iniciarTimer();
     setTimeout(() => this.startBgMusic(), 200);
@@ -273,20 +299,26 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
       this.speak(this.frasesCelebracion[Math.floor(Math.random() * this.frasesCelebracion.length)]);
 
       if (this.piezasColocadas === this.slots.length) {
+        this.setMascot('celebrate', '¡INCREÍBLE! 🎉 ¡Completaste todas las piezas!', 5000);
         this.detenerTimer();
         // Sin delay para evitar quedarse pegado; forzamos detección de cambios
         this.finalizarSesion('completado');
+      } else {
+        const restantes = this.slots.length - this.piezasColocadas;
+        this.setMascot('celebrate', `¡Pieza colocada! 🐯 ¡${restantes} más y terminas!`);
       }
     } else if (!formaOk) {
       this.fallidos++;
       this.triggerError(slot);
       pieza.seleccionada = false;
       this.piezaSeleccionada = null;
+      this.setMascot('encourage', '¡Casi! 🐯 Esa pieza no va ahí, probá otra silueta.');
     } else {
       // Forma ok pero rotación mal
       this.fallidos++;
       this.triggerError(slot);
       this.hintMsg = '¡Rota la pieza! 🔄';
+      this.setMascot('encourage', '🔄 ¡Rotá la pieza primero y volvé a intentarlo!');
       setTimeout(() => { this.hintMsg = ''; }, 2200);
     }
   }
@@ -346,13 +378,23 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
 
   // ── TIMER ────────────────────────────────────────────────────────────────
 
+  private warnedAt10 = false;
+
   private iniciarTimer(): void {
+    this.warnedAt10 = false;
     this.endTime = Date.now() + this.tiempoTotal * 1000;
     this.timerInterval = setInterval(() => {
       const restante = Math.ceil((this.endTime - Date.now()) / 1000);
       this.tiempoRestante = Math.max(0, restante);
+
+      if (restante <= 10 && !this.warnedAt10) {
+        this.warnedAt10 = true;
+        this.setMascot('warning', '⏰ ¡10 segundos! ¡Apúrate Tigre!', 4000);
+      }
+
       if (this.tiempoRestante <= 0) {
         this.detenerTimer();
+        this.setMascot('encourage', '¡Se acabó el tiempo! 🐯 ¡Inténtalo de nuevo!', 4000);
         this.finalizarSesion('tiempo-agotado');
       }
     }, 250);
@@ -495,8 +537,12 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
 
   volverInicio(): void {
     this.detenerTimer(); this.stopBgMusic();
+    clearTimeout(this.mascotTimer);
     this.isDragging = false; this.dragPieza = null;
     this.piezas = []; this.slots = []; this.piezaSeleccionada = null;
+    this.mascotMood = 'idle';
+    this.mascotMsg  = '¡Hola! Soy Tigre 🐯 ¡Arrastrá las piezas a sus siluetas!';
+    this.warnedAt10 = false;
     this.estado = 'inicio';
   }
   volverLobby(): void {

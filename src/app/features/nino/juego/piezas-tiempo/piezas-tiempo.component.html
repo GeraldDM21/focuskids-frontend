@@ -13,9 +13,9 @@
             <span class="sp sp-1">✨</span><span class="sp sp-2">⭐</span>
             <span class="sp sp-3">💫</span><span class="sp sp-4">✨</span>
           </div>
-          <div class="mascota-ring"><div class="mascota-avatar">🦊</div></div>
+          <div class="mascota-ring"><div class="mascota-avatar">🐯</div></div>
           <div class="mascota-bubble">
-            ¡Hola! Soy <strong>Foxy</strong> 🦊<br>
+            ¡Hola! Soy <strong>Tigre</strong> 🐯<br>
             ¡Arrastra las piezas a sus siluetas antes de que se acabe el tiempo! 🧩
           </div>
         </div>
@@ -145,6 +145,11 @@
            [innerHTML]="getPiezaSvg(dragPieza.id)">
       </div>
     }
+  }
+
+  <!-- Mascota flotante durante el juego -->
+  @if (estado === 'jugando') {
+    <app-mascot game="piezas" [mood]="mascotMood" [message]="mascotMsg"></app-mascot>
   }
 
   <!-- ══ PANTALLA RESULTADO ════════════════════════════════════════════════ -->

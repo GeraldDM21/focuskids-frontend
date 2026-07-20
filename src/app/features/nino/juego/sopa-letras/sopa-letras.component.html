@@ -20,10 +20,10 @@
             <span class="sp sp-4">✨</span>
           </div>
           <div class="mascota-ring">
-            <div class="mascota-avatar">🦊</div>
+            <div class="mascota-avatar">🐼</div>
           </div>
           <div class="mascota-bubble">
-            ¡Hola! Soy <strong>Foxy</strong> 🦊<br>
+            ¡Hola! Soy <strong>Pandi</strong> 🐼<br>
             ¡Encuentra todas las palabras escondidas en la grilla! 🔤
           </div>
         </div>
@@ -221,6 +221,11 @@
         </div>
       </div>
     </div>
+  }
+
+  <!-- Mascota flotante durante el juego -->
+  @if (estado === 'jugando') {
+    <app-mascot game="sopa" [mood]="mascotMood" [message]="mascotMsg"></app-mascot>
   }
 
 </div>

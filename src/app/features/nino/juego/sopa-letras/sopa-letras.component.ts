@@ -4,13 +4,14 @@ import { Router } from '@angular/router';
 import { SopaLetrasService } from './sopa-letras.service';
 import { ChildProfileService } from '../../../padre/perfiles/child-profile.service';
 import { SopaLetrasConfig, PalabraColocada, Tema, Nivel } from './sopa-letras.model';
+import { MascotComponent, MascotMood } from '../../../../shared/components/mascot/mascot.component';
 
 type Estado = 'inicio' | 'jugando' | 'completado' | 'tiempo-agotado';
 
 @Component({
   selector: 'app-sopa-letras',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, MascotComponent],
   templateUrl: './sopa-letras.component.html',
   styleUrls: ['./sopa-letras.component.css']
 })
@@ -44,6 +45,32 @@ export class SopaLetrasComponent implements OnInit, OnDestroy {
   private endTime = 0;
   private audioCtx: AudioContext | null = null;
   private bgInterval: any = null;
+
+  // ── MASCOTA ─────────────────────────────────────────────────────────────
+  mascotMood: MascotMood = 'idle';
+  mascotMsg  = '¡Hola! Soy Pandi 🐼 ¡Busca todas las palabras escondidas!';
+  private mascotTimer: any;
+
+  private readonly TIPS_IDLE = [
+    '¡Busca en todas las direcciones: horizontal, vertical y diagonal!',
+    '¡Las palabras pueden ir hacia atrás también!',
+    'Arrastra desde la primera hasta la última letra.',
+    '¡Concéntrate! Las palabras están ahí escondidas 🔍',
+    '¡Tómate tu tiempo, no hay prisa!'
+  ];
+
+  setMascot(mood: MascotMood, msg: string, durMs = 3500): void {
+    clearTimeout(this.mascotTimer);
+    this.mascotMood = mood;
+    this.mascotMsg  = msg;
+    if (mood !== 'idle') {
+      this.mascotTimer = setTimeout(() => {
+        const tip = this.TIPS_IDLE[Math.floor(Math.random() * this.TIPS_IDLE.length)];
+        this.mascotMood = 'idle';
+        this.mascotMsg  = tip;
+      }, durMs);
+    }
+  }
 
   // Frases de celebracion al encontrar una palabra
   private readonly frasesCelebracion = [
@@ -131,6 +158,7 @@ export class SopaLetrasComponent implements OnInit, OnDestroy {
     this.estado = 'jugando';
     this.iniciarTimer();
     setTimeout(() => this.startBgMusic(), 200);
+    this.setMascot('excited', '¡Arriba Pandi! 🐼 ¡A buscar palabras! Arrastrá sobre las letras.');
   }
 
   // ── GRILLA ──────────────────────────────────────────────────────────────
@@ -198,8 +226,12 @@ export class SopaLetrasComponent implements OnInit, OnDestroy {
     this.timerInterval = setInterval(() => {
       const restante = Math.ceil((this.endTime - Date.now()) / 1000);
       this.tiempoRestante = Math.max(0, restante);
+      if (this.tiempoRestante <= 10 && this.tiempoRestante > 0 && this.mascotMood === 'idle') {
+        this.setMascot('warning', '⏰ ¡10 segundos! ¡Date prisa, Pandi te anima!', 4000);
+      }
       if (this.tiempoRestante <= 0) {
         this.detenerTimer();
+        this.setMascot('encourage', '¡Se acabó el tiempo! 😢 ¡Inténtalo de nuevo, tú puedes!', 5000);
         this.finalizarSesion('tiempo-agotado');
       }
     }, 250); // Verifica cada 250ms para mayor precision
@@ -431,9 +463,13 @@ export class SopaLetrasComponent implements OnInit, OnDestroy {
         this.dragStart = this.dragCurrent = null;
         this.playPalabraEncontrada();
         this.speak(this.frasesCelebracion[Math.floor(Math.random() * this.frasesCelebracion.length)]);
+        const restantes = this.palabrasColocadas.length - this.palabrasEncontradasCount;
         if (this.palabrasEncontradasCount === this.palabrasColocadas.length) {
+          this.setMascot('celebrate', '¡INCREÍBLE! 🎉 ¡Encontraste TODAS las palabras! ¡Sos un campeón!', 5000);
           this.detenerTimer();
           setTimeout(() => this.finalizarSesion('completado'), 150);
+        } else {
+          this.setMascot('celebrate', `¡Genial! ¡Palabra encontrada! 🎊 Faltan ${restantes} más.`);
         }
         return;
       }
@@ -442,6 +478,7 @@ export class SopaLetrasComponent implements OnInit, OnDestroy {
     // Seleccion incorrecta
     this.errores++;
     this.playError();
+    this.setMascot('encourage', '¡No era ahí! 😅 Recordá: seguí una línea recta.');
     celdas.forEach(c => { if (this.cellState[c.row][c.col] !== 'found') this.cellState[c.row][c.col] = 'error'; });
     setTimeout(() => this.limpiarSeleccion(), 600);
   }
