@@ -15,5 +15,10 @@ export const ninoRoutes: Routes = [
     path: 'juego/palabras-ocultas',
     loadComponent: () =>
       import('./juego/sopa-letras/sopa-letras.component').then(m => m.SopaLetrasComponent)
+  },
+  {
+    path: 'juego/historia-viva',
+    loadComponent: () =>
+      import('./juego/historia-viva/historia-viva.component').then(m => m.HistoriaVivaComponent)
   }
 ];
