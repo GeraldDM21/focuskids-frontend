@@ -128,8 +128,17 @@ interface Logro        { icono: string; nombre: string; desc: string; puntos: nu
 
               <div class="card-header">
                 <div class="card-icon">{{ juego.icono }}</div>
-                <button class="play-btn"
-                  [style.background]="estaImplementado(juego.ruta) ? juego.color : '#cbd5e1'">
+                <button
+                  type="button"
+                  class="play-btn"
+                  [style.background]="
+                    estaImplementado(juego.ruta)
+                      ? juego.color
+                      : '#cbd5e1'
+                  "
+                  [attr.aria-label]="'Abrir ' + juego.nombre"
+                  (click)="irAJuego(juego); $event.stopPropagation()"
+                >
                   {{ estaImplementado(juego.ruta) ? '▶' : '🔒' }}
                 </button>
               </div>
@@ -460,7 +469,11 @@ export class NinoJuegosComponent implements OnInit {
     { icono:'⚡', nombre:'Velocidad récord',    desc:'Completaste Espejo en 45s',  puntos:25 },
   ];
 
-  private implementados = ['/nino/juego/espejo-mental', '/nino/juego/historia-viva'];
+  private implementados = [
+    '/nino/juego/espejo-mental',
+    '/nino/juego/historia-viva',
+    '/nino/juego/cascada-numerica'
+  ];
 
   constructor(private profileService: ChildProfileService, private router: Router) {}
 

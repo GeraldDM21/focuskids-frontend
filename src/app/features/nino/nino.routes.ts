@@ -15,5 +15,12 @@ export const ninoRoutes: Routes = [
     path: 'juego/historia-viva',
     loadComponent: () =>
       import('./juego/historia-viva/historia-viva.component').then(m => m.HistoriaVivaComponent)
+  },
+  {
+    path: 'juego/cascada-numerica',
+    loadComponent: () =>
+      import(
+        './juego/cascada-numerica/cascada-numerica.component'
+        ).then(m => m.CascadaNumericaComponent)
   }
 ];
