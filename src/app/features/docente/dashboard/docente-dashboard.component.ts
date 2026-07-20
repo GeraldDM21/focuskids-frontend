@@ -17,10 +17,6 @@ interface Estudiante {
 interface Alerta {
   nombre: string; avatar: string; mensaje: string; tipo: 'warn' | 'danger'; hace: string;
 }
-interface Asignacion {
-  titulo: string; juego: string; icono: string; fechaLimite: string;
-  entregadas: number; total: number; color: string;
-}
 interface LogroClase {
   icono: string; nombre: string; desc: string; alumno: string; avatarAlu: string; fecha: string;
 }
@@ -243,33 +239,10 @@ const JUEGO_ICO: Record<string, string> = {
 
       <!-- ══ ASIGNACIONES ══ -->
       @if (!loading && tab === 'asignaciones') {
-        @if (nuevaAsig) {
-          <div class="asig-form-card">
-            <h3 class="card-title">Nueva asignación</h3>
-            <p class="asig-note">Esta funcionalidad estará disponible cuando se implementen las APIs de asignaciones en el backend.</p>
-            <button class="btn-cancel" (click)="nuevaAsig=false">Cerrar</button>
-          </div>
-        }
-        <div class="asig-grid">
-          @for (a of asignaciones; track a.titulo) {
-            <div class="asig-card">
-              <div class="asig-top">
-                <span class="asig-ico" [style.background]="a.color+'20'">{{ a.icono }}</span>
-                <div class="asig-meta">
-                  <div class="asig-titulo">{{ a.titulo }}</div>
-                  <div class="asig-juego">{{ a.juego }}</div>
-                </div>
-              </div>
-              <div class="asig-prog-lbl">
-                <span>Entregas</span>
-                <span class="asig-cnt">{{ a.entregadas }}/{{ a.total }}</span>
-              </div>
-              <div class="asig-prog-bar">
-                <div class="asig-prog-fill" [style.width.%]="(a.entregadas/a.total)*100" [style.background]="a.color"></div>
-              </div>
-              <div class="asig-fecha">📅 Vence: {{ a.fechaLimite }}</div>
-            </div>
-          }
+        <div class="coming-soon-card">
+          <div style="font-size:52px">📋</div>
+          <h2>Asignaciones — próximamente</h2>
+          <p>Esta funcionalidad requiere un módulo de asignaciones en el backend que aún no está implementado. Se habilitará en la siguiente iteración del proyecto.</p>
         </div>
       }
 
@@ -301,25 +274,32 @@ const JUEGO_ICO: Record<string, string> = {
             </div>
           </div>
 
-          <!-- Logros recientes -->
+          <!-- Destacados -->
           <div class="logros-card">
-            <h3 class="card-title">Logros recientes de la clase</h3>
-            <div class="logro-list">
-              @for (l of logrosClase; track l.nombre) {
-                <div class="logro-row">
-                  <div class="lo-ico">{{ l.icono }}</div>
-                  <div class="lo-body">
-                    <div class="lo-nombre">{{ l.nombre }}</div>
-                    <div class="lo-desc">{{ l.desc }}</div>
+            <h3 class="card-title">Destacados de la clase</h3>
+            @if (logrosClase.length === 0) {
+              <div class="mini-empty">
+                <span style="font-size:32px">🏅</span>
+                <p>Los destacados aparecerán aquí cuando los alumnos comiencen a jugar.</p>
+              </div>
+            } @else {
+              <div class="logro-list">
+                @for (l of logrosClase; track l.nombre) {
+                  <div class="logro-row">
+                    <div class="lo-ico">{{ l.icono }}</div>
+                    <div class="lo-body">
+                      <div class="lo-nombre">{{ l.nombre }}</div>
+                      <div class="lo-desc">{{ l.desc }}</div>
+                    </div>
+                    <div class="lo-quien">
+                      <span class="lo-av">{{ l.avatarAlu }}</span>
+                      <span class="lo-alumno">{{ l.alumno }}</span>
+                    </div>
+                    <div class="lo-fecha">{{ l.fecha }}</div>
                   </div>
-                  <div class="lo-quien">
-                    <span class="lo-av">{{ l.avatarAlu }}</span>
-                    <span class="lo-alumno">{{ l.alumno }}</span>
-                  </div>
-                  <div class="lo-fecha">{{ l.fecha }}</div>
-                </div>
-              }
-            </div>
+                }
+              </div>
+            }
           </div>
         </div>
       }
@@ -530,6 +510,13 @@ const JUEGO_ICO: Record<string, string> = {
     .asig-prog-fill { height:100%; border-radius:100px; transition:width .8s ease; }
     .asig-fecha { font-size:11px; color:#9CA3AF; }
 
+    /* ── Coming soon / mini empty ── */
+    .coming-soon-card { background:white; border-radius:18px; padding:48px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:14px; box-shadow:0 2px 10px rgba(21,128,61,.07); }
+    .coming-soon-card h2 { font-size:20px; font-weight:800; color:#14532D; }
+    .coming-soon-card p  { font-size:14px; color:#6B7280; line-height:1.7; max-width:480px; }
+    .mini-empty { display:flex; align-items:center; gap:12px; padding:16px; background:#F0FDF4; border-radius:12px; }
+    .mini-empty p { font-size:13px; color:#6B7280; }
+
     /* ── Logros ── */
     .logros-wrap { display:flex; flex-direction:column; gap:16px; }
     .podio-card, .logros-card { background:white; border-radius:18px; padding:22px; box-shadow:0 2px 10px rgba(21,128,61,.07); }
@@ -608,18 +595,7 @@ export class DocenteDashboardComponent implements OnInit {
   estudiantes: Estudiante[] = [];
   alertas:     Alerta[]     = [];
 
-  asignaciones: Asignacion[] = [
-    { titulo:'Práctica de atención',  juego:'Espejo Mental',   icono:'🪞', fechaLimite:'25 jul 2026', entregadas:5, total:7, color:'#7C3AED' },
-    { titulo:'Comprensión lectora',   juego:'Historia Viva',   icono:'📖', fechaLimite:'28 jul 2026', entregadas:3, total:7, color:'#D97706' },
-    { titulo:'Velocidad de reacción', juego:'Piezas en Tiempo',icono:'🧩', fechaLimite:'30 jul 2026', entregadas:6, total:7, color:'#0891B2' },
-  ];
-
-  logrosClase: LogroClase[] = [
-    { icono:'🌟', nombre:'Semana perfecta',  desc:'7 días consecutivos de práctica',  alumno:'Mateo López',  avatarAlu:'🐯', fecha:'Hoy'     },
-    { icono:'🏆', nombre:'1000 puntos',      desc:'Alcanzó 1000 puntos en total',      alumno:'Lucía Torres', avatarAlu:'🐼', fecha:'Ayer'    },
-    { icono:'⚡', nombre:'Velocidad récord', desc:'Terminó Piezas en 12 segundos',     alumno:'Sofía Pérez',  avatarAlu:'🐰', fecha:'Lun 14'  },
-    { icono:'🎯', nombre:'Sin errores',      desc:'Sesión perfecta en Espejo Mental', alumno:'Mateo López',  avatarAlu:'🐯', fecha:'Vie 11'  },
-  ];
+  logrosClase: LogroClase[] = [];
 
   // Julio 2026 — empieza miércoles (relleno con 0s al inicio)
   readonly diasMes = [0,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31];
@@ -689,10 +665,35 @@ export class DocenteDashboardComponent implements OnInit {
           }
         });
 
+        this.logrosClase = this.derivarLogros();
         this.loading = false;
         this.cdr.detectChanges();
       });
     });
+  }
+
+  private derivarLogros(): LogroClase[] {
+    const logros: LogroClase[] = [];
+    const activos = this.estudiantes.filter(e => e.activo && e.partidas > 0);
+    if (!activos.length) return logros;
+
+    // Líder de XP
+    const topXp = [...activos].sort((a, b) => b.xp - a.xp)[0];
+    logros.push({ icono:'🏆', nombre:'Líder de XP', desc:`${topXp.xp} puntos acumulados`, alumno: topXp.nombre, avatarAlu: topXp.avatar, fecha:'Esta semana' });
+
+    // Mayor precisión
+    const topPrec = [...activos].sort((a, b) => b.precision - a.precision)[0];
+    if (topPrec.precision > 0) {
+      logros.push({ icono:'🎯', nombre:'Mayor precisión', desc:`${topPrec.precision}% de precisión`, alumno: topPrec.nombre, avatarAlu: topPrec.avatar, fecha:'Esta semana' });
+    }
+
+    // Más partidas
+    const topPartidas = [...activos].sort((a, b) => b.partidas - a.partidas)[0];
+    if (topPartidas.partidas > 0) {
+      logros.push({ icono:'⚡', nombre:'Más partidas', desc:`${topPartidas.partidas} sesiones jugadas`, alumno: topPartidas.nombre, avatarAlu: topPartidas.avatar, fecha:'Esta semana' });
+    }
+
+    return logros;
   }
 
   private hace(fecha: string): string {
