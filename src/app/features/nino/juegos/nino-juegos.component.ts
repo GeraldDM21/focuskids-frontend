@@ -460,7 +460,7 @@ export class NinoJuegosComponent implements OnInit {
     { icono:'⚡', nombre:'Velocidad récord',    desc:'Completaste Espejo en 45s',  puntos:25 },
   ];
 
-  private implementados = ['/nino/juego/espejo-mental', '/nino/juego/palabras-ocultas', '/nino/juego/historia-viva'];
+  private implementados = ['/nino/juego/espejo-mental', '/nino/juego/palabras-ocultas', '/nino/juego/historia-viva', '/nino/juego/piezas-tiempo'];
 
   constructor(private profileService: ChildProfileService, private router: Router) {}
 

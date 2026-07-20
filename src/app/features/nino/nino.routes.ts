@@ -20,5 +20,10 @@ export const ninoRoutes: Routes = [
     path: 'juego/historia-viva',
     loadComponent: () =>
       import('./juego/historia-viva/historia-viva.component').then(m => m.HistoriaVivaComponent)
+  },
+  {
+    path: 'juego/piezas-tiempo',
+    loadComponent: () =>
+      import('./juego/piezas-tiempo/piezas-tiempo.component').then(m => m.PiezasTiempoComponent)
   }
 ];
