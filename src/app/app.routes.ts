@@ -17,6 +17,16 @@ export const routes: Routes = [
     path: 'auth',
     loadChildren: () => import('./features/auth/auth.routes').then(m => m.authRoutes)
   },
+  {
+    path: 'terminos',
+    loadComponent: () =>
+      import('./features/legal/terminos.component').then(m => m.TerminosComponent)
+  },
+  {
+    path: 'privacidad',
+    loadComponent: () =>
+      import('./features/legal/privacidad.component').then(m => m.PrivacidadComponent)
+  },
 
   // Padre y Niño — layout propio, fuera del Shell
   {
@@ -30,22 +40,26 @@ export const routes: Routes = [
     loadChildren: () => import('./features/nino/nino.routes').then(m => m.ninoRoutes)
   },
 
-  // Admin y Docente — dentro del Shell
+  // Docente — layout propio, fuera del Shell
+  {
+    path: 'docente',
+    canActivate: [authGuard, roleGuard(['DOCENTE'])],
+    loadChildren: () => import('./features/docente/docente.routes').then(m => m.docenteRoutes)
+  },
+
+  // Admin — layout propio, fuera del Shell
+  {
+    path: 'admin',
+    canActivate: [authGuard, roleGuard(['ADMINISTRADOR'])],
+    loadChildren: () => import('./features/admin/admin.routes').then(m => m.adminRoutes)
+  },
+
+  // Shell solo para rutas que lo necesiten (unauthorized, etc.)
   {
     path: '',
     component: ShellComponent,
     canActivate: [authGuard],
     children: [
-      {
-        path: 'admin',
-        canActivate: [roleGuard(['ADMINISTRADOR'])],
-        loadChildren: () => import('./features/admin/admin.routes').then(m => m.adminRoutes)
-      },
-      {
-        path: 'docente',
-        canActivate: [roleGuard(['DOCENTE'])],
-        loadChildren: () => import('./features/docente/docente.routes').then(m => m.docenteRoutes)
-      },
       {
         path: 'unauthorized',
         loadComponent: () =>
