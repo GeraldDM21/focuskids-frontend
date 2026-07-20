@@ -8,6 +8,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { ChildProfileService } from '../perfiles/child-profile.service';
 import { ChildProfile, ChildProfileRequest, AVATAR_EMOJIS } from '../perfiles/child-profile.model';
 import { PadreService, SesionJuego, Metrica, AlertaRegresion, Notificacion } from '../padre.service';
+import { DocenteService } from '../../docente/docente.service';
 
 const AVATAR_MAP: Record<string, string> = {
   fox:'🦊', frog:'🐸', lion:'🦁', panda:'🐼', koala:'🐨',
@@ -339,6 +340,13 @@ interface DiaActividad     { dia: string; valor: number; }
               <div class="hijo-nombre">{{ p.nombre }}</div>
               <div class="hijo-edad">{{ p.edad }} años</div>
               @if (p.diagnostico) { <div class="hijo-diag">{{ p.diagnostico }}</div> }
+              @if (p.docente) {
+                <div class="hijo-docente">
+                  <span>👨‍🏫</span>
+                  <span>{{ p.docente.usuario?.nombre ?? p.docente.usuario?.email ?? 'Docente' }}</span>
+                  <button class="hbtn-star" (click)="abrirCalificacion(p)" title="Calificar docente">⭐</button>
+                </div>
+              }
               <div class="hijo-actions">
                 <button class="hbtn hbtn-jugar" (click)="jugar(p)" [disabled]="!p.activo">▶ Jugar</button>
                 <button class="hbtn hbtn-edit" (click)="openEdit(p)">✏️</button>
@@ -443,6 +451,26 @@ interface DiaActividad     { dia: string; valor: number; }
             }
           </div>
         </div>
+        <!-- Selector de docente -->
+        <div class="form-group docente-section">
+          <label>👨‍🏫 Docente asignado <span style="font-weight:400;color:#94A3B8">(opcional)</span></label>
+          @if (docentesList.length > 0) {
+            <select class="form-input" [(ngModel)]="formDocenteId">
+              <option [ngValue]="null">— Sin docente —</option>
+              @for (d of docentesList; track d.id) {
+                <option [ngValue]="d.id">
+                  {{ d.usuario?.nombre ?? d.usuario?.email }}
+                  @if (d.gradoGrupo) { · {{ d.gradoGrupo }} }
+                  @if (d.institucion) { ({{ d.institucion }}) }
+                </option>
+              }
+            </select>
+          } @else {
+            <div class="no-docentes-msg">
+              No hay docentes registrados en el sistema aún. Cuando un docente se registre, podrás asignarlo aquí.
+            </div>
+          }
+        </div>
         <div class="modal-footer">
           <button class="btn-cancel" (click)="closeModal()">Cancelar</button>
           <button class="btn-save"   (click)="guardar()">{{ isEditing ? 'Guardar cambios' : 'Crear perfil' }}</button>
@@ -462,6 +490,42 @@ interface DiaActividad     { dia: string; valor: number; }
           <button class="btn-cancel" (click)="cancelarEliminar()">Cancelar</button>
           <button class="btn-danger" (click)="confirmarEliminar()">Sí, eliminar</button>
         </div>
+      </div>
+    </div>
+  }
+
+  <!-- ══ MODAL CALIFICACIÓN DOCENTE ══ -->
+  @if (calificandoDocente) {
+    <div class="overlay" (click)="cerrarCalificacion()">
+      <div class="modal modal-sm" (click)="$event.stopPropagation()">
+        <div style="font-size:44px;text-align:center;margin-bottom:4px">⭐</div>
+        <h2 class="modal-title">Calificar docente</h2>
+        <p style="text-align:center;font-size:14px;color:#64748B;margin-bottom:18px">
+          {{ calificandoDocente.usuario?.nombre ?? calificandoDocente.usuario?.email }}
+        </p>
+        @if (calificacionEnviada) {
+          <div style="text-align:center;padding:16px;background:#F0FDF4;border-radius:12px;color:#16A34A;font-weight:700">
+            ¡Calificación enviada! Gracias por tu opinión 🙏
+          </div>
+          <div class="modal-footer" style="justify-content:center">
+            <button class="btn-save" (click)="cerrarCalificacion()">Cerrar</button>
+          </div>
+        } @else {
+          <div class="estrellas-row">
+            @for (n of [1,2,3,4,5]; track n) {
+              <button class="estrella" [class.sel]="calificacion >= n" (click)="calificacion = n">★</button>
+            }
+          </div>
+          <div class="form-group" style="margin-top:14px">
+            <label>Comentario (opcional)</label>
+            <textarea class="form-input" rows="3" [(ngModel)]="calificacionComentario"
+              placeholder="¿Cómo ha sido tu experiencia con este docente?"></textarea>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-cancel" (click)="cerrarCalificacion()">Cancelar</button>
+            <button class="btn-save" [disabled]="calificacion === 0" (click)="enviarCalificacion()">Enviar</button>
+          </div>
+        }
       </div>
     </div>
   }
@@ -698,6 +762,14 @@ interface DiaActividad     { dia: string; valor: number; }
     .btn-danger { background:#B91C1C; color:white; border:none; border-radius:12px; padding:11px 22px; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; }
     .delete-msg { font-size:14px; color:#64748B; line-height:1.6; margin-bottom:4px; }
     .delete-msg strong { color:#1E1B4B; }
+    .docente-section { background:#F5F3FF; border:1.5px solid #DDD6FE; border-radius:14px; padding:14px 16px; margin-top:4px; }
+    .docente-section label { color:#5B21B6 !important; }
+    .no-docentes-msg { font-size:12.5px; color:#94A3B8; background:white; border-radius:10px; padding:10px 14px; margin-top:8px; line-height:1.5; }
+    .hijo-docente { display:flex; align-items:center; gap:6px; font-size:11.5px; font-weight:700; color:#5B21B6; background:#F3F0FF; border-radius:20px; padding:4px 10px; margin-bottom:4px; }
+    .hbtn-star { background:none; border:none; font-size:14px; cursor:pointer; padding:0; margin-left:auto; }
+    .estrellas-row { display:flex; justify-content:center; gap:8px; margin:8px 0 4px; }
+    .estrella { font-size:36px; background:none; border:none; cursor:pointer; color:#D1D5DB; transition:color .15s; }
+    .estrella.sel { color:#F59E0B; }
   `]
 })
 export class PadreDashboardComponent implements OnInit {
@@ -724,6 +796,14 @@ export class PadreDashboardComponent implements OnInit {
   // Modal eliminar
   showDeleteModal = false;
   perfilAEliminar: ChildProfile | null = null;
+
+  // Selector de docente
+  docentesList:    any[]   = [];
+  formDocenteId:   number | null = null;
+  calificandoDocente: any | null = null;
+  calificacion     = 0;
+  calificacionComentario = '';
+  calificacionEnviada  = false;
 
   // Datos reales
   sesiones:       SesionJuego[]    = [];
@@ -753,6 +833,7 @@ export class PadreDashboardComponent implements OnInit {
     public  auth:                AuthService,
     private childProfileService: ChildProfileService,
     private padreService:        PadreService,
+    private docenteService:      DocenteService,
     private router:              Router,
     private cdr:                 ChangeDetectorRef
   ) {}
@@ -763,6 +844,9 @@ export class PadreDashboardComponent implements OnInit {
       this.parentName = user.nombre || user.email || 'Padre';
       this.loadPerfiles(user.usuarioId);
       this.loadNotificaciones(user.usuarioId);
+      this.docenteService.getListaDocentes().pipe(catchError(() => of([]))).subscribe(d => {
+        this.docentesList = d; this.cdr.detectChanges();
+      });
     }
   }
 
@@ -927,12 +1011,14 @@ export class PadreDashboardComponent implements OnInit {
   openCreate(): void {
     this.isEditing = false; this.editingId = null;
     this.form = { nombre:'', avatar:'fox', edad:null, diagnostico:null };
+    this.formDocenteId = null;
     this.formError = ''; this.showModal = true; this.cdr.detectChanges();
   }
 
   openEdit(p: ChildProfile): void {
     this.isEditing = true; this.editingId = p.id;
     this.form = { nombre:p.nombre, avatar:p.avatar, edad:p.edad, diagnostico:p.diagnostico };
+    this.formDocenteId = p.docente?.id ?? null;
     this.formError = ''; this.showModal = true; this.cdr.detectChanges();
   }
 
@@ -943,14 +1029,25 @@ export class PadreDashboardComponent implements OnInit {
       nombre: this.form.nombre.trim(), avatar: this.form.avatar,
       edad: this.form.edad, diagnostico: this.form.diagnostico?.trim() || null
     };
+
+    const asignarDocente = (perfilId: number) => {
+      if (this.formDocenteId) {
+        this.docenteService.asignarDocente(perfilId, this.formDocenteId)
+          .pipe(catchError(() => of(null))).subscribe(() => { this.loadPerfiles(uid); });
+      } else {
+        this.docenteService.desasignarDocente(perfilId)
+          .pipe(catchError(() => of(null))).subscribe(() => { this.loadPerfiles(uid); });
+      }
+    };
+
     if (this.isEditing && this.editingId) {
       this.childProfileService.updateProfile(this.editingId, req, uid).subscribe({
-        next: () => { this.showModal = false; this.loadPerfiles(uid); },
+        next: (p: any) => { this.showModal = false; asignarDocente(p.id ?? this.editingId!); },
         error: e  => { this.formError = e.error?.message || 'Error al guardar.'; this.cdr.detectChanges(); }
       });
     } else {
       this.childProfileService.createProfile(req, uid).subscribe({
-        next: () => { this.showModal = false; this.loadPerfiles(uid); },
+        next: (p: any) => { this.showModal = false; asignarDocente(p.id); },
         error: e  => { this.formError = e.error?.message || 'Error al crear.'; this.cdr.detectChanges(); }
       });
     }
@@ -977,6 +1074,25 @@ export class PadreDashboardComponent implements OnInit {
 
   cancelarEliminar(): void { this.showDeleteModal = false; this.perfilAEliminar = null; this.cdr.detectChanges(); }
   closeModal():       void { this.showModal = false; this.cdr.detectChanges(); }
+
+  abrirCalificacion(p: ChildProfile): void {
+    this.calificandoDocente    = p.docente;
+    this.calificacion          = 0;
+    this.calificacionComentario = '';
+    this.calificacionEnviada   = false;
+    this.cdr.detectChanges();
+  }
+  cerrarCalificacion(): void { this.calificandoDocente = null; this.cdr.detectChanges(); }
+
+  enviarCalificacion(): void {
+    const uid = this.auth.user()?.usuarioId;
+    if (!uid || !this.calificandoDocente) return;
+    this.docenteService.calificar(this.calificandoDocente.id, uid, this.calificacion, this.calificacionComentario)
+      .subscribe({
+        next: () => { this.calificacionEnviada = true; this.cdr.detectChanges(); },
+        error: () => { this.cdr.detectChanges(); }
+      });
+  }
 
   jugar(p: ChildProfile): void {
     const uid = this.auth.user()!.usuarioId;
