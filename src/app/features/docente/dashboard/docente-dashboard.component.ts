@@ -1,127 +1,131 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
-import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../../core/services/auth.service';
+import { Router } from '@angular/router';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { DocenteService, AlumnoDocente } from '../docente.service';
+import { SesionJuego, Metrica } from '../../padre/padre.service';
 
 interface Estudiante {
-  nombre: string; avatar: string; partidas: number;
-  precision: number; xp: number;
+  id: number; nombre: string; avatar: string; edad: number;
+  partidas: number; precision: number; xp: number;
   estado: 'Excelente' | 'Muy bien' | 'Necesita ayuda';
+  activo: boolean;
+  sesiones: SesionJuego[];
 }
 interface Alerta {
-  nombre: string; avatar: string; mensaje: string; tipo: 'warn' | 'danger';
+  nombre: string; avatar: string; mensaje: string; tipo: 'warn' | 'danger'; hace: string;
 }
+interface Asignacion {
+  titulo: string; juego: string; icono: string; fechaLimite: string;
+  entregadas: number; total: number; color: string;
+}
+interface LogroClase {
+  icono: string; nombre: string; desc: string; alumno: string; avatarAlu: string; fecha: string;
+}
+interface EventoCal {
+  dia: number; titulo: string; tipo: 'asig' | 'reporte' | 'reunion'; hora: string;
+}
+
+const AVATAR_MAP: Record<string, string> = {
+  fox:'🦊', frog:'🐸', lion:'🦁', panda:'🐼', koala:'🐨',
+  unicorn:'🦄', dog:'🐶', cat:'🐱', rabbit:'🐰', tiger:'🐯',
+  bear:'🐻', mouse:'🐭',
+};
+
+const JUEGO_ICO: Record<string, string> = {
+  'Espejo Mental': '🪞', 'Historia Viva': '📖', 'Palabras Ocultas': '📝',
+  'Piezas en Tiempo': '🧩', 'Foco Extremo': '🎯', 'Cascada Numérica': '🔢',
+};
 
 @Component({
   selector: 'app-docente-dashboard',
   standalone: true,
-  imports: [CommonModule, MatIconModule],
+  imports: [CommonModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="dash-page">
+<div class="root">
 
-      <!-- ══ SIDEBAR ══ -->
-      <aside class="sidebar">
-        <div class="sb-logo">
-          <span class="sb-logo-ico">🧠</span>
-          <span class="sb-logo-txt">FocusKids</span>
+  <!-- ══ SIDEBAR ══ -->
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="brand-ico">🎮</span>
+      <span class="brand-txt">FocusKids</span>
+    </div>
+    <nav class="nav">
+      <p class="nav-sec">PRINCIPAL</p>
+      <button class="nav-item" [class.active]="tab==='clase'"       (click)="tab='clase'">       <span>🏫</span> Mi clase</button>
+      <button class="nav-item" [class.active]="tab==='reportes'"    (click)="tab='reportes'">    <span>📊</span> Reportes</button>
+      <button class="nav-item" [class.active]="tab==='asignaciones'"(click)="tab='asignaciones'"><span>📋</span> Asignaciones</button>
+      <button class="nav-item" [class.active]="tab==='logros'"      (click)="tab='logros'">      <span>🏆</span> Logros</button>
+      <p class="nav-sec">HERRAMIENTAS</p>
+      <button class="nav-item" [class.active]="tab==='calendario'"  (click)="tab='calendario'">  <span>📅</span> Calendario</button>
+      <button class="nav-item" [class.active]="tab==='config'"      (click)="tab='config'">      <span>⚙️</span> Configuración</button>
+    </nav>
+    <div class="sb-user">
+      <div class="sb-avatar">{{ inicial }}</div>
+      <div class="sb-info">
+        <div class="sb-name">{{ docenteName }}</div>
+        <div class="sb-role">Docente</div>
+      </div>
+      <button class="sb-logout" (click)="auth.logout()" title="Salir">⎋</button>
+    </div>
+  </aside>
+
+  <!-- ══ MAIN ══ -->
+  <div class="main">
+    <header class="topbar">
+      <div>
+        <h1 class="tb-title">{{ topTitle }}</h1>
+        <p class="tb-sub">{{ topSub }}</p>
+      </div>
+      <div class="tb-right">
+        @if (tab === 'asignaciones') {
+          <button class="btn-add" (click)="nuevaAsig = true">+ Nueva asignación</button>
+        }
+        <div class="inst-chip">🏫 {{ institucion }}</div>
+      </div>
+    </header>
+
+    <div class="content">
+
+      @if (loading) {
+        <div class="loader"><div class="spinner"></div></div>
+      }
+
+      <!-- ══ MI CLASE ══ -->
+      @if (!loading && tab === 'clase') {
+
+        @if (estudiantes.length === 0) {
+          <div class="empty-state">
+            <div style="font-size:56px">👨‍🎓</div>
+            <h2>Aún no tenés alumnos asignados</h2>
+            <p>Para ver datos aquí, un padre debe asignar el perfil de su hijo a tu cuenta de docente.<br>El campo <strong>docente_id</strong> en <code>perfil_nino</code> debe apuntar a tu usuario.</p>
+          </div>
+        }
+
+        @if (estudiantes.length > 0) {
+        <!-- Stats -->
+        <div class="stats-row">
+          <div class="stat-card"><div class="stat-ico">👨‍🎓</div><div class="stat-num">{{ activos }}</div><div class="stat-lbl">Estudiantes activos</div></div>
+          <div class="stat-card"><div class="stat-ico">📈</div><div class="stat-num">{{ avgPrec }}%</div><div class="stat-lbl">Precisión promedio</div></div>
+          <div class="stat-card"><div class="stat-ico">🕹️</div><div class="stat-num">{{ totalPartidas }}</div><div class="stat-lbl">Partidas esta semana</div></div>
+          <div class="stat-card"><div class="stat-ico">⚠️</div><div class="stat-num">{{ alertas.length }}</div><div class="stat-lbl">Alertas activas</div></div>
         </div>
 
-        <nav class="sb-nav">
-          <p class="sb-section">PRINCIPAL</p>
-          <a class="sb-item" [class.active]="tab==='clase'" (click)="tab='clase'">
-            <mat-icon>grid_view</mat-icon> Mi clase
-          </a>
-          <a class="sb-item" [class.active]="tab==='reportes'" (click)="tab='reportes'">
-            <mat-icon>bar_chart</mat-icon> Reportes
-          </a>
-          <a class="sb-item" [class.active]="tab==='asignaciones'" (click)="tab='asignaciones'">
-            <mat-icon>assignment</mat-icon> Asignaciones
-          </a>
-          <a class="sb-item" [class.active]="tab==='logros'" (click)="tab='logros'">
-            <mat-icon>emoji_events</mat-icon> Logros
-          </a>
-
-          <p class="sb-section">HERRAMIENTAS</p>
-          <a class="sb-item" [class.active]="tab==='calendario'" (click)="tab='calendario'">
-            <mat-icon>calendar_today</mat-icon> Calendario
-          </a>
-          <a class="sb-item" [class.active]="tab==='mensajes'" (click)="tab='mensajes'">
-            <mat-icon>chat</mat-icon> Mensajes
-          </a>
-          <a class="sb-item" [class.active]="tab==='config'" (click)="tab='config'">
-            <mat-icon>settings</mat-icon> Configuración
-          </a>
-        </nav>
-
-        <div class="sb-user">
-          <div class="sb-avatar">{{ iniciales }}</div>
-          <div class="sb-user-info">
-            <span class="sb-user-name">{{ auth.userName() }}</span>
-            <span class="sb-user-role">Docente</span>
-          </div>
-          <button class="sb-logout" (click)="cerrarSesion()" title="Cerrar sesión">
-            <mat-icon>logout</mat-icon>
-          </button>
-        </div>
-      </aside>
-
-      <!-- ══ CONTENIDO PRINCIPAL ══ -->
-      <main class="main">
-
-        <!-- Top bar -->
-        <div class="top-bar">
-          <div>
-            <h1 class="page-title">Mi Clase — 3° Grado B</h1>
-            <p class="page-sub">{{ estudiantes.length }} estudiantes · Semana del 23-27 junio 2026</p>
-          </div>
-          <div class="top-actions">
-            <button class="btn-week">Esta semana</button>
-            <button class="btn-assign">
-              <mat-icon>add</mat-icon> Asignar tarea
-            </button>
-          </div>
-        </div>
-
-        <!-- Stat cards -->
-        <div class="stats-grid">
-          <div class="stat-card">
-            <span class="stat-ico" style="background:#EDE9FE">🎮</span>
-            <div>
-              <p class="stat-val">{{ estudiantes.length }}</p>
-              <p class="stat-lbl">Estudiantes activos</p>
+        <div class="bottom-grid">
+          <!-- Tabla -->
+          <div class="table-card">
+            <div class="tc-header">
+              <h3 class="card-title">Progreso individual</h3>
+              <div class="filter-row">
+                <button class="f-btn" [class.f-act]="filtro==='todos'"    (click)="filtro='todos'">Todos</button>
+                <button class="f-btn" [class.f-act]="filtro==='atencion'" (click)="filtro='atencion'">⚠️ Atención</button>
+                <button class="f-btn" [class.f-act]="filtro==='top'"      (click)="filtro='top'">⭐ Top</button>
+              </div>
             </div>
-          </div>
-          <div class="stat-card">
-            <span class="stat-ico" style="background:#DCFCE7">📈</span>
-            <div>
-              <p class="stat-val">{{ avgPrecision }}%</p>
-              <p class="stat-lbl">Promedio de precisión</p>
-            </div>
-          </div>
-          <div class="stat-card">
-            <span class="stat-ico" style="background:#FEF9C3">🕹️</span>
-            <div>
-              <p class="stat-val">{{ totalPartidas }}</p>
-              <p class="stat-lbl">Partidas esta semana</p>
-            </div>
-          </div>
-          <div class="stat-card">
-            <span class="stat-ico" style="background:#FEF3C7">⚠️</span>
-            <div>
-              <p class="stat-val">{{ alertas.length }}</p>
-              <p class="stat-lbl">Alertas de atención</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Panel principal -->
-        <div class="content-grid">
-
-          <!-- Tabla de progreso -->
-          <div class="card table-card">
-            <h2 class="card-title">Progreso individual de estudiantes</h2>
-            <table class="prog-table">
+            <table class="tabla">
               <thead>
                 <tr>
                   <th>ESTUDIANTE</th>
@@ -132,318 +136,610 @@ interface Alerta {
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let e of estudiantes">
-                  <td class="td-name">
-                    <span class="stu-avatar">{{ e.avatar }}</span>
-                    {{ e.nombre }}
-                  </td>
-                  <td>{{ e.partidas }}</td>
-                  <td [class.precision-low]="e.precision < 70"
-                      [class.precision-warn]="e.precision >= 70 && e.precision < 80"
-                      [class.precision-ok]="e.precision >= 80">
-                    {{ e.precision }}%
-                  </td>
-                  <td>{{ e.xp }}</td>
-                  <td>
-                    <span class="badge" [ngClass]="badgeClass(e.estado)">{{ e.estado }}</span>
-                  </td>
-                </tr>
+                @for (e of estudiantesFiltrados; track e.id) {
+                  <tr [class.fila-inactiva]="!e.activo">
+                    <td class="td-name">
+                      <span class="stu-av">{{ e.avatar }}</span>
+                      <span>{{ e.nombre }}<br><small>{{ e.edad }} años</small></span>
+                    </td>
+                    <td>{{ e.partidas }}</td>
+                    <td [class.prec-ok]="e.precision>=80" [class.prec-warn]="e.precision>=70&&e.precision<80" [class.prec-low]="e.precision<70">
+                      <div class="prec-wrap">
+                        {{ e.precision }}%
+                        <div class="prec-bar"><div class="prec-fill" [style.width.%]="e.precision" [class.fill-ok]="e.precision>=80" [class.fill-warn]="e.precision>=70&&e.precision<80" [class.fill-low]="e.precision<70"></div></div>
+                      </div>
+                    </td>
+                    <td class="td-xp">⭐ {{ e.xp }}</td>
+                    <td><span class="badge" [class]="badgeClass(e.estado)">{{ e.estado }}</span></td>
+                  </tr>
+                }
               </tbody>
             </table>
           </div>
 
           <!-- Panel derecho -->
           <div class="right-col">
-
-            <!-- Top estudiantes -->
-            <div class="card">
-              <h2 class="card-title">Top estudiantes</h2>
-              <div class="top-list">
-                <div class="top-item" *ngFor="let e of topEstudiantes; let i = index">
+            <!-- Top 3 -->
+            <div class="panel">
+              <h3 class="card-title">🏆 Top estudiantes</h3>
+              @for (e of top3; track e.id; let i = $index) {
+                <div class="top-row">
                   <span class="medal">{{ ['🥇','🥈','🥉'][i] }}</span>
+                  <span class="top-av">{{ e.avatar }}</span>
                   <span class="top-name">{{ e.nombre }}</span>
-                  <span class="top-pct" [class.pct-gold]="i===0">{{ e.precision }}%</span>
+                  <span class="top-pct" [class.gold]="i===0">{{ e.precision }}%</span>
                 </div>
-              </div>
+              }
             </div>
 
             <!-- Alertas -->
-            <div class="card">
-              <h2 class="card-title">Alertas</h2>
-              <div class="alert-list">
-                <div class="alert-item" *ngFor="let a of alertas" [class.alert-danger]="a.tipo==='danger'">
-                  <span class="alert-avatar">{{ a.avatar }}</span>
-                  <div>
-                    <p class="alert-name">{{ a.nombre }}</p>
-                    <p class="alert-msg">{{ a.mensaje }}</p>
+            <div class="panel">
+              <h3 class="card-title">🚨 Alertas</h3>
+              @for (a of alertas; track a.nombre) {
+                <div class="alerta-item" [class.alerta-danger]="a.tipo==='danger'">
+                  <span class="al-av">{{ a.avatar }}</span>
+                  <div class="al-body">
+                    <div class="al-nombre">{{ a.nombre }}</div>
+                    <div class="al-msg">{{ a.mensaje }}</div>
+                    <div class="al-hace">{{ a.hace }}</div>
                   </div>
                 </div>
-              </div>
+              }
             </div>
-
           </div>
         </div>
-      </main>
+        } <!-- /estudiantes.length > 0 -->
+      }
+
+      <!-- ══ REPORTES ══ -->
+      @if (!loading && tab === 'reportes') {
+        <div class="rep-wrap">
+          <div class="rep-intro">
+            <div class="rep-stat"><span class="rs-val">{{ avgPrec }}%</span><span class="rs-lbl">Precisión promedio de la clase</span></div>
+            <div class="rep-stat"><span class="rs-val">{{ totalPartidas }}</span><span class="rs-lbl">Partidas totales</span></div>
+            <div class="rep-stat"><span class="rs-val">{{ activos }}</span><span class="rs-lbl">Alumnos activos</span></div>
+            <div class="rep-stat"><span class="rs-val">{{ xpClase | number }}</span><span class="rs-lbl">XP acumulado</span></div>
+          </div>
+
+          <div class="rep-card">
+            <h3 class="card-title">Rendimiento por estudiante</h3>
+            @for (e of estudiantesOrdenados; track e.id) {
+              <div class="rep-row">
+                <span class="rep-av">{{ e.avatar }}</span>
+                <span class="rep-nombre">{{ e.nombre }}</span>
+                <div class="rep-bar-wrap">
+                  <div class="rep-bar-outer">
+                    <div class="rep-bar-fill" [style.width.%]="e.precision" [class.fill-ok]="e.precision>=80" [class.fill-warn]="e.precision>=70&&e.precision<80" [class.fill-low]="e.precision<70"></div>
+                  </div>
+                  <span class="rep-pct" [class.prec-ok]="e.precision>=80" [class.prec-warn]="e.precision>=70&&e.precision<80" [class.prec-low]="e.precision<70">{{ e.precision }}%</span>
+                </div>
+                <span class="badge sm" [class]="badgeClass(e.estado)">{{ e.estado }}</span>
+              </div>
+            }
+          </div>
+
+          <div class="rep-card">
+            <h3 class="card-title">Distribución de estados</h3>
+            <div class="dist-row">
+              <div class="dist-item dist-ex">
+                <div class="dist-num">{{ cuentaEstado('Excelente') }}</div>
+                <div class="dist-lbl">🌟 Excelente</div>
+                <div class="dist-bar"><div class="dist-fill" [style.width.%]="(cuentaEstado('Excelente')/estudiantes.length)*100" style="background:#16A34A"></div></div>
+              </div>
+              <div class="dist-item dist-mb">
+                <div class="dist-num">{{ cuentaEstado('Muy bien') }}</div>
+                <div class="dist-lbl">😊 Muy bien</div>
+                <div class="dist-bar"><div class="dist-fill" [style.width.%]="(cuentaEstado('Muy bien')/estudiantes.length)*100" style="background:#D97706"></div></div>
+              </div>
+              <div class="dist-item dist-na">
+                <div class="dist-num">{{ cuentaEstado('Necesita ayuda') }}</div>
+                <div class="dist-lbl">🆘 Necesita ayuda</div>
+                <div class="dist-bar"><div class="dist-fill" [style.width.%]="(cuentaEstado('Necesita ayuda')/estudiantes.length)*100" style="background:#DC2626"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ══ ASIGNACIONES ══ -->
+      @if (!loading && tab === 'asignaciones') {
+        @if (nuevaAsig) {
+          <div class="asig-form-card">
+            <h3 class="card-title">Nueva asignación</h3>
+            <p class="asig-note">Esta funcionalidad estará disponible cuando se implementen las APIs de asignaciones en el backend.</p>
+            <button class="btn-cancel" (click)="nuevaAsig=false">Cerrar</button>
+          </div>
+        }
+        <div class="asig-grid">
+          @for (a of asignaciones; track a.titulo) {
+            <div class="asig-card">
+              <div class="asig-top">
+                <span class="asig-ico" [style.background]="a.color+'20'">{{ a.icono }}</span>
+                <div class="asig-meta">
+                  <div class="asig-titulo">{{ a.titulo }}</div>
+                  <div class="asig-juego">{{ a.juego }}</div>
+                </div>
+              </div>
+              <div class="asig-prog-lbl">
+                <span>Entregas</span>
+                <span class="asig-cnt">{{ a.entregadas }}/{{ a.total }}</span>
+              </div>
+              <div class="asig-prog-bar">
+                <div class="asig-prog-fill" [style.width.%]="(a.entregadas/a.total)*100" [style.background]="a.color"></div>
+              </div>
+              <div class="asig-fecha">📅 Vence: {{ a.fechaLimite }}</div>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- ══ LOGROS ══ -->
+      @if (!loading && tab === 'logros') {
+        <div class="logros-wrap">
+          <!-- Podio -->
+          <div class="podio-card">
+            <h3 class="card-title">🏆 Podio de la semana</h3>
+            <div class="podio">
+              <div class="pod-col pod-2">
+                <div class="pod-av">{{ top3[1]?.avatar }}</div>
+                <div class="pod-name">{{ top3[1]?.nombre }}</div>
+                <div class="pod-xp">{{ top3[1]?.xp }} XP</div>
+                <div class="pod-pedestal p2">🥈</div>
+              </div>
+              <div class="pod-col pod-1">
+                <div class="pod-av large">{{ top3[0]?.avatar }}</div>
+                <div class="pod-name">{{ top3[0]?.nombre }}</div>
+                <div class="pod-xp gold">{{ top3[0]?.xp }} XP</div>
+                <div class="pod-pedestal p1">🥇</div>
+              </div>
+              <div class="pod-col pod-3">
+                <div class="pod-av">{{ top3[2]?.avatar }}</div>
+                <div class="pod-name">{{ top3[2]?.nombre }}</div>
+                <div class="pod-xp">{{ top3[2]?.xp }} XP</div>
+                <div class="pod-pedestal p3">🥉</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Logros recientes -->
+          <div class="logros-card">
+            <h3 class="card-title">Logros recientes de la clase</h3>
+            <div class="logro-list">
+              @for (l of logrosClase; track l.nombre) {
+                <div class="logro-row">
+                  <div class="lo-ico">{{ l.icono }}</div>
+                  <div class="lo-body">
+                    <div class="lo-nombre">{{ l.nombre }}</div>
+                    <div class="lo-desc">{{ l.desc }}</div>
+                  </div>
+                  <div class="lo-quien">
+                    <span class="lo-av">{{ l.avatarAlu }}</span>
+                    <span class="lo-alumno">{{ l.alumno }}</span>
+                  </div>
+                  <div class="lo-fecha">{{ l.fecha }}</div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ══ CALENDARIO ══ -->
+      @if (!loading && tab === 'calendario') {
+        <div class="cal-wrap">
+          <div class="cal-card">
+            <div class="cal-header">
+              <h3 class="card-title">Julio 2026</h3>
+              <div class="cal-legend">
+                <span class="leg asig-col">📋 Asignación</span>
+                <span class="leg rep-col">📊 Reporte</span>
+                <span class="leg reu-col">👥 Reunión</span>
+              </div>
+            </div>
+            <div class="dias-header">
+              @for (d of ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom']; track d) {
+                <div class="dia-hdr">{{ d }}</div>
+              }
+            </div>
+            <div class="dias-grid">
+              @for (dia of diasMes; track dia) {
+                <div class="dia-cel" [class.dia-hoy]="dia===20" [class.dia-vacio]="dia===0">
+                  @if (dia > 0) {
+                    <span class="dia-num">{{ dia }}</span>
+                    @for (ev of eventosDelDia(dia); track ev.titulo) {
+                      <div class="ev-chip" [class.ev-asig]="ev.tipo==='asig'" [class.ev-rep]="ev.tipo==='reporte'" [class.ev-reu]="ev.tipo==='reunion'">
+                        {{ ev.titulo }}
+                      </div>
+                    }
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ══ CONFIGURACIÓN ══ -->
+      @if (!loading && tab === 'config') {
+        <div class="cfg-wrap">
+          <div class="cfg-card">
+            <h3 class="cfg-title">👤 Mi perfil docente</h3>
+            <div class="cfg-avatar">{{ inicial }}</div>
+            <div class="cfg-field"><label>Nombre</label><div class="cfg-val">{{ docenteName }}</div></div>
+            <div class="cfg-field"><label>Institución</label><div class="cfg-val">{{ institucion }}</div></div>
+            <div class="cfg-field"><label>Grado / Grupo</label><div class="cfg-val">{{ gradoGrupo }}</div></div>
+            <div class="cfg-field"><label>Rol</label><div class="cfg-val">Docente</div></div>
+            <p class="cfg-note">Para actualizar tu información, contacta al administrador del sistema.</p>
+          </div>
+          <div class="cfg-card">
+            <h3 class="cfg-title">👨‍🎓 Mi clase</h3>
+            <div class="cfg-alumnos">
+              @for (e of estudiantes; track e.id) {
+                <div class="cfg-alumno">
+                  <span>{{ e.avatar }}</span>
+                  <span class="ca-nombre">{{ e.nombre }}</span>
+                  <span class="ca-edad">{{ e.edad }} años</span>
+                  <span class="ca-est" [class.est-ok]="e.activo" [class.est-no]="!e.activo">{{ e.activo ? 'Activo' : 'Inactivo' }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+
     </div>
+  </div>
+</div>
   `,
   styles: [`
-    :host { display:block; height:100vh; }
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    .root { display:flex; height:100vh; overflow:hidden; font-family:'Inter',-apple-system,sans-serif; background:#ECFDF5; }
 
-    /* ══ LAYOUT ══ */
-    .dash-page {
-      display: flex;
-      height: 100vh;
-      overflow: hidden;
-      font-family: 'Quicksand', sans-serif;
-    }
+    /* ── Sidebar ── */
+    .sidebar { width:172px; flex-shrink:0; background:linear-gradient(180deg,#14532D 0%,#166534 60%,#15803D 100%); display:flex; flex-direction:column; padding:22px 0 16px; overflow-y:auto; }
+    .brand { display:flex; align-items:center; gap:8px; padding:0 16px 20px; border-bottom:1px solid rgba(255,255,255,.08); }
+    .brand-ico { font-size:20px; }
+    .brand-txt { font-size:15px; font-weight:800; color:white; }
+    .nav { flex:1; padding:12px 10px; }
+    .nav-sec { font-size:9px; font-weight:700; letter-spacing:1.4px; color:rgba(255,255,255,.3); padding:14px 8px 6px; text-transform:uppercase; }
+    .nav-item { display:flex; align-items:center; gap:9px; width:100%; padding:9px 10px; border-radius:10px; border:none; background:transparent; color:rgba(255,255,255,.5); font-size:12.5px; font-weight:600; cursor:pointer; text-align:left; margin-bottom:2px; transition:all .15s; }
+    .nav-item span { font-size:15px; flex-shrink:0; }
+    .nav-item:hover { background:rgba(255,255,255,.09); color:rgba(255,255,255,.9); }
+    .nav-item.active { background:rgba(255,255,255,.15); color:white; }
+    .sb-user { margin-top:auto; padding:14px 12px 0; border-top:1px solid rgba(255,255,255,.08); display:flex; align-items:center; gap:8px; }
+    .sb-avatar { width:34px; height:34px; border-radius:50%; background:#F59E0B; display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:800; color:white; flex-shrink:0; }
+    .sb-info { flex:1; min-width:0; }
+    .sb-name { font-size:11.5px; font-weight:700; color:white; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .sb-role { font-size:10px; color:rgba(255,255,255,.4); }
+    .sb-logout { background:none; border:none; color:rgba(255,255,255,.4); font-size:17px; cursor:pointer; padding:4px; border-radius:6px; }
+    .sb-logout:hover { color:white; background:rgba(255,255,255,.1); }
 
-    /* ══ SIDEBAR ══ */
-    .sidebar {
-      width: 220px;
-      min-width: 220px;
-      background: linear-gradient(180deg, #14532D 0%, #166534 60%, #15803D 100%);
-      display: flex;
-      flex-direction: column;
-      padding: 0;
-      overflow: hidden;
-    }
+    /* ── Main ── */
+    .main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+    .topbar { background:white; padding:14px 24px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #D1FAE5; flex-shrink:0; }
+    .tb-title { font-size:18px; font-weight:800; color:#14532D; }
+    .tb-sub { font-size:12px; color:#6B7280; margin-top:2px; }
+    .tb-right { display:flex; align-items:center; gap:10px; }
+    .inst-chip { background:#F0FDF4; border:1.5px solid #86EFAC; border-radius:20px; padding:6px 14px; font-size:12px; font-weight:700; color:#15803D; }
+    .btn-add { background:#15803D; color:white; border:none; border-radius:12px; padding:8px 16px; font-size:13px; font-weight:700; cursor:pointer; }
+    .btn-add:hover { background:#14532D; }
+    .content { flex:1; overflow-y:auto; padding:20px 22px 32px; display:flex; flex-direction:column; gap:16px; }
 
-    .sb-logo {
-      display: flex; align-items: center; gap: 10px;
-      padding: 24px 20px 20px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-    }
-    .sb-logo-ico { font-size: 22px; }
-    .sb-logo-txt {
-      font-family: 'Baloo 2','Quicksand',sans-serif;
-      font-size: 17px; font-weight: 800; color: white;
-    }
+    /* ── Stats ── */
+    .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+    .stat-card { background:white; border-radius:16px; padding:18px 16px; text-align:center; box-shadow:0 2px 10px rgba(21,128,61,.07); }
+    .stat-ico { font-size:26px; margin-bottom:8px; }
+    .stat-num { font-size:24px; font-weight:900; color:#14532D; }
+    .stat-lbl { font-size:10.5px; color:#94A3B8; margin-top:4px; }
 
-    .sb-nav { flex: 1; padding: 16px 12px; overflow-y: auto; }
-    .sb-section {
-      font-size: 10px; font-weight: 700; letter-spacing: 1.2px;
-      color: rgba(255,255,255,0.4); margin: 16px 8px 6px; padding: 0;
-    }
-    .sb-item {
-      display: flex; align-items: center; gap: 10px;
-      padding: 10px 12px; border-radius: 10px;
-      color: rgba(255,255,255,0.65); font-size: 14px; font-weight: 600;
-      cursor: pointer; text-decoration: none;
-      transition: all .18s; margin-bottom: 2px;
-    }
-    .sb-item mat-icon { font-size: 18px; width: 18px; height: 18px; }
-    .sb-item:hover { background: rgba(255,255,255,0.08); color: white; }
-    .sb-item.active { background: rgba(255,255,255,0.15); color: white; }
+    /* ── Mi Clase ── */
+    .bottom-grid { display:grid; grid-template-columns:1fr 248px; gap:14px; }
+    .table-card { background:white; border-radius:18px; padding:20px; box-shadow:0 2px 10px rgba(21,128,61,.07); overflow:hidden; }
+    .tc-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+    .card-title { font-size:14px; font-weight:800; color:#14532D; }
+    .filter-row { display:flex; gap:6px; }
+    .f-btn { border:1.5px solid #D1FAE5; background:white; border-radius:8px; padding:5px 10px; font-size:11.5px; font-weight:700; color:#6B7280; cursor:pointer; }
+    .f-btn.f-act { background:#F0FDF4; border-color:#86EFAC; color:#15803D; }
+    .tabla { width:100%; border-collapse:collapse; }
+    .tabla thead tr { border-bottom:1.5px solid #F1F5F9; }
+    .tabla th { font-size:10px; font-weight:700; letter-spacing:.8px; color:#94A3B8; padding:0 10px 10px; text-align:left; }
+    .tabla tbody tr { border-bottom:1px solid #F8FAFC; transition:background .15s; }
+    .tabla tbody tr:hover { background:#F0FDF4; }
+    .tabla tbody tr:last-child { border-bottom:none; }
+    .tabla td { padding:10px; font-size:13.5px; color:#334155; font-weight:600; }
+    .fila-inactiva { opacity:.5; }
+    .td-name { display:flex; align-items:center; gap:10px; }
+    .stu-av { width:34px; height:34px; border-radius:10px; background:#F1F5F9; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+    .td-name small { font-size:10.5px; color:#94A3B8; font-weight:600; }
+    .td-xp { color:#F59E0B; font-weight:800; }
+    .prec-ok   { color:#16A34A; }
+    .prec-warn { color:#D97706; }
+    .prec-low  { color:#DC2626; }
+    .prec-wrap { display:flex; flex-direction:column; gap:4px; }
+    .prec-bar { height:5px; background:#F3F4F6; border-radius:100px; overflow:hidden; width:80px; }
+    .prec-fill { height:100%; border-radius:100px; }
+    .fill-ok   { background:#16A34A; }
+    .fill-warn { background:#D97706; }
+    .fill-low  { background:#DC2626; }
+    .badge { display:inline-block; padding:4px 10px; border-radius:20px; font-size:11px; font-weight:700; }
+    .badge.sm { font-size:10px; padding:3px 8px; }
+    .badge-ex  { background:#DCFCE7; color:#15803D; }
+    .badge-mb  { background:#FEF9C3; color:#A16207; }
+    .badge-na  { background:#FEE2E2; color:#B91C1C; }
+    .right-col { display:flex; flex-direction:column; gap:12px; }
+    .panel { background:white; border-radius:16px; padding:16px; box-shadow:0 2px 10px rgba(21,128,61,.07); }
+    .top-row { display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid #F0FDF4; }
+    .top-row:last-child { border-bottom:none; }
+    .medal { font-size:20px; flex-shrink:0; }
+    .top-av { font-size:18px; flex-shrink:0; }
+    .top-name { flex:1; font-size:12.5px; font-weight:700; color:#334155; }
+    .top-pct { font-size:13px; font-weight:800; color:#15803D; }
+    .top-pct.gold { color:#D97706; }
+    .alerta-item { display:flex; align-items:flex-start; gap:8px; padding:10px; border-radius:12px; background:#FFFBEB; border-left:3px solid #F59E0B; margin-bottom:8px; }
+    .alerta-item:last-child { margin-bottom:0; }
+    .alerta-danger { background:#FFF5F5; border-left-color:#EF4444; }
+    .al-av { font-size:20px; flex-shrink:0; margin-top:2px; }
+    .al-nombre { font-size:12px; font-weight:800; color:#334155; }
+    .al-msg    { font-size:11.5px; color:#6B7280; margin-top:2px; }
+    .al-hace   { font-size:10px; color:#9CA3AF; margin-top:2px; }
 
-    .sb-user {
-      display: flex; align-items: center; gap: 10px;
-      padding: 16px 16px;
-      border-top: 1px solid rgba(255,255,255,0.08);
-    }
-    .sb-avatar {
-      width: 36px; height: 36px; border-radius: 10px;
-      background: rgba(255,255,255,0.2);
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 800; font-size: 14px; color: white; flex-shrink: 0;
-    }
-    .sb-user-info { flex: 1; min-width: 0; }
-    .sb-user-name {
-      display: block; font-size: 13px; font-weight: 700;
-      color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .sb-user-role { font-size: 11px; color: rgba(255,255,255,0.5); }
-    .sb-logout {
-      background: none; border: none; cursor: pointer;
-      color: rgba(255,255,255,0.4); padding: 4px;
-      border-radius: 6px; transition: all .2s; display: flex;
-    }
-    .sb-logout:hover { color: white; background: rgba(255,255,255,0.1); }
-    .sb-logout mat-icon { font-size: 18px; width: 18px; height: 18px; }
+    /* ── Loader / Empty ── */
+    .loader { display:flex; justify-content:center; align-items:center; flex:1; padding:60px; }
+    .spinner { width:36px; height:36px; border:3px solid #BBF7D0; border-top-color:#15803D; border-radius:50%; animation:spin .8s linear infinite; }
+    @keyframes spin { to{transform:rotate(360deg)} }
+    .empty-state { display:flex; flex-direction:column; align-items:center; gap:14px; padding:60px; text-align:center; }
+    .empty-state h2 { font-size:20px; font-weight:800; color:#14532D; }
+    .empty-state p  { color:#6B7280; font-size:14px; line-height:1.7; }
+    .empty-state code { background:#F0FDF4; padding:2px 6px; border-radius:6px; font-size:12px; color:#15803D; }
 
-    /* ══ MAIN ══ */
-    .main {
-      flex: 1;
-      background: #F0EEFF;
-      overflow-y: auto;
-      padding: 28px 32px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
+    /* ── Reportes ── */
+    .rep-wrap { display:flex; flex-direction:column; gap:16px; }
+    .rep-intro { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+    .rep-stat { background:white; border-radius:16px; padding:18px; text-align:center; box-shadow:0 2px 10px rgba(21,128,61,.07); }
+    .rs-val { display:block; font-size:26px; font-weight:900; color:#14532D; }
+    .rs-lbl { display:block; font-size:10.5px; color:#94A3B8; margin-top:5px; }
+    .rep-card { background:white; border-radius:16px; padding:20px; box-shadow:0 2px 10px rgba(21,128,61,.07); }
+    .rep-row { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid #F0FDF4; }
+    .rep-row:last-child { border-bottom:none; }
+    .rep-av { font-size:22px; flex-shrink:0; }
+    .rep-nombre { font-size:13px; font-weight:700; color:#334155; min-width:130px; }
+    .rep-bar-wrap { flex:1; display:flex; align-items:center; gap:10px; }
+    .rep-bar-outer { flex:1; height:8px; background:#F3F4F6; border-radius:100px; overflow:hidden; }
+    .rep-bar-fill { height:100%; border-radius:100px; transition:width .8s ease; }
+    .rep-pct { font-size:12px; font-weight:800; min-width:36px; text-align:right; }
+    .dist-row { display:flex; gap:16px; }
+    .dist-item { flex:1; }
+    .dist-num { font-size:32px; font-weight:900; color:#14532D; }
+    .dist-lbl { font-size:12px; color:#6B7280; font-weight:700; margin:4px 0 8px; }
+    .dist-bar { height:8px; background:#F3F4F6; border-radius:100px; overflow:hidden; }
+    .dist-fill { height:100%; border-radius:100px; transition:width .8s ease; }
 
-    /* Top bar */
-    .top-bar {
-      display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;
-    }
-    .page-title {
-      font-family: 'Baloo 2','Quicksand',sans-serif;
-      font-size: 22px; font-weight: 800; color: #1E1B4B; margin: 0 0 2px;
-    }
-    .page-sub { font-size: 13px; color: #94A3B8; margin: 0; }
-    .top-actions { display: flex; gap: 10px; align-items: center; }
-    .btn-week {
-      padding: 9px 18px; border-radius: 10px;
-      border: 1.5px solid #C4B5FD; background: white;
-      font-family: 'Quicksand',sans-serif; font-size: 13px; font-weight: 700;
-      color: #4F46E5; cursor: pointer; transition: all .2s;
-    }
-    .btn-week:hover { background: #F5F3FF; }
-    .btn-assign {
-      display: flex; align-items: center; gap: 6px;
-      padding: 9px 18px; border-radius: 10px; border: none;
-      background: linear-gradient(135deg, #166534, #15803D);
-      font-family: 'Quicksand',sans-serif; font-size: 13px; font-weight: 700;
-      color: white; cursor: pointer; transition: all .2s;
-    }
-    .btn-assign:hover { box-shadow: 0 4px 14px rgba(22,101,52,0.35); }
-    .btn-assign mat-icon { font-size: 16px; width: 16px; height: 16px; }
+    /* ── Asignaciones ── */
+    .asig-form-card { background:white; border-radius:16px; padding:20px; box-shadow:0 2px 10px rgba(21,128,61,.07); margin-bottom:4px; }
+    .asig-note { font-size:13px; color:#6B7280; margin:12px 0 16px; }
+    .btn-cancel { background:#F3F4F6; color:#374151; border:none; border-radius:10px; padding:8px 18px; font-size:13px; font-weight:700; cursor:pointer; }
+    .asig-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:16px; }
+    .asig-card { background:white; border-radius:18px; padding:20px; box-shadow:0 2px 10px rgba(21,128,61,.07); }
+    .asig-top { display:flex; align-items:center; gap:12px; margin-bottom:16px; }
+    .asig-ico { width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
+    .asig-titulo { font-size:14px; font-weight:800; color:#1E1B4B; }
+    .asig-juego { font-size:11.5px; color:#94A3B8; margin-top:2px; }
+    .asig-prog-lbl { display:flex; justify-content:space-between; font-size:11.5px; font-weight:700; color:#6B7280; margin-bottom:6px; }
+    .asig-cnt { color:#15803D; }
+    .asig-prog-bar { height:8px; background:#F3F4F6; border-radius:100px; overflow:hidden; margin-bottom:10px; }
+    .asig-prog-fill { height:100%; border-radius:100px; transition:width .8s ease; }
+    .asig-fecha { font-size:11px; color:#9CA3AF; }
 
-    /* Stats */
-    .stats-grid {
-      display: grid; grid-template-columns: repeat(4,1fr); gap: 14px;
-    }
-    .stat-card {
-      background: white; border-radius: 16px;
-      padding: 18px 20px;
-      display: flex; align-items: center; gap: 14px;
-      box-shadow: 0 2px 12px rgba(79,70,229,0.07);
-    }
-    .stat-ico {
-      width: 46px; height: 46px; border-radius: 12px; flex-shrink: 0;
-      display: flex; align-items: center; justify-content: center; font-size: 22px;
-    }
-    .stat-val {
-      font-family: 'Baloo 2','Quicksand',sans-serif;
-      font-size: 24px; font-weight: 800; color: #1E1B4B; margin: 0;
-    }
-    .stat-lbl { font-size: 12px; color: #94A3B8; margin: 0; font-weight: 600; }
+    /* ── Logros ── */
+    .logros-wrap { display:flex; flex-direction:column; gap:16px; }
+    .podio-card, .logros-card { background:white; border-radius:18px; padding:22px; box-shadow:0 2px 10px rgba(21,128,61,.07); }
+    .podio { display:flex; align-items:flex-end; justify-content:center; gap:20px; padding:20px 0 0; }
+    .pod-col { display:flex; flex-direction:column; align-items:center; gap:6px; }
+    .pod-av { font-size:38px; }
+    .pod-av.large { font-size:52px; }
+    .pod-name { font-size:13px; font-weight:800; color:#334155; }
+    .pod-xp { font-size:12px; font-weight:700; color:#94A3B8; }
+    .pod-xp.gold { color:#D97706; }
+    .pod-pedestal { font-size:28px; margin-top:4px; }
+    .p1 { font-size:34px; }
+    .logro-list { display:flex; flex-direction:column; gap:2px; }
+    .logro-row { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid #F0FDF4; }
+    .logro-row:last-child { border-bottom:none; }
+    .lo-ico { font-size:26px; flex-shrink:0; }
+    .lo-body { flex:1; }
+    .lo-nombre { font-size:13px; font-weight:800; color:#334155; }
+    .lo-desc { font-size:11.5px; color:#94A3B8; margin-top:2px; }
+    .lo-quien { display:flex; align-items:center; gap:6px; flex-shrink:0; }
+    .lo-av { font-size:18px; }
+    .lo-alumno { font-size:12px; font-weight:700; color:#15803D; }
+    .lo-fecha { font-size:11px; color:#9CA3AF; flex-shrink:0; min-width:60px; text-align:right; }
 
-    /* Content grid */
-    .content-grid {
-      display: grid; grid-template-columns: 1fr 300px; gap: 18px;
-      flex: 1;
-    }
+    /* ── Calendario ── */
+    .cal-wrap { display:flex; flex-direction:column; gap:16px; }
+    .cal-card { background:white; border-radius:18px; padding:22px; box-shadow:0 2px 10px rgba(21,128,61,.07); }
+    .cal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+    .cal-legend { display:flex; gap:14px; }
+    .leg { font-size:11.5px; font-weight:700; padding:4px 10px; border-radius:20px; }
+    .asig-col { background:#EDE9FE; color:#5B21B6; }
+    .rep-col  { background:#FEF9C3; color:#92400E; }
+    .reu-col  { background:#DCFCE7; color:#14532D; }
+    .dias-header { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-bottom:6px; }
+    .dia-hdr { text-align:center; font-size:11px; font-weight:700; color:#94A3B8; padding:6px 0; }
+    .dias-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
+    .dia-cel { min-height:72px; background:#F9FAFB; border-radius:10px; padding:6px; display:flex; flex-direction:column; gap:3px; }
+    .dia-cel.dia-hoy { background:#F0FDF4; border:1.5px solid #86EFAC; }
+    .dia-cel.dia-vacio { background:transparent; }
+    .dia-num { font-size:12px; font-weight:800; color:#374151; }
+    .dia-hoy .dia-num { color:#15803D; }
+    .ev-chip { font-size:9.5px; font-weight:700; border-radius:6px; padding:2px 5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .ev-asig { background:#EDE9FE; color:#5B21B6; }
+    .ev-rep  { background:#FEF9C3; color:#92400E; }
+    .ev-reu  { background:#DCFCE7; color:#14532D; }
 
-    /* Cards */
-    .card {
-      background: white; border-radius: 18px;
-      padding: 22px 24px;
-      box-shadow: 0 2px 12px rgba(79,70,229,0.07);
-    }
-    .card-title {
-      font-family: 'Baloo 2','Quicksand',sans-serif;
-      font-size: 15px; font-weight: 800; color: #1E1B4B;
-      margin: 0 0 16px;
-    }
-
-    /* Tabla */
-    .table-card { overflow: hidden; }
-    .prog-table { width: 100%; border-collapse: collapse; }
-    .prog-table thead tr {
-      border-bottom: 1.5px solid #F1F5F9;
-    }
-    .prog-table th {
-      font-size: 11px; font-weight: 700; letter-spacing: .8px;
-      color: #94A3B8; padding: 0 12px 12px; text-align: left;
-    }
-    .prog-table tbody tr {
-      border-bottom: 1px solid #F8FAFC;
-      transition: background .15s;
-    }
-    .prog-table tbody tr:hover { background: #F8F7FF; }
-    .prog-table tbody tr:last-child { border-bottom: none; }
-    .prog-table td { padding: 12px; font-size: 14px; color: #334155; font-weight: 600; }
-    .td-name { display: flex; align-items: center; gap: 10px; }
-    .stu-avatar {
-      width: 32px; height: 32px; border-radius: 10px;
-      background: #F1F5F9;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 16px; flex-shrink: 0;
-    }
-
-    .precision-ok   { color: #16A34A; }
-    .precision-warn { color: #D97706; }
-    .precision-low  { color: #DC2626; }
-
-    .badge {
-      display: inline-block; padding: 4px 12px;
-      border-radius: 20px; font-size: 12px; font-weight: 700;
-    }
-    .badge-excelente  { background: #DCFCE7; color: #15803D; }
-    .badge-muybien    { background: #FEF9C3; color: #A16207; }
-    .badge-necesita   { background: #FEE2E2; color: #B91C1C; }
-
-    /* Panel derecho */
-    .right-col { display: flex; flex-direction: column; gap: 16px; }
-
-    /* Top list */
-    .top-list { display: flex; flex-direction: column; gap: 12px; }
-    .top-item {
-      display: flex; align-items: center; gap: 10px;
-      padding: 10px 12px; border-radius: 12px; background: #F8F7FF;
-    }
-    .medal { font-size: 20px; }
-    .top-name { flex: 1; font-size: 14px; font-weight: 700; color: #334155; }
-    .top-pct { font-size: 14px; font-weight: 800; color: #4F46E5; }
-    .pct-gold { color: #D97706; }
-
-    /* Alertas */
-    .alert-list { display: flex; flex-direction: column; gap: 10px; }
-    .alert-item {
-      display: flex; align-items: flex-start; gap: 10px;
-      padding: 12px 14px; border-radius: 12px;
-      background: #FFFBEB; border-left: 3px solid #F59E0B;
-    }
-    .alert-item.alert-danger {
-      background: #FFF5F5; border-left-color: #EF4444;
-    }
-    .alert-avatar { font-size: 20px; margin-top: 2px; }
-    .alert-name { font-size: 13px; font-weight: 800; color: #334155; margin: 0 0 2px; }
-    .alert-msg  { font-size: 12px; color: #64748B; margin: 0; }
-
-    @media (max-width: 1024px) {
-      .stats-grid { grid-template-columns: repeat(2,1fr); }
-      .content-grid { grid-template-columns: 1fr; }
-    }
+    /* ── Configuración ── */
+    .cfg-wrap { display:flex; flex-direction:column; gap:16px; max-width:540px; }
+    .cfg-card { background:white; border-radius:16px; padding:22px; box-shadow:0 2px 10px rgba(21,128,61,.07); }
+    .cfg-title { font-size:14px; font-weight:800; color:#14532D; margin-bottom:16px; }
+    .cfg-avatar { width:60px; height:60px; border-radius:50%; background:#F59E0B; display:flex; align-items:center; justify-content:center; font-size:26px; font-weight:800; color:white; margin-bottom:16px; }
+    .cfg-field { display:flex; flex-direction:column; gap:5px; margin-bottom:14px; }
+    .cfg-field label { font-size:12px; font-weight:700; color:#6B7280; }
+    .cfg-val { background:#F0FDF4; border-radius:10px; padding:10px 14px; font-size:14px; font-weight:600; color:#14532D; }
+    .cfg-note { font-size:12px; color:#94A3B8; }
+    .cfg-alumnos { display:flex; flex-direction:column; gap:8px; }
+    .cfg-alumno { display:flex; align-items:center; gap:10px; padding:10px; background:#F0FDF4; border-radius:12px; font-size:14px; }
+    .ca-nombre { flex:1; font-weight:700; color:#14532D; }
+    .ca-edad { font-size:12px; color:#6B7280; }
+    .ca-est { font-size:10px; font-weight:800; padding:3px 10px; border-radius:20px; }
+    .est-ok { background:#DCFCE7; color:#15803D; }
+    .est-no { background:#FEE2E2; color:#B91C1C; }
   `]
 })
-export class DocenteDashboardComponent {
-  tab = 'clase';
+export class DocenteDashboardComponent implements OnInit {
 
-  estudiantes: Estudiante[] = [
-    { nombre: 'Mateo López',   avatar: '🐯', partidas: 47, precision: 92, xp: 680, estado: 'Excelente'     },
-    { nombre: 'Sofía Pérez',   avatar: '🐰', partidas: 38, precision: 85, xp: 520, estado: 'Muy bien'      },
-    { nombre: 'Carlos Ruiz',   avatar: '🦊', partidas: 22, precision: 61, xp: 290, estado: 'Necesita ayuda' },
-    { nombre: 'Lucía Torres',  avatar: '🐼', partidas: 44, precision: 88, xp: 610, estado: 'Excelente'     },
-    { nombre: 'Diego Mora',    avatar: '🐸', partidas: 15, precision: 54, xp: 180, estado: 'Necesita ayuda' },
+  tab       = 'clase';
+  filtro    = 'todos';
+  nuevaAsig = false;
+  loading   = true;
+
+  docenteName = '';
+  institucion = '';
+  gradoGrupo  = '';
+
+  estudiantes: Estudiante[] = [];
+  alertas:     Alerta[]     = [];
+
+  asignaciones: Asignacion[] = [
+    { titulo:'Práctica de atención',  juego:'Espejo Mental',   icono:'🪞', fechaLimite:'25 jul 2026', entregadas:5, total:7, color:'#7C3AED' },
+    { titulo:'Comprensión lectora',   juego:'Historia Viva',   icono:'📖', fechaLimite:'28 jul 2026', entregadas:3, total:7, color:'#D97706' },
+    { titulo:'Velocidad de reacción', juego:'Piezas en Tiempo',icono:'🧩', fechaLimite:'30 jul 2026', entregadas:6, total:7, color:'#0891B2' },
   ];
 
-  alertas: Alerta[] = [
-    { nombre: 'Carlos Ruiz', avatar: '🦊', mensaje: 'Bajo rendimiento en Laberinto (3 días)', tipo: 'warn'   },
-    { nombre: 'Diego Mora',  avatar: '🐸', mensaje: 'Sin actividad en los últimos 4 días',    tipo: 'danger' },
+  logrosClase: LogroClase[] = [
+    { icono:'🌟', nombre:'Semana perfecta',  desc:'7 días consecutivos de práctica',  alumno:'Mateo López',  avatarAlu:'🐯', fecha:'Hoy'     },
+    { icono:'🏆', nombre:'1000 puntos',      desc:'Alcanzó 1000 puntos en total',      alumno:'Lucía Torres', avatarAlu:'🐼', fecha:'Ayer'    },
+    { icono:'⚡', nombre:'Velocidad récord', desc:'Terminó Piezas en 12 segundos',     alumno:'Sofía Pérez',  avatarAlu:'🐰', fecha:'Lun 14'  },
+    { icono:'🎯', nombre:'Sin errores',      desc:'Sesión perfecta en Espejo Mental', alumno:'Mateo López',  avatarAlu:'🐯', fecha:'Vie 11'  },
   ];
 
-  get topEstudiantes() {
-    return [...this.estudiantes].sort((a, b) => b.precision - a.precision).slice(0, 3);
-  }
-  get avgPrecision() {
-    return Math.round(this.estudiantes.reduce((s, e) => s + e.precision, 0) / this.estudiantes.length);
-  }
-  get totalPartidas() {
-    return this.estudiantes.reduce((s, e) => s + e.partidas, 0);
-  }
-  get iniciales() {
-    const n = this.auth.userName();
-    return n ? n.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() : 'D';
+  // Julio 2026 — empieza miércoles (relleno con 0s al inicio)
+  readonly diasMes = [0,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31];
+
+  readonly eventos: EventoCal[] = [
+    { dia:22, titulo:'Asig. Atención',  tipo:'asig',    hora:'8:00'  },
+    { dia:25, titulo:'Reporte semanal', tipo:'reporte', hora:'12:00' },
+    { dia:27, titulo:'Reunión padres',  tipo:'reunion', hora:'16:00' },
+    { dia:30, titulo:'Asig. Lectura',   tipo:'asig',    hora:'8:00'  },
+  ];
+
+  constructor(
+    public  auth:    AuthService,
+    private router:  Router,
+    private cdr:     ChangeDetectorRef,
+    private docSvc:  DocenteService,
+  ) {}
+
+  ngOnInit(): void {
+    const user = this.auth.user();
+    if (!user) return;
+    this.docenteName = user.nombre || user.email || 'Docente';
+    this.loadAlumnos(user.usuarioId);
   }
 
-  badgeClass(estado: string) {
-    if (estado === 'Excelente')     return 'badge-excelente';
-    if (estado === 'Muy bien')      return 'badge-muybien';
-    return 'badge-necesita';
+  private loadAlumnos(uid: number): void {
+    this.loading = true;
+    this.docSvc.getAlumnos(uid).pipe(catchError(() => of([]))).subscribe(alumnos => {
+      if (alumnos.length === 0) {
+        this.estudiantes = [];
+        this.alertas     = [];
+        this.loading     = false;
+        this.cdr.detectChanges();
+        return;
+      }
+
+      // Para cada alumno cargamos sesiones + métricas en paralelo
+      const requests = alumnos.map(a =>
+        forkJoin({
+          sesiones: this.docSvc.getSesiones(a.id).pipe(catchError(() => of([]))),
+          metricas: this.docSvc.getMetricas(a.id).pipe(catchError(() => of([]))),
+          alertas:  this.docSvc.getAlertas(a.id).pipe(catchError(() => of([]))),
+        })
+      );
+
+      forkJoin(requests).subscribe(resultados => {
+        this.estudiantes = alumnos.map((a, i) => {
+          const { sesiones, metricas } = resultados[i];
+          const precs   = (metricas as Metrica[]).filter(m => m.precisionPct != null).map(m => m.precisionPct!);
+          const precision = precs.length ? Math.round(precs.reduce((s, v) => s + v, 0) / precs.length) : 0;
+          const xp        = (sesiones as SesionJuego[]).reduce((s, x) => s + (x.puntaje ?? 0), 0);
+          const partidas  = sesiones.length;
+          const estado: Estudiante['estado'] = precision >= 80 ? 'Excelente' : precision >= 65 ? 'Muy bien' : 'Necesita ayuda';
+          const avatar = AVATAR_MAP[a.avatar ?? ''] ?? '👤';
+          return { id: a.id, nombre: a.nombre, avatar, edad: a.edad ?? 0, partidas, precision, xp, estado, activo: a.activo, sesiones };
+        });
+
+        // Alertas: alumnos con estado "Necesita ayuda" o sin sesiones recientes
+        this.alertas = [];
+        alumnos.forEach((a, i) => {
+          const { alertas: al, sesiones } = resultados[i];
+          const alu = this.estudiantes[i];
+          if (al.length > 0) {
+            this.alertas.push({ nombre: a.nombre, avatar: alu.avatar, mensaje: al[0].descripcion, tipo: 'warn', hace: this.hace(al[0].fecha) });
+          } else if (sesiones.length === 0) {
+            this.alertas.push({ nombre: a.nombre, avatar: alu.avatar, mensaje: 'Sin sesiones registradas aún', tipo: 'danger', hace: '—' });
+          }
+        });
+
+        this.loading = false;
+        this.cdr.detectChanges();
+      });
+    });
   }
 
-  cerrarSesion() { this.auth.logout(); }
+  private hace(fecha: string): string {
+    const diff = Math.floor((Date.now() - new Date(fecha).getTime()) / 86400000);
+    if (diff === 0) return 'Hoy';
+    if (diff === 1) return 'Hace 1 día';
+    return `Hace ${diff} días`;
+  }
 
-  constructor(public auth: AuthService, private router: Router) {}
+  // ── Getters ──
+  get activos()        { return this.estudiantes.filter(e => e.activo).length; }
+  get avgPrec()        { const a = this.estudiantes.filter(e=>e.activo); return a.length ? Math.round(a.reduce((s,e)=>s+e.precision,0)/a.length) : 0; }
+  get totalPartidas()  { return this.estudiantes.filter(e=>e.activo).reduce((s,e)=>s+e.partidas,0); }
+  get xpClase()        { return this.estudiantes.reduce((s,e)=>s+e.xp,0); }
+  get top3()           { return [...this.estudiantes].filter(e=>e.activo).sort((a,b)=>b.precision-a.precision).slice(0,3); }
+  get estudiantesOrdenados() { return [...this.estudiantes].sort((a,b)=>b.precision-a.precision); }
+  get inicial()        { return this.docenteName.charAt(0).toUpperCase() || 'D'; }
+
+  get estudiantesFiltrados() {
+    if (this.filtro === 'atencion') return this.estudiantes.filter(e => e.estado === 'Necesita ayuda');
+    if (this.filtro === 'top')      return this.top3;
+    return this.estudiantes;
+  }
+
+  get topTitle(): string {
+    const m: Record<string,string> = {
+      clase:'Mi clase — ' + this.gradoGrupo, reportes:'Reportes de la clase',
+      asignaciones:'Asignaciones', logros:'Logros', calendario:'Calendario', config:'Configuración'
+    };
+    return m[this.tab] ?? 'FocusKids';
+  }
+  get topSub(): string {
+    const m: Record<string,string> = {
+      clase:`${this.activos} estudiantes activos · Semana del 20-26 jul 2026`,
+      reportes:'Rendimiento general de la clase', asignaciones:'Tareas asignadas',
+      logros:'Reconocimientos de la clase', calendario:'Julio 2026', config:'Perfil docente'
+    };
+    return m[this.tab] ?? '';
+  }
+
+  badgeClass(estado: string): string {
+    if (estado === 'Excelente')     return 'badge badge-ex';
+    if (estado === 'Muy bien')      return 'badge badge-mb';
+    return 'badge badge-na';
+  }
+
+  cuentaEstado(estado: string): number { return this.estudiantes.filter(e => e.estado === estado).length; }
+
+  eventosDelDia(dia: number): EventoCal[] { return this.eventos.filter(e => e.dia === dia); }
 }
