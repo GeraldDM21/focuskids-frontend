@@ -4,8 +4,9 @@ import { AuthService } from '../../../core/services/auth.service';
 import { Router } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { DocenteService, AlumnoDocente } from '../docente.service';
+import { DocenteService, AlumnoDocente, Asignacion } from '../docente.service';
 import { SesionJuego, Metrica } from '../../padre/padre.service';
+import { FormsModule } from '@angular/forms';
 
 interface Estudiante {
   id: number; nombre: string; avatar: string; edad: number;
@@ -38,7 +39,7 @@ const JUEGO_ICO: Record<string, string> = {
 @Component({
   selector: 'app-docente-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
 <div class="root">
@@ -78,7 +79,7 @@ const JUEGO_ICO: Record<string, string> = {
       </div>
       <div class="tb-right">
         @if (tab === 'asignaciones') {
-          <button class="btn-add" (click)="nuevaAsig = true">+ Nueva asignación</button>
+          <button class="btn-add" (click)="showFormAsig = true">+ Nueva asignación</button>
         }
         <div class="inst-chip">🏫 {{ institucion }}</div>
       </div>
@@ -239,10 +240,89 @@ const JUEGO_ICO: Record<string, string> = {
 
       <!-- ══ ASIGNACIONES ══ -->
       @if (!loading && tab === 'asignaciones') {
-        <div class="coming-soon-card">
-          <div style="font-size:52px">📋</div>
-          <h2>Asignaciones — próximamente</h2>
-          <p>Esta funcionalidad requiere un módulo de asignaciones en el backend que aún no está implementado. Se habilitará en la siguiente iteración del proyecto.</p>
+        <div class="asig-wrap">
+
+          <!-- Formulario de nueva asignación -->
+          @if (showFormAsig) {
+            <div class="asig-form-card">
+              <h3 class="card-title">Nueva asignación</h3>
+              <p class="asig-note">Se distribuirá automáticamente a todos los alumnos activos de tu clase ({{ estudiantes.length }}).</p>
+              <div class="form-grid">
+                <div class="form-field">
+                  <label>Título *</label>
+                  <input [(ngModel)]="formAsig.titulo" placeholder="Ej: Practica de memoria" />
+                </div>
+                <div class="form-field">
+                  <label>Juego</label>
+                  <select [(ngModel)]="formJuegoId" (ngModelChange)="setJuego($event)">
+                    <option [ngValue]="null">Sin juego específico</option>
+                    @for (j of JUEGOS_LISTA; track j.id) {
+                      <option [ngValue]="j.id">{{ j.nombre }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="form-field">
+                  <label>Mínimo de sesiones *</label>
+                  <input type="number" [(ngModel)]="formAsig.minimoSesiones" min="1" max="50" />
+                </div>
+                <div class="form-field">
+                  <label>Fecha límite *</label>
+                  <input type="date" [(ngModel)]="formAsig.fechaLimite" />
+                </div>
+                <div class="form-field span2">
+                  <label>Descripción</label>
+                  <textarea [(ngModel)]="formAsig.descripcion" rows="3" placeholder="Instrucciones opcionales para los alumnos..."></textarea>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button class="btn-cancel" (click)="cancelarAsig()">Cancelar</button>
+                <button class="btn-add" [disabled]="savingAsig || !formAsig.titulo || !formAsig.fechaLimite" (click)="crearAsig()">
+                  {{ savingAsig ? 'Guardando...' : 'Crear asignación' }}
+                </button>
+              </div>
+            </div>
+          }
+
+          <!-- Cargando asignaciones -->
+          @if (loadingAsig) {
+            <div class="loader"><div class="spinner"></div></div>
+          }
+
+          <!-- Estado vacío -->
+          @if (!loadingAsig && asignaciones.length === 0 && !showFormAsig) {
+            <div class="empty-state">
+              <div style="font-size:56px">📋</div>
+              <h2>Aún no hay asignaciones</h2>
+              <p>Crea una asignación con el botón <strong>+ Nueva asignación</strong>.<br>Se distribuirá automáticamente a los {{ estudiantes.length }} alumnos de tu clase.</p>
+            </div>
+          }
+
+          <!-- Grid de asignaciones -->
+          @if (!loadingAsig && asignaciones.length > 0) {
+            <div class="asig-grid">
+              @for (a of asignaciones; track a.id) {
+                <div class="asig-card">
+                  <div class="asig-top">
+                    <div class="asig-ico" [style.background]="juegoColor(a.juego?.nombre)">{{ juegoIco(a.juego?.nombre) }}</div>
+                    <div style="flex:1;min-width:0">
+                      <div class="asig-titulo">{{ a.titulo }}</div>
+                      <div class="asig-juego">{{ a.juego?.nombre ?? 'Sin juego específico' }}</div>
+                    </div>
+                    <button class="btn-del" (click)="eliminarAsig(a.id!)" title="Eliminar">🗑</button>
+                  </div>
+                  @if (a.descripcion) {
+                    <p class="asig-desc">{{ a.descripcion }}</p>
+                  }
+                  <div class="asig-meta">
+                    <span class="asig-chip">🎯 {{ a.minimoSesiones }} sesiones</span>
+                    <span class="asig-chip">👨‍🎓 {{ estudiantes.length }} alumnos</span>
+                  </div>
+                  <div class="asig-fecha">📅 Límite: {{ a.fechaLimite | date:'dd/MM/yyyy' }}</div>
+                </div>
+              }
+            </div>
+          }
+
         </div>
       }
 
@@ -510,10 +590,23 @@ const JUEGO_ICO: Record<string, string> = {
     .asig-prog-fill { height:100%; border-radius:100px; transition:width .8s ease; }
     .asig-fecha { font-size:11px; color:#9CA3AF; }
 
-    /* ── Coming soon / mini empty ── */
-    .coming-soon-card { background:white; border-radius:18px; padding:48px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:14px; box-shadow:0 2px 10px rgba(21,128,61,.07); }
-    .coming-soon-card h2 { font-size:20px; font-weight:800; color:#14532D; }
-    .coming-soon-card p  { font-size:14px; color:#6B7280; line-height:1.7; max-width:480px; }
+    /* ── Asignaciones form ── */
+    .asig-wrap { display:flex; flex-direction:column; gap:16px; }
+    .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:12px 0 16px; }
+    .form-field { display:flex; flex-direction:column; gap:5px; }
+    .form-field.span2 { grid-column:span 2; }
+    .form-field label { font-size:12px; font-weight:700; color:#6B7280; }
+    .form-field input, .form-field select, .form-field textarea { border:1.5px solid #E5E7EB; border-radius:10px; padding:9px 12px; font-size:13.5px; color:#1F2937; background:white; outline:none; font-family:inherit; }
+    .form-field input:focus, .form-field select:focus, .form-field textarea:focus { border-color:#86EFAC; box-shadow:0 0 0 3px rgba(134,239,172,.15); }
+    .form-field textarea { resize:vertical; }
+    .form-actions { display:flex; gap:10px; justify-content:flex-end; }
+    .asig-meta { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+    .asig-chip { background:#F0FDF4; color:#15803D; border-radius:20px; padding:4px 10px; font-size:11px; font-weight:700; }
+    .asig-desc { font-size:12.5px; color:#6B7280; margin-bottom:10px; line-height:1.5; }
+    .btn-del { background:none; border:none; font-size:16px; cursor:pointer; padding:5px 8px; border-radius:8px; opacity:.5; flex-shrink:0; }
+    .btn-del:hover { background:#FEE2E2; opacity:1; }
+
+    /* ── mini empty ── */
     .mini-empty { display:flex; align-items:center; gap:12px; padding:16px; background:#F0FDF4; border-radius:12px; }
     .mini-empty p { font-size:13px; color:#6B7280; }
 
@@ -583,10 +676,9 @@ const JUEGO_ICO: Record<string, string> = {
 })
 export class DocenteDashboardComponent implements OnInit {
 
-  tab       = 'clase';
-  filtro    = 'todos';
-  nuevaAsig = false;
-  loading   = true;
+  tab     = 'clase';
+  filtro  = 'todos';
+  loading = true;
 
   docenteName = '';
   institucion = '';
@@ -596,6 +688,21 @@ export class DocenteDashboardComponent implements OnInit {
   alertas:     Alerta[]     = [];
 
   logrosClase: LogroClase[] = [];
+
+  // Asignaciones
+  asignaciones:  Asignacion[] = [];
+  loadingAsig    = false;
+  showFormAsig   = false;
+  savingAsig     = false;
+  docenteUid     = 0;
+  formJuegoId:   number | null = null;
+  formAsig: Asignacion = { titulo:'', descripcion:'', minimoSesiones:1, fechaLimite:'', juego:null };
+
+  readonly JUEGOS_LISTA = [
+    { id:1, nombre:'Espejo Mental' }, { id:2, nombre:'Historia Viva' },
+    { id:3, nombre:'Palabras Ocultas' }, { id:4, nombre:'Piezas en Tiempo' },
+    { id:5, nombre:'Foco Extremo' }, { id:6, nombre:'Cascada Numérica' },
+  ];
 
   // Julio 2026 — empieza miércoles (relleno con 0s al inicio)
   readonly diasMes = [0,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31];
@@ -618,7 +725,9 @@ export class DocenteDashboardComponent implements OnInit {
     const user = this.auth.user();
     if (!user) return;
     this.docenteName = user.nombre || user.email || 'Docente';
+    this.docenteUid  = user.usuarioId;
     this.loadAlumnos(user.usuarioId);
+    this.loadAsignaciones(user.usuarioId);
   }
 
   private loadAlumnos(uid: number): void {
@@ -670,6 +779,59 @@ export class DocenteDashboardComponent implements OnInit {
         this.cdr.detectChanges();
       });
     });
+  }
+
+  private loadAsignaciones(uid: number): void {
+    this.loadingAsig = true;
+    this.docSvc.getAsignacionesDocente(uid).pipe(catchError(() => of([]))).subscribe(list => {
+      this.asignaciones = list;
+      this.loadingAsig  = false;
+      this.cdr.detectChanges();
+    });
+  }
+
+  crearAsig(): void {
+    if (!this.formAsig.titulo || !this.formAsig.fechaLimite) return;
+    this.savingAsig = true;
+    this.docSvc.crearAsignacion(this.docenteUid, this.formAsig).subscribe({
+      next: () => {
+        this.cancelarAsig();
+        this.loadAsignaciones(this.docenteUid);
+      },
+      error: () => { this.savingAsig = false; this.cdr.detectChanges(); }
+    });
+  }
+
+  eliminarAsig(id: number): void {
+    if (!confirm('¿Eliminar esta asignación? Se borrará el progreso de todos los alumnos.')) return;
+    this.docSvc.eliminarAsignacion(id).subscribe(() => this.loadAsignaciones(this.docenteUid));
+  }
+
+  cancelarAsig(): void {
+    this.showFormAsig = false;
+    this.savingAsig   = false;
+    this.formJuegoId  = null;
+    this.formAsig     = { titulo:'', descripcion:'', minimoSesiones:1, fechaLimite:'', juego:null };
+    this.cdr.detectChanges();
+  }
+
+  setJuego(id: number | null): void {
+    if (!id) { this.formAsig.juego = null; return; }
+    const j = this.JUEGOS_LISTA.find(x => x.id === id);
+    this.formAsig.juego = j ? { id: j.id, nombre: j.nombre } : null;
+  }
+
+  juegoIco(nombre?: string): string {
+    if (!nombre) return '📋';
+    return JUEGO_ICO[nombre] ?? '📋';
+  }
+
+  juegoColor(nombre?: string): string {
+    const colors: Record<string, string> = {
+      'Espejo Mental':'#EDE9FE', 'Historia Viva':'#FEF9C3', 'Palabras Ocultas':'#DCFCE7',
+      'Piezas en Tiempo':'#FEE2E2', 'Foco Extremo':'#DBEAFE', 'Cascada Numérica':'#FCE7F3',
+    };
+    return nombre ? (colors[nombre] ?? '#F0FDF4') : '#F0FDF4';
   }
 
   private derivarLogros(): LogroClase[] {

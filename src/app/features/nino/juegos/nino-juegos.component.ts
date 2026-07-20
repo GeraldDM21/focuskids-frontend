@@ -1,7 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { ChildProfileService } from '../../padre/perfiles/child-profile.service';
+import { DocenteService, AsignacionPerfil } from '../../docente/docente.service';
 
 interface Juego       { nombre: string; tipo: string; icono: string; color: string; nivelTxt: string; progreso: number; ruta: string; }
 interface ProgresoItem{ nombre: string; valor: number; color: string; icono: string; }
@@ -37,6 +40,7 @@ interface Avatar      { key: string; emoji: string; }
       <button class="nav-item" [class.active]="activeTab==='juegos'"   (click)="activeTab='juegos'"><span class="nav-ico">🎮</span> Mis juegos</button>
       <button class="nav-item" [class.active]="activeTab==='progreso'" (click)="activeTab='progreso'"><span class="nav-ico">📊</span> Mi progreso</button>
       <button class="nav-item" [class.active]="activeTab==='logros'"   (click)="activeTab='logros'"><span class="nav-ico">🏆</span> Logros</button>
+      <button class="nav-item" [class.active]="activeTab==='tareas'"   (click)="activeTab='tareas'"><span class="nav-ico">📋</span> Mis tareas</button>
       <button class="nav-item" [class.active]="activeTab==='config'"   (click)="activeTab='config'"><span class="nav-ico">⚙️</span> Configuración</button>
     </nav>
     <button class="btn-cerrar" (click)="cerrarSesion()"><span>🚪</span> Cerrar sesión</button>
@@ -240,6 +244,74 @@ interface Avatar      { key: string; emoji: string; }
             </div>
           }
         </div>
+
+      </div>
+    }
+
+    <!-- ── MIS TAREAS ── -->
+    @if (activeTab === 'tareas') {
+      <div class="tab-content">
+
+        @if (loadingTareas) {
+          <div class="tareas-loader"><div class="t-spinner"></div><p>Cargando tareas...</p></div>
+        }
+
+        @if (!loadingTareas && tareas.length === 0) {
+          <div class="tareas-empty">
+            <div style="font-size:60px">📋</div>
+            <h2>Sin tareas por ahora</h2>
+            <p>Cuando tu maestra o maestro te asigne una tarea, aparecerá aquí. ¡Sigue jugando!</p>
+          </div>
+        }
+
+        @if (!loadingTareas && tareas.length > 0) {
+          <div class="tareas-grid">
+            @for (t of tareas; track t.id) {
+              <div class="tarea-card" [class.tarea-ok]="t.completada">
+
+                <!-- Badge completada -->
+                @if (t.completada) {
+                  <div class="tarea-badge-done">✅ Completada</div>
+                }
+
+                <!-- Top row -->
+                <div class="tarea-top">
+                  <div class="tarea-ico-wrap" [class.tarea-ico-done]="t.completada">
+                    {{ t.asignacion.juego ? juegoIcoNino(t.asignacion.juego.nombre) : '📋' }}
+                  </div>
+                  <div style="flex:1;min-width:0">
+                    <div class="tarea-titulo">{{ t.asignacion.titulo }}</div>
+                    <div class="tarea-juego">{{ t.asignacion.juego?.nombre ?? 'Sin juego específico' }}</div>
+                  </div>
+                </div>
+
+                <!-- Descripción -->
+                @if (t.asignacion.descripcion) {
+                  <p class="tarea-desc">{{ t.asignacion.descripcion }}</p>
+                }
+
+                <!-- Progreso de sesiones -->
+                <div class="tarea-prog-lbl">
+                  <span>Sesiones completadas</span>
+                  <span class="tarea-cnt" [class.tarea-cnt-ok]="t.completada">{{ t.sesionesCompletadas }} / {{ t.asignacion.minimoSesiones }}</span>
+                </div>
+                <div class="tarea-prog-bar">
+                  <div class="tarea-prog-fill"
+                       [style.width.%]="progresoPct(t)"
+                       [class.tarea-fill-ok]="t.completada"></div>
+                </div>
+
+                <!-- Fecha límite -->
+                <div class="tarea-footer">
+                  <span class="tarea-fecha">📅 Límite: {{ t.asignacion.fechaLimite | date:'dd/MM/yyyy' }}</span>
+                  @if (t.completada && t.fechaCompletada) {
+                    <span class="tarea-completada-en">Completada {{ t.fechaCompletada | date:'dd/MM' }}</span>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
 
       </div>
     }
@@ -605,6 +677,33 @@ interface Avatar      { key: string; emoji: string; }
     .l3d-on  .l3d-cat { color: rgba(255,255,255,.55); }
     .l3d-off .l3d-cat { color: rgba(255,255,255,.18); }
 
+    /* ── MIS TAREAS ── */
+    .tareas-loader { display:flex; flex-direction:column; align-items:center; gap:16px; padding:60px; color:#64748B; font-size:14px; }
+    .t-spinner { width:36px; height:36px; border:3px solid #E8E4F4; border-top-color:#7C3AED; border-radius:50%; animation:spin .8s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .tareas-empty { display:flex; flex-direction:column; align-items:center; gap:14px; padding:60px; text-align:center; }
+    .tareas-empty h2 { font-size:20px; font-weight:800; color:#1E293B; }
+    .tareas-empty p  { font-size:14px; color:#64748B; line-height:1.7; max-width:380px; }
+    .tareas-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:18px; }
+    .tarea-card { background:white; border-radius:18px; padding:20px; box-shadow:0 2px 10px rgba(0,0,0,.06); border:2px solid transparent; transition:border-color .2s; position:relative; display:flex; flex-direction:column; gap:12px; }
+    .tarea-card.tarea-ok { border-color:#BBF7D0; background:#F0FDF4; }
+    .tarea-badge-done { position:absolute; top:14px; right:14px; background:#DCFCE7; color:#15803D; border-radius:20px; padding:3px 10px; font-size:11px; font-weight:700; }
+    .tarea-top { display:flex; align-items:center; gap:12px; }
+    .tarea-ico-wrap { width:46px; height:46px; border-radius:14px; background:#EDE9FE; display:flex; align-items:center; justify-content:center; font-size:24px; flex-shrink:0; }
+    .tarea-ico-done { background:#DCFCE7; }
+    .tarea-titulo { font-size:14px; font-weight:800; color:#1E293B; line-height:1.3; }
+    .tarea-juego  { font-size:11.5px; color:#94A3B8; margin-top:2px; }
+    .tarea-desc   { font-size:12.5px; color:#475569; line-height:1.55; }
+    .tarea-prog-lbl { display:flex; justify-content:space-between; font-size:11.5px; font-weight:700; color:#64748B; }
+    .tarea-cnt { color:#7C3AED; }
+    .tarea-cnt-ok { color:#15803D; }
+    .tarea-prog-bar { height:10px; background:#F1F0F9; border-radius:100px; overflow:hidden; }
+    .tarea-prog-fill { height:100%; border-radius:100px; background:linear-gradient(90deg,#7C3AED,#A78BFA); transition:width .8s ease; }
+    .tarea-fill-ok { background:linear-gradient(90deg,#16A34A,#4ADE80); }
+    .tarea-footer { display:flex; align-items:center; justify-content:space-between; padding-top:4px; }
+    .tarea-fecha { font-size:11px; color:#9CA3AF; }
+    .tarea-completada-en { font-size:11px; color:#15803D; font-weight:700; }
+
     /* ── CONFIGURACIÓN ── */
     .config-body { max-width: 640px; display: flex; flex-direction: column; gap: 20px; }
     .config-card { background: white; border-radius: 16px; padding: 22px; box-shadow: 0 1px 8px rgba(0,0,0,.05); }
@@ -636,6 +735,7 @@ export class NinoJuegosComponent implements OnInit {
 
   profileName   = '';
   profileAvatar = '🦊';
+  perfilId: number | null = null;
 
   streak        = 7;
   puntosTotales = 1240;
@@ -645,6 +745,10 @@ export class NinoJuegosComponent implements OnInit {
   nivelNum      = 4;
   nivelNombre   = 'Explorador';
   activeTab     = 'inicio';
+
+  // Tareas
+  tareas:        AsignacionPerfil[] = [];
+  loadingTareas  = false;
 
   totalSesiones  = 34;
   tiempoPromedio = 8;
@@ -736,25 +840,54 @@ export class NinoJuegosComponent implements OnInit {
   catColor2(cat: string): string { return this.CAT_COLORS[cat]?.[1] ?? '#4338CA'; }
   catIco   (cat: string): string { return this.CAT_ICOS[cat] ?? '🏅'; }
 
-  constructor(private profileService: ChildProfileService, private router: Router) {}
+  constructor(
+    private profileService: ChildProfileService,
+    private router: Router,
+    private docSvc: DocenteService,
+  ) {}
 
   ngOnInit(): void {
     this.profileService.activeProfile$.subscribe(state => {
       if (!state.profileId) { this.router.navigate(['/padre/dashboard']); return; }
-      this.profileName       = state.profileName   || 'Niño';
-      this.profileAvatar     = this.avatarEmoji(state.profileAvatar || 'fox');
+      this.profileName        = state.profileName   || 'Niño';
+      this.profileAvatar      = this.avatarEmoji(state.profileAvatar || 'fox');
       this.avatarSeleccionado = state.profileAvatar || 'fox';
+      this.perfilId           = state.profileId;
+      this.loadTareas(state.profileId);
     });
   }
 
+  private loadTareas(perfilId: number): void {
+    this.loadingTareas = true;
+    this.docSvc.getAsignacionesPerfil(perfilId).pipe(catchError(() => of([]))).subscribe(t => {
+      this.tareas        = t;
+      this.loadingTareas = false;
+    });
+  }
+
+  progresoPct(t: AsignacionPerfil): number {
+    if (!t.asignacion.minimoSesiones) return 0;
+    return Math.min(100, Math.round((t.sesionesCompletadas / t.asignacion.minimoSesiones) * 100));
+  }
+
+  private readonly JUEGO_ICO_NINO: Record<string, string> = {
+    'Espejo Mental':'🪞', 'Historia Viva':'📖', 'Palabras Ocultas':'📝',
+    'Piezas en Tiempo':'🧩', 'Foco Extremo':'🎯', 'Cascada Numérica':'🔢',
+  };
+  juegoIcoNino(nombre: string): string { return this.JUEGO_ICO_NINO[nombre] ?? '📋'; }
+
   get headerTitle(): string {
-    const m: Record<string, string> = { progreso:'📊 Mi progreso', logros:'🏆 Mis logros', config:'⚙️ Configuración' };
+    const m: Record<string, string> = {
+      progreso:'📊 Mi progreso', logros:'🏆 Mis logros',
+      tareas:`📋 Mis tareas`, config:'⚙️ Configuración'
+    };
     return m[this.activeTab] ?? `¡Hola, ${this.profileName}! 👋`;
   }
   get headerSub(): string {
     const m: Record<string, string> = {
       progreso: 'Así vas evolucionando cada día',
       logros:   `${this.logrosGanados} de ${this.logrosCompletos.length} logros desbloqueados`,
+      tareas:   `${this.tareas.filter(t=>t.completada).length} de ${this.tareas.length} completadas`,
       config:   'Personaliza tu experiencia',
     };
     return m[this.activeTab] ?? 'Listo para un nuevo reto hoy?';
