@@ -11,7 +11,7 @@ export class ChildProfileService {
 
   // Guarda cual perfil de nino esta activo en este momento (sin cerrar sesion del padre)
   private activeProfileSubject = new BehaviorSubject<ActiveProfileState>({
-    profileId: null, profileName: null, profileAvatar: null
+    profileId: null, profileName: null, profileAvatar: null, profileVolumen: null
   });
   public activeProfile$ = this.activeProfileSubject.asObservable();
 
@@ -28,8 +28,21 @@ export class ChildProfileService {
       tap(profile => this.activeProfileSubject.next({
         profileId: profile.id,
         profileName: profile.nombre,
-        profileAvatar: profile.avatar
+        profileAvatar: profile.avatar,
+        profileVolumen: profile.volumen ?? 75
       }))
+    );
+  }
+
+  // CA-05: persiste el nivel de volumen de efectos de sonido del perfil activo
+  updateVolumen(profileId: number, volumen: number): Observable<ChildProfile> {
+    return this.http.patch<ChildProfile>(`${this.API_URL}/${profileId}/volumen`, { volumen }).pipe(
+      tap(profile => {
+        const current = this.activeProfileSubject.value;
+        if (current.profileId === profile.id) {
+          this.activeProfileSubject.next({ ...current, profileVolumen: profile.volumen ?? volumen });
+        }
+      })
     );
   }
 
@@ -55,6 +68,6 @@ export class ChildProfileService {
 
   // Limpia el perfil activo, por ejemplo cuando el padre cierra sesion
   clearActiveProfile(): void {
-    this.activeProfileSubject.next({ profileId: null, profileName: null, profileAvatar: null });
+    this.activeProfileSubject.next({ profileId: null, profileName: null, profileAvatar: null, profileVolumen: null });
   }
 }

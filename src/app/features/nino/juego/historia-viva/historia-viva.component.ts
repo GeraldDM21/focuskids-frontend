@@ -1,6 +1,10 @@
-import { Component, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { GameFeedbackComponent } from '../../../../shared/game-feedback/game-feedback.component';
+import { VolumeControlComponent } from '../../../../shared/game-feedback/volume-control.component';
+import { GameFeedbackService, NivelVolumen } from '../../../../shared/game-feedback/game-feedback.service';
+import { ChildProfileService } from '../../../padre/perfiles/child-profile.service';
 
 type Estado = 'inicio' | 'lectura' | 'pregunta' | 'resultados';
 type Mood   = 'idle' | 'thinking' | 'celebrate' | 'encourage';
@@ -155,15 +159,10 @@ const TIPO_TIPS: Record<string, string> = {
 @Component({
   selector: 'app-historia-viva',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, GameFeedbackComponent, VolumeControlComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
 <div class="game-wrapper">
-
-  <!-- Flash overlay -->
-  @if (showFlash) {
-    <div class="flash-overlay" [class.flash-verde]="flashVerde" [class.flash-rojo]="!flashVerde"></div>
-  }
 
   <!-- ══ INICIO ══════════════════════════════════════════════════════════ -->
   @if (estado === 'inicio') {
@@ -230,6 +229,10 @@ const TIPO_TIPS: Record<string, string> = {
             {{ voiceEnabled ? '🔊' : '🔇' }}
           </button>
         </div>
+
+        <div class="volumen-footer">
+          <app-volume-control [volumen]="volumenActual" (volumenChange)="onVolumenChange($event)"></app-volume-control>
+        </div>
       </div>
     </div>
   }
@@ -287,7 +290,9 @@ const TIPO_TIPS: Record<string, string> = {
 
   <!-- ══ PREGUNTA ══════════════════════════════════════════════════════════ -->
   @if (estado === 'pregunta' && historiaActual) {
-    <div class="pantalla-pregunta">
+    <div class="pantalla-pregunta" (click)="saltarSiEsPosible()">
+
+      <app-game-feedback #feedback></app-game-feedback>
 
       <!-- Header pregunta -->
       <div class="game-header">
@@ -334,6 +339,7 @@ const TIPO_TIPS: Record<string, string> = {
         @for (op of preguntaActual?.opciones ?? []; track $index) {
           <button class="opcion"
             [class.opcion-correcta]="respondioCorrectamente && respuestaSeleccionada === $index"
+            [class.opcion-correcta-temporal]="mostrarCorrectaTemporal && $index === preguntaActual?.correcta"
             [class.opcion-errada]="opcionesErradas.includes($index)"
             [class.opcion-disabled]="opcionesErradas.includes($index) || respondioCorrectamente === true"
             (click)="seleccionarOpcion($index)">
@@ -459,12 +465,6 @@ const TIPO_TIPS: Record<string, string> = {
       font-family: 'Inter', -apple-system, sans-serif;
       color: white; overflow: hidden; position: relative;
     }
-
-    /* ── Flash ── */
-    .flash-overlay { position: fixed; inset: 0; z-index: 200; pointer-events: none; animation: flashAnim .4s ease forwards; }
-    .flash-verde { background: rgba(34,197,94,.28); }
-    .flash-rojo  { background: rgba(239,68,68,.28); }
-    @keyframes flashAnim { 0%{opacity:1} 100%{opacity:0} }
 
     /* ── Confetti ── */
     .confetti-container { position: fixed; inset: 0; pointer-events: none; z-index: 100; overflow: hidden; }
@@ -641,7 +641,11 @@ const TIPO_TIPS: Record<string, string> = {
     .btn-listo:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(79,70,229,.55); }
 
     /* ══ PREGUNTA ══ */
-    .pantalla-pregunta { width: 100%; max-width: 540px; padding: 16px 20px 28px; }
+    .pantalla-pregunta { width: 100%; max-width: 540px; padding: 16px 20px 28px; position: relative; }
+    .volumen-footer { margin-top: 16px; display: flex; justify-content: center; }
+    /* CA-03: resalta la opción correcta en verde por 1.5s aunque el niño haya fallado */
+    .opcion-correcta-temporal { background: rgba(34,197,94,.2) !important; border-color: rgba(34,197,94,.6) !important; }
+    .opcion-correcta-temporal .opcion-letra { background: rgba(34,197,94,.3); border-color: #4ade80; color: #4ade80; }
 
     .game-header {
       display:flex; align-items:center; gap:10px; margin-bottom:16px;
@@ -776,7 +780,7 @@ const TIPO_TIPS: Record<string, string> = {
     @keyframes starPop    { from{transform:scale(0) rotate(-30deg)} to{transform:scale(1) rotate(0)} }
   `]
 })
-export class HistoriaVivaComponent implements OnDestroy {
+export class HistoriaVivaComponent implements OnInit, OnDestroy {
 
   readonly LETRAS = ['A', 'B', 'C'];
 
@@ -811,14 +815,42 @@ export class HistoriaVivaComponent implements OnDestroy {
   voiceEnabled = true;
   leyendoAudio = false;
 
-  // ── Flash / confetti ────────────────────────────────────────────────────────
-  showFlash  = false;
-  flashVerde = true;
+  // ── Confetti (celebración final) ──────────────────────────────────────────
   confettiPieces: { id:number; left:number; color:string; delay:number; dur:number; size:number }[] = [];
 
   private audioCtx: AudioContext | null = null;
 
-  constructor(private router: Router, private cdr: ChangeDetectorRef) {}
+  // ── Retroalimentación visual/sonora (CA-01..CA-06) ─────────────────────
+  @ViewChild('feedback') feedback!: GameFeedbackComponent;
+  volumenActual: NivelVolumen = 75;
+  mostrarCorrectaTemporal = false; // CA-03: resalta la opción correcta 1.5s
+  private profileId: number | null = null;
+  private skipResolver: (() => void) | null = null;
+
+  constructor(
+    private router: Router,
+    private cdr: ChangeDetectorRef,
+    private feedbackService: GameFeedbackService,
+    private childProfileService: ChildProfileService,
+  ) {}
+
+  ngOnInit(): void {
+    this.childProfileService.activeProfile$.subscribe(state => {
+      this.profileId = state.profileId;
+      this.volumenActual = (state.profileVolumen ?? 75) as NivelVolumen;
+      this.feedbackService.setVolumen(this.volumenActual);
+    });
+  }
+
+  // ── Volumen (CA-05) ─────────────────────────────────────────────────────
+
+  onVolumenChange(v: NivelVolumen): void {
+    this.volumenActual = v;
+    this.feedbackService.setVolumen(v);
+    if (this.profileId != null) {
+      this.childProfileService.updateVolumen(this.profileId, v).subscribe();
+    }
+  }
 
   ngOnDestroy(): void {
     window.speechSynthesis?.cancel();
@@ -906,6 +938,9 @@ export class HistoriaVivaComponent implements OnDestroy {
     if (this.opcionesErradas.includes(idx)) return;
     if (this.respondioCorrectamente === true)  return;
 
+    // CA-01: se marca el inicio justo en el input; el cálculo correcto/incorrecto es 100% local.
+    const t0 = this.feedbackService.marcarInicio();
+
     this.respuestaSeleccionada = idx;
     const correcto = idx === (this.preguntaActual?.correcta ?? -1);
     this.respondioCorrectamente = correcto;
@@ -913,12 +948,12 @@ export class HistoriaVivaComponent implements OnDestroy {
     if (correcto) {
       this.preguntasCorrectas++;
       this.setMascota('celebrate', this.pick(['¡CORRECTO! ¡Eres genial! 🎉', '¡Perfecto! ¡Lo sabías! ⭐', '¡Muy bien! ¡Sigue así! 🏆']));
-      this.tocarAcierto();
-      this.mostrarFlash(true);
+      this.feedback.showCorrect(); // CA-02
       this.cdr.detectChanges();
+      this.feedbackService.registrarLatencia(t0);
 
       const speech = this.hablar('¡Correcto!');
-      const pause  = new Promise<void>(r => setTimeout(r, 1200));
+      const pause  = this.crearPausaCancelable(1200); // CA-06: se puede saltar con un clic
       Promise.all([speech, pause]).then(() => {
         this.siguientePregunta();
         this.cdr.detectChanges();
@@ -933,10 +968,30 @@ export class HistoriaVivaComponent implements OnDestroy {
       this.respuestaSeleccionada = null;
       this.respondioCorrectamente = null;
       this.setMascota('encourage', '¡Casi! Lee la pista de abajo 💡');
-      this.tocarError();
-      this.mostrarFlash(false);
+      this.feedback.showIncorrect(); // CA-03/CA-04 (la pista propia de este juego ya se muestra abajo)
+      // CA-03: resalta la opción correcta en verde por 1.5s
+      this.mostrarCorrectaTemporal = true;
       this.cdr.detectChanges();
+      this.feedbackService.registrarLatencia(t0);
+      setTimeout(() => { this.mostrarCorrectaTemporal = false; this.cdr.detectChanges(); }, 1500);
       this.hablar('¡Casi! Lee la pista.');
+    }
+  }
+
+  // ── CA-06: skip de la animación de transición tras responder correcto ───
+
+  private crearPausaCancelable(ms: number): Promise<void> {
+    return new Promise<void>(resolve => {
+      const timer = setTimeout(resolve, ms);
+      this.skipResolver = () => { clearTimeout(timer); resolve(); };
+    });
+  }
+
+  saltarSiEsPosible(): void {
+    if (this.skipResolver) {
+      const resolver = this.skipResolver;
+      this.skipResolver = null;
+      resolver();
     }
   }
 
@@ -1056,8 +1111,7 @@ export class HistoriaVivaComponent implements OnDestroy {
     } catch (_) {}
   }
 
-  private tocarAcierto(): void { [523, 659, 784].forEach((f,i) => setTimeout(() => this.tocar(f, 0.18, 'sine', 0.35), i * 80)); }
-  private tocarError():   void { this.tocar(200, 0.15, 'sawtooth', 0.25); setTimeout(() => this.tocar(160, 0.2, 'sawtooth', 0.2), 120); }
+  // Los sonidos de acierto/error del CA-04 ahora los reproduce GameFeedbackService (assets OGG/MP3).
   private tocarFanfare(): void { [523,659,784,880,1047].forEach((f,i) => setTimeout(() => this.tocar(f, 0.3, 'sine', 0.35), i * 120)); }
 
   // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -1072,11 +1126,8 @@ export class HistoriaVivaComponent implements OnDestroy {
     this.opcionesErradas        = [];
     this.mostrandoPista         = false;
     this.mostrandoTexto         = false;
-  }
-
-  private mostrarFlash(verde: boolean): void {
-    this.flashVerde = verde; this.showFlash = true; this.cdr.detectChanges();
-    setTimeout(() => { this.showFlash = false; this.cdr.detectChanges(); }, 420);
+    this.mostrarCorrectaTemporal = false;
+    this.skipResolver           = null;
   }
 
   private generarConfeti() {
