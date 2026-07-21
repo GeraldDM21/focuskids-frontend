@@ -6,6 +6,7 @@ import { VolumeControlComponent } from '../../../../shared/game-feedback/volume-
 import { GameFeedbackService, NivelVolumen } from '../../../../shared/game-feedback/game-feedback.service';
 import { ChildProfileService } from '../../../padre/perfiles/child-profile.service';
 import { MascotComponent } from '../../../../shared/components/mascot/mascot.component';
+import { SesionJuegoService } from '../../../../core/services/sesion-juego.service';
 
 type Estado = 'inicio' | 'lectura' | 'pregunta' | 'resultados';
 type Mood   = 'idle' | 'thinking' | 'celebrate' | 'encourage';
@@ -212,11 +213,17 @@ export class HistoriaVivaComponent implements OnInit, OnDestroy {
   private profileId: number | null = null;
   private skipResolver: (() => void) | null = null;
 
+  // ── Backend session tracking ──
+  private readonly JUEGO_ID = 12;  // "Historia Viva" es ID 12 en el seeder
+  private sesionBackendId: number | null = null;
+  private nivelFacilId: number | null = null;
+
   constructor(
     private router: Router,
     private cdr: ChangeDetectorRef,
     private feedbackService: GameFeedbackService,
     private childProfileService: ChildProfileService,
+    private sesionService: SesionJuegoService,
   ) {}
 
   ngOnInit(): void {
@@ -224,6 +231,30 @@ export class HistoriaVivaComponent implements OnInit, OnDestroy {
       this.profileId = state.profileId;
       this.volumenActual = (state.profileVolumen ?? 75) as NivelVolumen;
       this.feedbackService.setVolumen(this.volumenActual);
+    });
+    this.sesionService.obtenerNiveles(this.JUEGO_ID).subscribe({
+      next: niveles => { this.nivelFacilId = niveles[0]?.id ?? null; },
+      error: () => {}
+    });
+  }
+
+  private iniciarSesionBackend(): void {
+    if (!this.profileId || !this.nivelFacilId) return;
+    this.sesionService.iniciarSesion({
+      perfilId: this.profileId,
+      juegoId:  this.JUEGO_ID,
+      nivelId:  this.nivelFacilId,
+    }).subscribe({
+      next: sesion => { this.sesionBackendId = sesion.id; },
+      error: () => {}
+    });
+  }
+
+  private finalizarSesionBackend(): void {
+    if (!this.sesionBackendId) return;
+    this.sesionService.finalizarSesion(this.sesionBackendId, this.puntuacion).subscribe({
+      next: () => { this.sesionBackendId = null; },
+      error: () => {}
     });
   }
 
@@ -293,6 +324,8 @@ export class HistoriaVivaComponent implements OnInit, OnDestroy {
 
   iniciarLectura(): void {
     this.initAudio();
+    this.sesionBackendId = null;
+    this.iniciarSesionBackend();
     const historia = HISTORIAS.find(h => h.nivel === this.nivelActual) ?? HISTORIAS[0];
     this.historiaActual    = historia;
     this.modoRelectura     = false;
@@ -400,6 +433,7 @@ export class HistoriaVivaComponent implements OnInit, OnDestroy {
 
     this.confettiPieces = this.generarConfeti();
     this.estado = 'resultados';
+    this.finalizarSesionBackend();
     this.tocarFanfare();
 
     const msg = rate >= 70

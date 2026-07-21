@@ -6,6 +6,7 @@ import { VolumeControlComponent } from '../../../../shared/game-feedback/volume-
 import { GameFeedbackService, NivelVolumen } from '../../../../shared/game-feedback/game-feedback.service';
 import { ChildProfileService } from '../../../padre/perfiles/child-profile.service';
 import { MascotComponent } from '../../../../shared/components/mascot/mascot.component';
+import { SesionJuegoService } from '../../../../core/services/sesion-juego.service';
 
 type Estado = 'inicio' | 'cuenta' | 'mostrando' | 'input' | 'feedback' | 'resultados';
 type Mood   = 'idle' | 'thinking' | 'excited' | 'celebrate' | 'encourage';
@@ -65,6 +66,13 @@ export class EspejoMentalComponent implements OnInit, OnDestroy {
   mascotMood: Mood = 'idle';
   voiceEnabled = true;
   private abortado = false;
+  private foxyVoice: SpeechSynthesisVoice | null = null;
+
+  // ── Backend session tracking ──
+  private readonly JUEGO_ID = 1;   // "Espejo Mental" es ID 1 en el seeder
+  private sesionBackendId: number | null = null;
+  private nivelFacilId: number | null = null;
+  private perfilId: number | null = null;
 
   // ── Retroalimentación visual/sonora (CA-01..CA-06) ─────────────────────
   @ViewChild('feedback') feedback!: GameFeedbackComponent;
@@ -92,14 +100,69 @@ export class EspejoMentalComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef,
     private feedbackService: GameFeedbackService,
     private childProfileService: ChildProfileService,
+    private sesionService: SesionJuegoService,
   ) {}
 
   ngOnInit(): void {
     this.childProfileService.activeProfile$.subscribe(state => {
       this.profileId = state.profileId;
+      this.perfilId  = state.profileId;
       this.volumenActual = (state.profileVolumen ?? 75) as NivelVolumen;
       this.feedbackService.setVolumen(this.volumenActual);
     });
+    // Cargar el primer nivel del juego (FACIL) para usarlo en iniciarSesion
+    this.sesionService.obtenerNiveles(this.JUEGO_ID).subscribe({
+      next: niveles => { this.nivelFacilId = niveles[0]?.id ?? null; },
+      error: () => {}
+    });
+    this.cargarVozFoxy();
+    setTimeout(() => {
+      this.hablar('¡Hola! Soy Foxy. Para jugar Espejo Mental: Mira los colores que brillan, recuérdalos en orden y tócalos igual que yo. ¡Yo te ayudo!', 0.88, 1.25);
+    }, 900);
+  }
+
+  private iniciarSesionBackend(): void {
+    if (!this.perfilId || !this.nivelFacilId) return;
+    this.sesionService.iniciarSesion({
+      perfilId: this.perfilId,
+      juegoId:  this.JUEGO_ID,
+      nivelId:  this.nivelFacilId,
+    }).subscribe({
+      next: sesion => { this.sesionBackendId = sesion.id; },
+      error: () => {}
+    });
+  }
+
+  private finalizarSesionBackend(): void {
+    if (!this.sesionBackendId) return;
+    this.sesionService.finalizarSesion(this.sesionBackendId, this.puntuacion).subscribe({
+      next: () => { this.sesionBackendId = null; },
+      error: () => {}
+    });
+  }
+
+  private cargarVozFoxy(): void {
+    const seleccionar = () => {
+      const voces = window.speechSynthesis?.getVoices() ?? [];
+      // Prioridad: voces femeninas en español (nombres comunes en Windows/Mac/Android)
+      const candidatas = [
+        voces.find(v => v.name.includes('Sabina')),    // macOS es-MX femenina
+        voces.find(v => v.name.includes('Paulina')),   // macOS es-MX
+        voces.find(v => v.name.includes('Monica')),    // macOS es-ES femenina
+        voces.find(v => v.name.includes('Helena')),    // Windows es-ES femenina
+        voces.find(v => v.name.includes('Laura')),     // Windows es-ES
+        voces.find(v => v.name.includes('Elvira')),    // Android
+        voces.find(v => v.lang === 'es-MX'),
+        voces.find(v => v.lang === 'es-ES'),
+        voces.find(v => v.lang.startsWith('es')),
+      ];
+      this.foxyVoice = candidatas.find(v => !!v) ?? null;
+    };
+    if (window.speechSynthesis?.getVoices().length) {
+      seleccionar();
+    } else {
+      window.speechSynthesis?.addEventListener('voiceschanged', seleccionar, { once: true });
+    }
   }
 
   ngOnDestroy(): void { this.limpiarTimers(); this.audioCtx?.close(); window.speechSynthesis?.cancel(); }
@@ -142,13 +205,18 @@ export class EspejoMentalComponent implements OnInit, OnDestroy {
 
   toggleVoz(): void { this.voiceEnabled = !this.voiceEnabled; if (!this.voiceEnabled) window.speechSynthesis?.cancel(); }
 
-  private hablar(texto: string, rate = 0.92, pitch = 1.15): Promise<void> {
+  private hablar(texto: string, rate = 0.90, pitch = 1.25): Promise<void> {
     if (!this.voiceEnabled || !window.speechSynthesis) return Promise.resolve();
     return new Promise(resolve => {
       try {
         window.speechSynthesis.cancel();
         const utt = new SpeechSynthesisUtterance(texto);
-        utt.lang   = 'es-ES';
+        if (this.foxyVoice) {
+          utt.voice = this.foxyVoice;
+          utt.lang  = this.foxyVoice.lang;
+        } else {
+          utt.lang  = 'es-ES';
+        }
         utt.volume = 0.9;
         utt.rate   = rate;
         utt.pitch  = pitch;
@@ -177,9 +245,11 @@ export class EspejoMentalComponent implements OnInit, OnDestroy {
   iniciarJuego(): void {
     this.initAudio();
     this.abortado = false;
+    this.sesionBackendId = null;
     this.aciertos = 0; this.errores = 0; this.maxLongitud = 3;
     this.rondas = 0; this.metricas = []; this.erroresConsecutivos = 0;
     this.longitudActual = 3; this.combo = 0; this.maxCombo = 0;
+    this.iniciarSesionBackend();
     this.nuevaRonda();
   }
 
@@ -304,6 +374,7 @@ export class EspejoMentalComponent implements OnInit, OnDestroy {
       if (this.rondas >= this.MAX_RONDAS) {
         this.dispararConfeti(); // celebración solo al terminar la partida completa
         this.estado = 'resultados'; this.sonarFanfare();
+        this.finalizarSesionBackend();
         const txt = (this.tituloFinal + '. ' + this.mensajeFinal).replace(/[\u{1F300}-\u{1FFFF}]/gu, '').trim();
         setTimeout(() => this.hablar(txt, 0.88, 1.1), 800);
       } else {
@@ -336,6 +407,7 @@ export class EspejoMentalComponent implements OnInit, OnDestroy {
       if (this.abortado) return;
       if (this.rondas >= this.MAX_RONDAS) {
         this.estado = 'resultados'; this.sonarFanfare();
+        this.finalizarSesionBackend();
         const txt = (this.tituloFinal + '. ' + this.mensajeFinal).replace(/[\u{1F300}-\u{1FFFF}]/gu, '').trim();
         setTimeout(() => this.hablar(txt, 0.88, 1.1), 800);
       } else {
@@ -386,6 +458,7 @@ export class EspejoMentalComponent implements OnInit, OnDestroy {
     this.dispararConfeti();
     this.estado = 'resultados';
     this.sonarFanfare();
+    this.finalizarSesionBackend();
     this.cdr.detectChanges();
     setTimeout(() => this.hablar(this.tituloFinal + '. ' + this.mensajeFinal.replace(/[\u{1F300}-\u{1FFFF}]/gu, '').trim(), 0.88, 1.1), 800);
   }
