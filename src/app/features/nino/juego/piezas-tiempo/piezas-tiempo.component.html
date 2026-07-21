@@ -1,0 +1,192 @@
+<div class="juego-wrapper">
+
+  <!-- ══ PANTALLA INICIO ══════════════════════════════════════════════════ -->
+  @if (estado === 'inicio') {
+    <div class="pantalla-inicio">
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+      <div class="orb orb-3"></div>
+      <div class="inicio-content">
+
+        <div class="mascota-area">
+          <div class="sparkles">
+            <span class="sp sp-1">✨</span><span class="sp sp-2">⭐</span>
+            <span class="sp sp-3">💫</span><span class="sp sp-4">✨</span>
+          </div>
+          <div class="mascota-ring"><div class="mascota-avatar">🐯</div></div>
+          <div class="mascota-bubble">
+            ¡Hola! Soy <strong>Tigre</strong> 🐯<br>
+            ¡Arrastra las piezas a sus siluetas antes de que se acabe el tiempo! 🧩
+          </div>
+        </div>
+
+        <h1 class="titulo-juego">
+          <span class="titulo-parte1">Piezas</span><span class="titulo-parte2"> en Tiempo</span>
+        </h1>
+        <p class="titulo-sub">Arrastra y rota las piezas geométricas a sus siluetas</p>
+
+        <div class="instrucciones-grid">
+          <div class="instruccion-card">
+            <span class="ic-num">1</span><span class="ic-emoji">✋</span>
+            <span class="ic-texto">Arrastra una pieza hacia su silueta</span>
+          </div>
+          <div class="instruccion-card">
+            <span class="ic-num">2</span><span class="ic-emoji">🔄</span>
+            <span class="ic-texto">Usa el botón Rotar para girarla 90°</span>
+          </div>
+          <div class="instruccion-card">
+            <span class="ic-num">3</span><span class="ic-emoji">🎯</span>
+            <span class="ic-texto">¡Suéltala sobre la silueta correcta!</span>
+          </div>
+          <div class="instruccion-card">
+            <span class="ic-num">4</span><span class="ic-emoji">⚡</span>
+            <span class="ic-texto">¡Sé rápido y gana puntos bonus!</span>
+          </div>
+        </div>
+
+        <div class="nivel-seccion">
+          <p class="nivel-label">Elige tu nivel:</p>
+          <div class="niveles-row">
+            @for (n of niveles; track n.id) {
+              <button class="nivel-btn" [class.activo]="nivelActual === n.id"
+                      (click)="seleccionarNivel(n.id)">
+                <span class="nv-emoji">{{ n.emoji }}</span>
+                <span class="nv-nombre">{{ n.label }}</span>
+                <span class="nv-desc">{{ n.desc }}</span>
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="inicio-botones">
+          <button class="btn-empezar" (click)="iniciarJuego(nivelActual)">🧩 ¡Empezar!</button>
+          <button class="btn-sonido" (click)="toggleSonido()">{{ sonidoActivo ? '🔊' : '🔇' }}</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ══ PANTALLA JUGANDO ══════════════════════════════════════════════════ -->
+  @if (estado === 'jugando') {
+    <div class="pantalla-juego">
+
+      <div class="juego-topbar">
+        <button class="btn-salir" (click)="volverInicio()">← Salir</button>
+        <div class="timer-area">
+          <div class="timer-bar-bg">
+            <div class="timer-bar-fill" [style.width.%]="timerPorcentaje" [style.background]="timerColor"></div>
+          </div>
+          <span class="timer-texto">⏱ {{ formatTiempo(tiempoRestante) }}</span>
+        </div>
+        <div class="contadores">
+          <div class="contador">⭐ {{ piezasColocadas }}/{{ slots.length }}</div>
+          <div class="contador rojo">❌ {{ fallidos }}</div>
+        </div>
+        <button class="btn-sonido-top" (click)="toggleSonido()">{{ sonidoActivo ? '🔊' : '🔇' }}</button>
+      </div>
+
+      <div class="juego-info">
+        🧩 {{ nivelLabel }}
+        @if (requiereRotacion) { · 🔄 Rotación activa }
+      </div>
+
+      @if (hintMsg) {
+        <div class="hint-msg">{{ hintMsg }}</div>
+      }
+
+      <!-- Siluetas (zonas de destino) -->
+      <div class="seccion-card">
+        <p class="seccion-titulo">📐 Siluetas objetivo — arrastra aquí tu pieza</p>
+        <div class="slots-grid">
+          @for (slot of slots; track slot.id) {
+            <div class="slot-card"
+                 [attr.data-slot-id]="slot.id"
+                 [class.slot-ocupado]="slot.ocupado"
+                 [class.slot-error]="slot.animError"
+                 [class.slot-ok]="slot.animOk"
+                 [class.slot-activo]="!!piezaSeleccionada && !slot.ocupado"
+                 (click)="onSlotClick(slot)">
+              <div class="shape-inner" [innerHTML]="getSlotSvg(slot.id)"></div>
+              @if (slot.ocupado) { <div class="slot-check">✓</div> }
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Piezas disponibles -->
+      <div class="seccion-card">
+        <div class="piezas-header">
+          <p class="seccion-titulo">🎨 Tus piezas — arrastra una a su silueta</p>
+          <button class="btn-rotar" [disabled]="!piezaSeleccionada" (click)="rotarSeleccionada()">
+            🔄 Rotar {{ piezaSeleccionada ? '(' + piezaSeleccionada.rotacion + '°)' : '' }}
+          </button>
+        </div>
+        <div class="piezas-tray">
+          @for (pieza of piezasRestantes; track pieza.id) {
+            <div class="pieza-card"
+                 [class.pieza-sel]="pieza.seleccionada"
+                 [class.pieza-dragging]="isDragging && dragPieza?.id === pieza.id"
+                 (mousedown)="onPiezaMouseDown(pieza, $event)"
+                 (touchstart)="onPiezaTouchStart(pieza, $event)">
+              <div class="shape-inner" [innerHTML]="getPiezaSvg(pieza.id)"></div>
+              @if (pieza.seleccionada && !isDragging) { <div class="pieza-badge">✓</div> }
+            </div>
+          }
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Ghost de arrastre (sigue al cursor) -->
+    @if (isDragging && dragPieza) {
+      <div class="drag-ghost"
+           [style.left.px]="ghostX"
+           [style.top.px]="ghostY"
+           [innerHTML]="getPiezaSvg(dragPieza.id)">
+      </div>
+    }
+  }
+
+  <!-- Mascota flotante durante el juego -->
+  @if (estado === 'jugando') {
+    <app-mascot game="piezas" [mood]="mascotMood" [message]="mascotMsg"></app-mascot>
+  }
+
+  <!-- ══ PANTALLA RESULTADO ════════════════════════════════════════════════ -->
+  @if (estado === 'completado' || estado === 'tiempo-agotado') {
+    <div class="pantalla-resultado">
+      <div class="orb orb-1"></div><div class="orb orb-2"></div>
+      <div class="resultado-card">
+        <div class="res-icono">{{ estado === 'completado' ? '🎉' : '⏰' }}</div>
+        <div class="res-espacio"></div>
+        <h2 class="res-titulo">{{ estado === 'completado' ? '¡Lo lograste!' : '¡Se acabó el tiempo!' }}</h2>
+
+        @if (estado === 'tiempo-agotado' && fraseMotivaconalActual) {
+          <p class="frase-motivacional">{{ fraseMotivaconalActual }}</p>
+        }
+        @if (estado === 'completado' && puntosBonus > 0) {
+          <div class="bonus-badge">⚡ +{{ puntosBonus }} puntos bonus por rapidez!</div>
+        }
+        @if (subioNivel && nivelSugerido) {
+          <div class="ia-badge">🤖 ¡Motor IA: nivel subido a <strong>{{ nivelSugerido }}</strong>!</div>
+        }
+
+        <div class="res-stats">
+          <div class="res-stat"><span class="rs-num verde">{{ piezasColocadas }}</span><span class="rs-label">Encajadas</span></div>
+          <div class="res-stat"><span class="rs-num celeste">{{ rotaciones }}</span><span class="rs-label">Rotaciones</span></div>
+          <div class="res-stat"><span class="rs-num amarillo">{{ fallidos }}</span><span class="rs-label">Fallidos</span></div>
+        </div>
+
+        <div class="res-botones">
+          @if (subioNivel && nivelSugerido) {
+            <button class="btn-ia" (click)="subirNivel()">⬆️ Jugar en {{ nivelSugerido }}</button>
+          }
+          <button class="btn-reintentar" (click)="jugarDeNuevo()">🔄 Jugar de nuevo</button>
+          <button class="btn-cambiar"    (click)="volverInicio()">🎯 Cambiar nivel</button>
+          <button class="btn-volver"     (click)="volverLobby()">← Volver a juegos</button>
+        </div>
+      </div>
+    </div>
+  }
+
+</div>
