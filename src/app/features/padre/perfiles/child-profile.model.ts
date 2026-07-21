@@ -7,6 +7,12 @@ export interface ChildProfile {
   diagnostico: string | null;
   activo: boolean;
   volumen?: number; // CA-05: nivel de volumen de efectos de sonido (0/25/50/75/100), persistido por perfil
+  docente?: {
+    id: number;
+    usuario?: { nombre?: string; email?: string; };
+    institucion?: string;
+    gradoGrupo?: string;
+  } | null;
 }
 
 // Datos que se envian al backend para crear o editar un perfil

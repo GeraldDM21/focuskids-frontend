@@ -5,6 +5,7 @@ import { GameFeedbackComponent } from '../../../../shared/game-feedback/game-fee
 import { VolumeControlComponent } from '../../../../shared/game-feedback/volume-control.component';
 import { GameFeedbackService, NivelVolumen } from '../../../../shared/game-feedback/game-feedback.service';
 import { ChildProfileService } from '../../../padre/perfiles/child-profile.service';
+import { MascotComponent } from '../../../../shared/components/mascot/mascot.component';
 
 type Estado = 'inicio' | 'cuenta' | 'mostrando' | 'input' | 'feedback' | 'resultados';
 type Mood   = 'idle' | 'thinking' | 'excited' | 'celebrate' | 'encourage';
@@ -16,7 +17,7 @@ interface ConfettiPiece { id: number; left: number; color: string; delay: number
 @Component({
   selector: 'app-espejo-mental',
   standalone: true,
-  imports: [CommonModule, GameFeedbackComponent, VolumeControlComponent],
+  imports: [CommonModule, GameFeedbackComponent, VolumeControlComponent, MascotComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="game-wrapper">
@@ -140,22 +141,7 @@ interface ConfettiPiece { id: number; left: number; color: string; delay: number
           </div>
 
           <!-- Mascota prominente -->
-          <div class="mascota-area">
-            <div class="fox-game-wrap"
-              [class.fox-celebrate]="mascotMood === 'celebrate'"
-              [class.fox-encourage]="mascotMood === 'encourage'">
-              @if (mascotDecoEmoji) {
-                <div class="fox-deco-emoji">{{ mascotDecoEmoji }}</div>
-              }
-              <div class="fox-game-avatar">{{ mascotEmoji }}</div>
-            </div>
-            <div class="burbuja-dialogo"
-              [class.burbuja-verde]="mascotMood === 'celebrate'"
-              [class.burbuja-naranja]="mascotMood === 'encourage'"
-              [class.burbuja-azul]="mascotMood === 'thinking'">
-              {{ mascotMsg }}
-            </div>
-          </div>
+          <app-mascot game="espejo" [mood]="mascotMood" [message]="mascotMsg"></app-mascot>
 
           <!-- Combo -->
           @if (showCombo && combo >= 2) {
