@@ -813,7 +813,9 @@ export class NinoJuegosComponent implements OnInit {
     '/nino/juego/espejo-mental', '/nino/juego/palabras-ocultas',
     '/nino/juego/historia-viva', '/nino/juego/piezas-tiempo',
     '/nino/juego/cascada-numerica', '/nino/juego/foco-extremo',
-    '/nino/juego/ritmo-patron'
+    '/nino/juego/ritmo-patron', '/nino/juego/reaccion-controlada',
+    '/nino/juego/laberinto', '/nino/juego/maraton-mental',
+    '/nino/juego/mapa-aventura', '/nino/juego/lab-ciencias',
   ];
 
   private readonly CAT_COLORS: Record<string, [string, string]> = {

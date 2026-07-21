@@ -43,6 +43,30 @@ export const ninoRoutes: Routes = [
     path: 'juego/foco-extremo',
     loadComponent: () =>
       import('./juego/foco-extremo/foco-extremo.component').then((m) => m.FocoExtremoComponent),
-  }
-  ,
+  },
+  {
+    path: 'juego/reaccion-controlada',
+    loadComponent: () =>
+      import('./juego/reaccion-controlada/reaccion-controlada.component').then((m) => m.ReaccionControladaComponent),
+  },
+  {
+    path: 'juego/laberinto',
+    loadComponent: () =>
+      import('./juego/laberinto/laberinto.component').then((m) => m.LaberintoComponent),
+  },
+  {
+    path: 'juego/maraton-mental',
+    loadComponent: () =>
+      import('./juego/maraton-mental/maraton-mental.component').then((m) => m.MaratonMentalComponent),
+  },
+  {
+    path: 'juego/mapa-aventura',
+    loadComponent: () =>
+      import('./juego/mapa-aventura/mapa-aventura.component').then((m) => m.MapaAventuraComponent),
+  },
+  {
+    path: 'juego/lab-ciencias',
+    loadComponent: () =>
+      import('./juego/lab-ciencias/lab-ciencias.component').then((m) => m.LabCienciasComponent),
+  },
 ];
