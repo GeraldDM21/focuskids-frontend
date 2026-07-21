@@ -7,7 +7,7 @@ import { ChildProfileService } from '../../padre/perfiles/child-profile.service'
 import { DocenteService, AsignacionPerfil } from '../../docente/docente.service';
 import { SesionJuego, Metrica } from '../../padre/padre.service';
 
-interface Juego       { nombre: string; tipo: string; icono: string; color: string; nivelTxt: string; progreso: number; ruta: string; }
+interface Juego       { nombre: string; tipo: string; icono: string; personaje: string; color: string; nivelTxt: string; progreso: number; ruta: string; }
 interface ProgresoItem{ nombre: string; valor: number; color: string; icono: string; }
 interface Logro       { icono: string; nombre: string; desc: string; puntos: number; }
 interface LogroFull   { icono: string; nombre: string; desc: string; puntos: number; ganado: boolean; cat: string; }
@@ -77,9 +77,9 @@ interface Avatar      { key: string; emoji: string; }
             @for (juego of juegos; track juego.nombre) {
               <div class="game-card" [style.--accent]="juego.color"
                    [class.locked]="!estaImplementado(juego.ruta)" (click)="irAJuego(juego)">
-                <div class="card-top-bar" [style.background]="juego.color"></div>
-                <div class="card-header">
-                  <div class="card-icon">{{ juego.icono }}</div>
+                <div class="card-hero" [style.background]="juego.color + '18'">
+                  <span class="card-personaje">{{ juego.personaje }}</span>
+                  <span class="card-icon-sm">{{ juego.icono }}</span>
                   <button class="play-btn" [style.background]="estaImplementado(juego.ruta) ? juego.color : '#cbd5e1'">{{ estaImplementado(juego.ruta) ? '▶' : '🔒' }}</button>
                 </div>
                 <div class="card-body">
@@ -428,10 +428,11 @@ interface Avatar      { key: string; emoji: string; }
     .game-card:hover { transform: translateY(-4px) scale(1.02); border-color: var(--accent); box-shadow: 0 8px 28px rgba(0,0,0,.1); }
     .game-card.locked { opacity: .7; }
     .game-card.locked:hover { transform: translateY(-2px) scale(1.01); }
-    .card-top-bar { height: 4px; }
-    .card-header { display: flex; align-items: flex-start; justify-content: space-between; padding: 14px 14px 6px; }
-    .card-icon { font-size: 36px; line-height: 1; }
-    .play-btn { width: 28px; height: 28px; border-radius: 50%; border: none; color: white; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: transform .2s; }
+    .card-hero { position: relative; height: 90px; display: flex; align-items: center; justify-content: center; border-radius: 0; }
+    .card-personaje { font-size: 52px; line-height: 1; filter: drop-shadow(0 4px 8px rgba(0,0,0,.15)); transition: transform .25s cubic-bezier(.34,1.56,.64,1); }
+    .game-card:hover .card-personaje { transform: scale(1.18) rotate(-5deg); }
+    .card-icon-sm { position: absolute; bottom: 6px; left: 10px; font-size: 18px; opacity: .7; }
+    .play-btn { position: absolute; top: 8px; right: 10px; width: 28px; height: 28px; border-radius: 50%; border: none; color: white; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: transform .2s; }
     .game-card:hover .play-btn { transform: scale(1.15); }
     .card-body { padding: 0 14px 10px; flex: 1; }
     .card-tipo   { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; margin-bottom: 2px; }
@@ -777,18 +778,18 @@ export class NinoJuegosComponent implements OnInit {
     { key:'bear',    emoji:'🐻' }, { key:'mouse',   emoji:'🐭' },
   ];
   readonly juegos: Juego[] = [
-    { nombre:'Espejo Mental',       tipo:'Atención',   icono:'🪞', color:'#7C3AED', nivelTxt:'Nivel 3 · Avanzado',   progreso:75, ruta:'/nino/juego/espejo-mental' },
-    { nombre:'Historia Viva',       tipo:'Lectura',    icono:'📖', color:'#D97706', nivelTxt:'Nivel 1 · Básico',      progreso:10, ruta:'/nino/juego/historia-viva' },
-    { nombre:'Foco Extremo',        tipo:'Atención',   icono:'🎯', color:'#4F46E5', nivelTxt:'Nivel 4 · Experto',     progreso:90, ruta:'/nino/juego/foco-extremo' },
-    { nombre:'Reacción Controlada', tipo:'Atención',   icono:'⚡', color:'#2563EB', nivelTxt:'Nivel 2 · Intermedio',  progreso:45, ruta:'/nino/juego/reaccion-controlada' },
-    { nombre:'Cascada Numérica',    tipo:'Cálculo',    icono:'🔢', color:'#059669', nivelTxt:'Nivel 2 · Intermedio',  progreso:30, ruta:'/nino/juego/cascada-numerica' },
-    { nombre:'Laberinto Cognitivo', tipo:'Memoria',    icono:'🌀', color:'#7C3AED', nivelTxt:'Nivel 1 · Básico',      progreso:15, ruta:'/nino/juego/laberinto' },
-    { nombre:'Maratón Mental',      tipo:'Cálculo',    icono:'🏃', color:'#059669', nivelTxt:'Nivel 1 · Básico',      progreso:10, ruta:'/nino/juego/maraton-mental' },
-    { nombre:'Ritmo y Patrón',      tipo:'Memoria',    icono:'🎵', color:'#9333EA', nivelTxt:'Nivel 1 · Básico',      progreso:0,  ruta:'/nino/juego/ritmo-patron' },
-    { nombre:'Palabras Ocultas',    tipo:'Lenguaje',   icono:'📝', color:'#EA580C', nivelTxt:'Nivel 1 · Básico',      progreso:0,  ruta:'/nino/juego/palabras-ocultas' },
-    { nombre:'Piezas en Tiempo',    tipo:'Percepción', icono:'🧩', color:'#0891B2', nivelTxt:'Nivel 1 · Básico',      progreso:0,  ruta:'/nino/juego/piezas-tiempo' },
-    { nombre:'Mapa Aventura',       tipo:'Geografía',  icono:'🗺️', color:'#65A30D', nivelTxt:'Nivel 1 · Básico',      progreso:0,  ruta:'/nino/juego/mapa-aventura' },
-    { nombre:'Lab de Ciencias',     tipo:'Lógica',     icono:'🔬', color:'#DB2777', nivelTxt:'Nivel 1 · Básico',      progreso:0,  ruta:'/nino/juego/lab-ciencias' },
+    { nombre:'Espejo Mental',       tipo:'Atención',   icono:'🪞', personaje:'🦊', color:'#7C3AED', nivelTxt:'Nivel 3 · Avanzado',   progreso:75, ruta:'/nino/juego/espejo-mental' },
+    { nombre:'Historia Viva',       tipo:'Lectura',    icono:'📖', personaje:'🐰', color:'#D97706', nivelTxt:'Nivel 1 · Básico',      progreso:10, ruta:'/nino/juego/historia-viva' },
+    { nombre:'Foco Extremo',        tipo:'Atención',   icono:'🎯', personaje:'🦄', color:'#4F46E5', nivelTxt:'Nivel 4 · Experto',     progreso:90, ruta:'/nino/juego/foco-extremo' },
+    { nombre:'Reacción Controlada', tipo:'Atención',   icono:'⚡', personaje:'🐸', color:'#2563EB', nivelTxt:'Nivel 2 · Intermedio',  progreso:45, ruta:'/nino/juego/reaccion-controlada' },
+    { nombre:'Cascada Numérica',    tipo:'Cálculo',    icono:'🔢', personaje:'🦉', color:'#059669', nivelTxt:'Nivel 2 · Intermedio',  progreso:30, ruta:'/nino/juego/cascada-numerica' },
+    { nombre:'Laberinto Cognitivo', tipo:'Memoria',    icono:'🌀', personaje:'🐱', color:'#7C3AED', nivelTxt:'Nivel 1 · Básico',      progreso:15, ruta:'/nino/juego/laberinto' },
+    { nombre:'Maratón Mental',      tipo:'Cálculo',    icono:'🏃', personaje:'🐨', color:'#059669', nivelTxt:'Nivel 1 · Básico',      progreso:10, ruta:'/nino/juego/maraton-mental' },
+    { nombre:'Ritmo y Patrón',      tipo:'Memoria',    icono:'🎵', personaje:'🐭', color:'#9333EA', nivelTxt:'Nivel 1 · Básico',      progreso:0,  ruta:'/nino/juego/ritmo-patron' },
+    { nombre:'Palabras Ocultas',    tipo:'Lenguaje',   icono:'📝', personaje:'🐼', color:'#EA580C', nivelTxt:'Nivel 1 · Básico',      progreso:0,  ruta:'/nino/juego/palabras-ocultas' },
+    { nombre:'Piezas en Tiempo',    tipo:'Percepción', icono:'🧩', personaje:'🐯', color:'#0891B2', nivelTxt:'Nivel 1 · Básico',      progreso:0,  ruta:'/nino/juego/piezas-tiempo' },
+    { nombre:'Mapa Aventura',       tipo:'Geografía',  icono:'🗺️', personaje:'🦁', color:'#65A30D', nivelTxt:'Nivel 1 · Básico',      progreso:0,  ruta:'/nino/juego/mapa-aventura' },
+    { nombre:'Lab de Ciencias',     tipo:'Lógica',     icono:'🔬', personaje:'🐶', color:'#DB2777', nivelTxt:'Nivel 1 · Básico',      progreso:0,  ruta:'/nino/juego/lab-ciencias' },
   ];
   progresos: ProgresoItem[] = [];
   logrosRecientes: Logro[] = [];
