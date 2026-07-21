@@ -8,8 +8,9 @@ export interface Juego {
 
 export interface NivelDificultad {
   id: number;
-  juego: Juego;
-  nombre: string;
+  juego?: Juego;
+  nivel: string;           // "FACIL" | "MEDIO" | "DIFICIL"
+  parametrosJson: string;  // ej.: {"velocidad":1,"distractores":1,"tiempo":60}
   umbralMin: number;
   umbralMax: number;
 }
