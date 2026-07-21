@@ -22,6 +22,9 @@ export const ninoRoutes: Routes = [
       import('./juego/historia-viva/historia-viva.component').then((m) => m.HistoriaVivaComponent),
   },
   {
+    path: 'juego/ritmo-patron',
+    loadComponent: () =>
+      import('./juego/ritmo-patron/ritmo-patron.component').then(m => m.RitmoPatronComponent)
     path: 'juego/piezas-tiempo',
     loadComponent: () =>
       import('./juego/piezas-tiempo/piezas-tiempo.component').then((m) => m.PiezasTiempoComponent),
