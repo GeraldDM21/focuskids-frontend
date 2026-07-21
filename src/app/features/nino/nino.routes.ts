@@ -25,5 +25,10 @@ export const ninoRoutes: Routes = [
     path: 'juego/piezas-tiempo',
     loadComponent: () =>
       import('./juego/piezas-tiempo/piezas-tiempo.component').then(m => m.PiezasTiempoComponent)
+  },
+  {
+    path: 'juego/cascada-numerica',
+    loadComponent: () =>
+      import('./juego/cascada-numerica/cascada-numerica.component').then(m => m.CascadaNumericaComponent)
   }
 ];
