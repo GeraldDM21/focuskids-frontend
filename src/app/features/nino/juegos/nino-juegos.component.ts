@@ -829,9 +829,6 @@ export class NinoJuegosComponent implements OnInit {
   catColor2(cat: string): string { return this.CAT_COLORS[cat]?.[1] ?? '#4338CA'; }
   catIco   (cat: string): string { return this.CAT_ICOS[cat] ?? '🏅'; }
 
-  private implementados = ['/nino/juego/espejo-mental', '/nino/juego/historia-viva', '/nino/juego/ritmo-patron'];
-
-  constructor(private profileService: ChildProfileService, private router: Router) {}
   constructor(
     private profileService: ChildProfileService,
     private router: Router,
