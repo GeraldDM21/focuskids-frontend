@@ -25,12 +25,12 @@
             <div class="circulo circulo-3"></div>
 
             <div class="foxy-principal">
-              🦊
+              🦉
             </div>
           </div>
 
           <div class="burbuja-presentacion">
-            <strong>¡Hola! Soy Foxy 🦊</strong>
+            <strong>¡Hola! Soy Ollie 🦉</strong>
 
             <span>
               ¡Tu guía de cálculo! ¿Listo para atrapar
@@ -158,13 +158,7 @@
         </header>
 
         <div class="mascota-area cuenta-mascota-area">
-          <div class="fox-game-avatar">
-            🦊
-          </div>
-
-          <div class="mascot-message">
-            {{ mascotMsg }}
-          </div>
+          <app-mascot game="numeros" [mood]="mascotMood" [message]="mascotMsg"></app-mascot>
         </div>
 
         @if (operacionActual) {
@@ -243,13 +237,7 @@
       </header>
 
       <div class="mascota-area">
-        <div class="fox-game-avatar">
-          🦊
-        </div>
-
-        <div class="mascot-message">
-          {{ mascotMsg }}
-        </div>
+        <app-mascot game="numeros" [mood]="mascotMood" [message]="mascotMsg"></app-mascot>
       </div>
 
       @if (operacionActual) {

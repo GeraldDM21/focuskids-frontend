@@ -778,18 +778,18 @@ export class NinoJuegosComponent implements OnInit {
     { key:'bear',    emoji:'🐻' }, { key:'mouse',   emoji:'🐭' },
   ];
   readonly juegos: Juego[] = [
-    { nombre:'Espejo Mental',       tipo:'Atención',   icono:'🪞', personaje:'🦉', color:'#7C3AED', nivelTxt:'Nivel 3 · Avanzado',   progreso:75, ruta:'/nino/juego/espejo-mental' },
-    { nombre:'Historia Viva',       tipo:'Lectura',    icono:'📖', personaje:'🦊', color:'#D97706', nivelTxt:'Nivel 1 · Básico',      progreso:10, ruta:'/nino/juego/historia-viva' },
-    { nombre:'Foco Extremo',        tipo:'Atención',   icono:'🎯', personaje:'🦅', color:'#4F46E5', nivelTxt:'Nivel 4 · Experto',     progreso:90, ruta:'/nino/juego/foco-extremo' },
-    { nombre:'Reacción Controlada', tipo:'Atención',   icono:'⚡', personaje:'🐆', color:'#2563EB', nivelTxt:'Nivel 2 · Intermedio',  progreso:45, ruta:'/nino/juego/reaccion-controlada' },
-    { nombre:'Cascada Numérica',    tipo:'Cálculo',    icono:'🔢', personaje:'🐠', color:'#059669', nivelTxt:'Nivel 2 · Intermedio',  progreso:30, ruta:'/nino/juego/cascada-numerica' },
-    { nombre:'Laberinto Cognitivo', tipo:'Memoria',    icono:'🌀', personaje:'🐙', color:'#7C3AED', nivelTxt:'Nivel 1 · Básico',      progreso:15, ruta:'/nino/juego/laberinto' },
-    { nombre:'Maratón Mental',      tipo:'Cálculo',    icono:'🏃', personaje:'🐇', color:'#059669', nivelTxt:'Nivel 1 · Básico',      progreso:10, ruta:'/nino/juego/maraton-mental' },
-    { nombre:'Ritmo y Patrón',      tipo:'Memoria',    icono:'🎵', personaje:'🦜', color:'#9333EA', nivelTxt:'Nivel 1 · Básico',      progreso:0,  ruta:'/nino/juego/ritmo-patron' },
-    { nombre:'Palabras Ocultas',    tipo:'Lenguaje',   icono:'📝', personaje:'🦔', color:'#EA580C', nivelTxt:'Nivel 1 · Básico',      progreso:0,  ruta:'/nino/juego/palabras-ocultas' },
-    { nombre:'Piezas en Tiempo',    tipo:'Percepción', icono:'🧩', personaje:'🦎', color:'#0891B2', nivelTxt:'Nivel 1 · Básico',      progreso:0,  ruta:'/nino/juego/piezas-tiempo' },
+    { nombre:'Espejo Mental',       tipo:'Atención',   icono:'🪞', personaje:'🦊', color:'#7C3AED', nivelTxt:'Nivel 3 · Avanzado',   progreso:75, ruta:'/nino/juego/espejo-mental' },
+    { nombre:'Historia Viva',       tipo:'Lectura',    icono:'📖', personaje:'🐰', color:'#D97706', nivelTxt:'Nivel 1 · Básico',      progreso:10, ruta:'/nino/juego/historia-viva' },
+    { nombre:'Foco Extremo',        tipo:'Atención',   icono:'🎯', personaje:'🦄', color:'#4F46E5', nivelTxt:'Nivel 4 · Experto',     progreso:90, ruta:'/nino/juego/foco-extremo' },
+    { nombre:'Reacción Controlada', tipo:'Atención',   icono:'⚡', personaje:'🐸', color:'#2563EB', nivelTxt:'Nivel 2 · Intermedio',  progreso:45, ruta:'/nino/juego/reaccion-controlada' },
+    { nombre:'Cascada Numérica',    tipo:'Cálculo',    icono:'🔢', personaje:'🦉', color:'#059669', nivelTxt:'Nivel 2 · Intermedio',  progreso:30, ruta:'/nino/juego/cascada-numerica' },
+    { nombre:'Laberinto Cognitivo', tipo:'Memoria',    icono:'🌀', personaje:'🐱', color:'#7C3AED', nivelTxt:'Nivel 1 · Básico',      progreso:15, ruta:'/nino/juego/laberinto' },
+    { nombre:'Maratón Mental',      tipo:'Cálculo',    icono:'🏃', personaje:'🐨', color:'#059669', nivelTxt:'Nivel 1 · Básico',      progreso:10, ruta:'/nino/juego/maraton-mental' },
+    { nombre:'Ritmo y Patrón',      tipo:'Memoria',    icono:'🎵', personaje:'🐭', color:'#9333EA', nivelTxt:'Nivel 1 · Básico',      progreso:0,  ruta:'/nino/juego/ritmo-patron' },
+    { nombre:'Palabras Ocultas',    tipo:'Lenguaje',   icono:'📝', personaje:'🐼', color:'#EA580C', nivelTxt:'Nivel 1 · Básico',      progreso:0,  ruta:'/nino/juego/palabras-ocultas' },
+    { nombre:'Piezas en Tiempo',    tipo:'Percepción', icono:'🧩', personaje:'🐯', color:'#0891B2', nivelTxt:'Nivel 1 · Básico',      progreso:0,  ruta:'/nino/juego/piezas-tiempo' },
     { nombre:'Mapa Aventura',       tipo:'Geografía',  icono:'🗺️', personaje:'🦁', color:'#65A30D', nivelTxt:'Nivel 1 · Básico',      progreso:0,  ruta:'/nino/juego/mapa-aventura' },
-    { nombre:'Lab de Ciencias',     tipo:'Lógica',     icono:'🔬', personaje:'🦝', color:'#DB2777', nivelTxt:'Nivel 1 · Básico',      progreso:0,  ruta:'/nino/juego/lab-ciencias' },
+    { nombre:'Lab de Ciencias',     tipo:'Lógica',     icono:'🔬', personaje:'🐶', color:'#DB2777', nivelTxt:'Nivel 1 · Básico',      progreso:0,  ruta:'/nino/juego/lab-ciencias' },
   ];
   progresos: ProgresoItem[] = [];
   logrosRecientes: Logro[] = [];

@@ -1,6 +1,7 @@
 import { Component, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { MascotComponent } from '../../../../shared/components/mascot/mascot.component';
 
 type Estado = 'inicio' | 'lectura' | 'pregunta' | 'resultados';
 type Mood   = 'idle' | 'thinking' | 'celebrate' | 'encourage';
@@ -155,7 +156,7 @@ const TIPO_TIPS: Record<string, string> = {
 @Component({
   selector: 'app-historia-viva',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, MascotComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
 <div class="game-wrapper">
@@ -179,9 +180,9 @@ const TIPO_TIPS: Record<string, string> = {
             <span class="sp sp-3">⭐</span>
             <span class="sp sp-4">💫</span>
           </div>
-          <div class="fox-ring"><div class="fox-avatar">🦊</div></div>
+          <div class="fox-ring"><div class="fox-avatar">🐰</div></div>
           <div class="fox-bubble-inicio">
-            ¡Hola! Soy <strong>Foxy</strong> 🦊<br>
+            ¡Hola! Soy <strong>Benny</strong> 🐰<br>
             ¡Hoy te voy a contar una historia increíble! Lee con atención y responde mis preguntas. 📚
           </div>
         </div>
@@ -246,14 +247,7 @@ const TIPO_TIPS: Record<string, string> = {
       </div>
 
       <!-- Mascota -->
-      <div class="mascota-area">
-        <div class="fox-game-wrap" [class.fox-celebrate]="mascotMood === 'celebrate'">
-          <div class="fox-game-avatar">🦊</div>
-        </div>
-        <div class="burbuja-dialogo" [class.burbuja-azul]="mascotMood === 'thinking'">
-          {{ mascotMsg }}
-        </div>
-      </div>
+      <app-mascot game="historia" [mood]="mascotMood" [message]="mascotMsg"></app-mascot>
 
       <!-- Historia card -->
       <div class="historia-card">
@@ -309,19 +303,7 @@ const TIPO_TIPS: Record<string, string> = {
       </div>
 
       <!-- Mascota -->
-      <div class="mascota-area mascota-area-sm">
-        <div class="fox-game-wrap"
-          [class.fox-celebrate]="mascotMood === 'celebrate'"
-          [class.fox-encourage]="mascotMood === 'encourage'">
-          <div class="fox-game-avatar">🦊</div>
-        </div>
-        <div class="burbuja-dialogo"
-          [class.burbuja-verde]="mascotMood === 'celebrate'"
-          [class.burbuja-naranja]="mascotMood === 'encourage'"
-          [class.burbuja-azul]="mascotMood === 'thinking'">
-          {{ mascotMsg }}
-        </div>
-      </div>
+      <app-mascot game="historia" [mood]="mascotMood" [message]="mascotMsg"></app-mascot>
 
       <!-- Pregunta -->
       <div class="pregunta-card">
@@ -346,7 +328,7 @@ const TIPO_TIPS: Record<string, string> = {
       <!-- Pista -->
       @if (mostrandoPista) {
         <div class="pista-box">
-          <div class="pista-header">💡 Pista de Foxy:</div>
+          <div class="pista-header">💡 Pista de Benny:</div>
           <div class="pista-texto">{{ preguntaActual?.pista }}</div>
         </div>
       }
@@ -384,7 +366,7 @@ const TIPO_TIPS: Record<string, string> = {
         <!-- Fox resultado -->
         <div class="fox-resultado-hero">
           <div class="fox-resultado-ring"></div>
-          <div class="fox-resultado-face">🦊</div>
+          <div class="fox-resultado-face">🐰</div>
           <div class="fox-resultado-trophy">{{ trofeoEmoji }}</div>
         </div>
 
@@ -433,9 +415,9 @@ const TIPO_TIPS: Record<string, string> = {
           </div>
         }
 
-        <!-- Foxy mensaje -->
+        <!-- Benny mensaje -->
         <div class="foxy-msg-final">
-          <div class="foxy-msg-avatar">🦊</div>
+          <div class="foxy-msg-avatar">🐰</div>
           <div class="foxy-msg-bubble">{{ mascotMsg }}</div>
         </div>
 
@@ -804,7 +786,7 @@ export class HistoriaVivaComponent implements OnDestroy {
   tiposErradas:       string[] = [];
 
   // ── Mascota ─────────────────────────────────────────────────────────────────
-  mascotMsg  = '¡Hola! Hoy te voy a contar una historia increíble 📖';
+  mascotMsg  = '¡Hola! Soy Benny 🐰 ¡Hoy te voy a contar una historia increíble! 📖';
   mascotMood: Mood = 'idle';
 
   // ── Audio ───────────────────────────────────────────────────────────────────
