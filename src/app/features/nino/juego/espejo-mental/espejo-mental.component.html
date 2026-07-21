@@ -1,0 +1,229 @@
+    <div class="game-wrapper">
+
+      <!-- ══ INICIO ══════════════════════════════════════════ -->
+      @if (estado === 'inicio') {
+        <div class="pantalla-inicio">
+          <div class="orb orb-1"></div>
+          <div class="orb orb-2"></div>
+          <div class="orb orb-3"></div>
+
+          <div class="inicio-content">
+            <!-- Hero mascota -->
+            <div class="hero-mascota">
+              <div class="fox-sparkles">
+                <span class="sp sp-1">✨</span>
+                <span class="sp sp-2">⭐</span>
+                <span class="sp sp-3">💫</span>
+                <span class="sp sp-4">✨</span>
+              </div>
+              <div class="fox-ring">
+                <div class="fox-avatar">🦊</div>
+              </div>
+              <div class="fox-bubble-inicio">
+                ¡Hola! Soy <strong>Foxy</strong> 🦊<br>
+                ¡Tu guía de memoria! ¿Listo para entrenar juntos? 🧠
+              </div>
+            </div>
+
+            <h1 class="titulo-juego">
+              <span class="titulo-grad">Espejo</span><span class="titulo-blanco"> Mental</span>
+            </h1>
+            <p class="subtitulo-juego">Mira la secuencia de colores y repítela en orden</p>
+
+            <div class="instrucciones-grid">
+              <div class="instr-card instr-rojo">
+                <span class="instr-num">1</span>
+                <div class="instr-emoji">👀</div>
+                <div class="instr-text">Mira los colores que se iluminan</div>
+              </div>
+              <div class="instr-card instr-azul">
+                <span class="instr-num">2</span>
+                <div class="instr-emoji">👆</div>
+                <div class="instr-text">Tócalos en el mismo orden</div>
+              </div>
+              <div class="instr-card instr-verde">
+                <span class="instr-num">3</span>
+                <div class="instr-emoji">🚀</div>
+                <div class="instr-text">¡Aciertas y la secuencia crece!</div>
+              </div>
+              <div class="instr-card instr-amarillo">
+                <span class="instr-num">4</span>
+                <div class="instr-emoji">💪</div>
+                <div class="instr-text">2 errores seguidos bajan la dificultad</div>
+              </div>
+            </div>
+
+            <div class="inicio-footer">
+              <button class="btn-empezar" (click)="iniciarJuego()">
+                <span>🎮</span> ¡Empezar!
+                <span class="btn-shine"></span>
+              </button>
+              <button class="btn-voz" (click)="toggleVoz()" [title]="voiceEnabled ? 'Silenciar voz' : 'Activar voz'">
+                {{ voiceEnabled ? '🔊' : '🔇' }}
+              </button>
+            </div>
+
+            <div class="volumen-footer">
+              <app-volume-control [volumen]="volumenActual" (volumenChange)="onVolumenChange($event)"></app-volume-control>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ══ JUEGO ══════════════════════════════════════════ -->
+      @if (estado === 'cuenta' || estado === 'mostrando' || estado === 'input' || estado === 'feedback') {
+        <div class="pantalla-juego" (click)="saltarSiEsPosible()">
+
+          <app-game-feedback #feedback (incorrectShown)="onIncorrectShown()" (hintRequested)="onHintRequested()"></app-game-feedback>
+
+          @if (showConfetti) {
+            <div class="confetti-container">
+              @for (p of confettiPieces; track p.id) {
+                <div class="confeti"
+                  [style.left.%]="p.left" [style.background]="p.color"
+                  [style.animation-delay.ms]="p.delay" [style.animation-duration.ms]="p.dur"
+                  [style.width.px]="p.size" [style.height.px]="p.size*1.6"></div>
+              }
+            </div>
+          }
+
+          <!-- Header -->
+          <div class="game-header">
+            <button class="btn-salir" (click)="terminarSesion()">
+              <span class="salir-icon">←</span>
+              <span class="salir-txt">Salir</span>
+            </button>
+
+            <div class="header-centro">
+              <div class="progreso-wrap">
+                <div class="progreso-barra">
+                  <div class="progreso-fill" [style.width.%]="(rondas/MAX_RONDAS)*100"></div>
+                </div>
+                <span class="progreso-label">{{ rondas }}/{{ MAX_RONDAS }}</span>
+              </div>
+            </div>
+
+            <div class="header-stats">
+              <div class="stat-badge badge-oro">
+                <span class="badge-ico">⭐</span>
+                <span class="badge-num">{{ aciertos }}</span>
+              </div>
+              <div class="stat-badge badge-rojo">
+                <span class="badge-ico">💔</span>
+                <span class="badge-num">{{ errores }}</span>
+              </div>
+              <button class="btn-voz-hdr" (click)="toggleVoz()" [title]="voiceEnabled ? 'Silenciar' : 'Activar voz'">
+                {{ voiceEnabled ? '🔊' : '🔇' }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Mascota prominente -->
+          <app-mascot game="espejo" [mood]="mascotMood" [message]="mascotMsg"></app-mascot>
+
+          <!-- Combo -->
+          @if (showCombo && combo >= 2) {
+            <div class="combo-badge">🔥 ¡Combo x{{ combo }}!</div>
+          }
+
+          <!-- Dots de progreso -->
+          <div class="nivel-secuencia">
+            @for (i of secuenciaArray; track $index) {
+              <div class="seq-dot" [class.seq-dot-fill]="$index < respuestaJugador.length"></div>
+            }
+          </div>
+
+          <!-- Elementos -->
+          <div class="elementos-grid" [class.grid-dimmed]="estado === 'cuenta'">
+            @for (el of ELEMENTOS; track el.id) {
+              <button class="elemento"
+                [class.activo]="elementoActivo === el.id"
+                [class.error-anim]="elementoError === el.id"
+                [class.correcto-highlight]="elementoCorrectoHighlight === el.id"
+                [class.pista-highlight]="elementoPista === el.id"
+                [class.clickable]="estado === 'input'"
+                [style.--color]="el.color"
+                [style.--color-activo]="el.colorActivo"
+                [style.--glow]="el.glow"
+                [disabled]="estado !== 'input'"
+                (click)="clicarElemento(el.id)">
+                <span class="el-simbolo">{{ el.simbolo }}</span>
+                <span class="el-nombre">{{ el.nombre }}</span>
+              </button>
+            }
+          </div>
+
+          <!-- Cuenta regresiva -->
+          @if (estado === 'cuenta') {
+            <div class="cuenta-overlay">
+              <div class="cuenta-num" [class.cuenta-pop]="cuentaPop">{{ cuentaTexto }}</div>
+              <div class="cuenta-sub">{{ cuentaTexto === '¡YA!' ? '¡A recordar!' : '¡Prepárate!' }}</div>
+            </div>
+          }
+
+        </div>
+      }
+
+      <!-- ══ RESULTADOS ══════════════════════════════════════ -->
+      @if (estado === 'resultados') {
+        <div class="pantalla-resultados">
+          <div class="confetti-container">
+            @for (p of confettiPieces; track p.id) {
+              <div class="confeti"
+                [style.left.%]="p.left" [style.background]="p.color"
+                [style.animation-delay.ms]="p.delay" [style.animation-duration.ms]="p.dur"
+                [style.width.px]="p.size" [style.height.px]="p.size*1.6"></div>
+            }
+          </div>
+
+          <div class="resultados-card">
+            <!-- Fox hero resultado -->
+            <div class="fox-resultado-hero">
+              <div class="fox-resultado-ring"></div>
+              <div class="fox-resultado-face">🦊</div>
+              <div class="fox-resultado-trophy">{{ trofeoEmoji }}</div>
+            </div>
+
+            <h2 class="resultado-titulo">{{ tituloFinal }}</h2>
+
+            <div class="estrellas">
+              <span class="estrella"        [class.estrella-on]="puntuacion >= 40">⭐</span>
+              <span class="estrella grande" [class.estrella-on]="puntuacion >= 65">⭐</span>
+              <span class="estrella"        [class.estrella-on]="puntuacion >= 85">⭐</span>
+            </div>
+
+            <div class="score-ring">
+              <svg viewBox="0 0 120 120">
+                <circle cx="60" cy="60" r="50" class="ring-bg"/>
+                <circle cx="60" cy="60" r="50" class="ring-fill"
+                  [style.stroke-dasharray]="314"
+                  [style.stroke-dashoffset]="314-(314*puntuacion/100)"/>
+              </svg>
+              <div class="score-texto">
+                <div class="score-num">{{ puntuacion }}%</div>
+                <div class="score-lbl">precisión</div>
+              </div>
+            </div>
+
+            <!-- Foxy habla en resultados -->
+            <div class="foxy-msg-final">
+              <div class="foxy-msg-avatar">🦊</div>
+              <div class="foxy-msg-bubble">{{ mensajeFinal }}</div>
+            </div>
+
+            <div class="metricas-row">
+              <div class="metrica"><div class="m-icon">✅</div><div class="m-val verde">{{ aciertos }}</div><div class="m-lbl">Aciertos</div></div>
+              <div class="metrica"><div class="m-icon">❌</div><div class="m-val rojo">{{ errores }}</div><div class="m-lbl">Errores</div></div>
+              <div class="metrica"><div class="m-icon">🔗</div><div class="m-val morado">{{ maxLongitud }}</div><div class="m-lbl">Máx. seq.</div></div>
+              <div class="metrica"><div class="m-icon">🔥</div><div class="m-val naranja">{{ maxCombo }}</div><div class="m-lbl">Mejor combo</div></div>
+            </div>
+
+            <div class="btns-final">
+              <button class="btn-repetir" (click)="reiniciarJuego()">🔄 Jugar de nuevo</button>
+              <button class="btn-volver"  (click)="volver()">← Volver</button>
+            </div>
+          </div>
+        </div>
+      }
+
+    </div>
