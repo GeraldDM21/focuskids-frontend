@@ -6,6 +6,12 @@ export interface ChildProfile {
   edad: number | null;
   diagnostico: string | null;
   activo: boolean;
+  docente?: {
+    id: number;
+    usuario?: { nombre?: string; email?: string; };
+    institucion?: string;
+    gradoGrupo?: string;
+  } | null;
 }
 
 // Datos que se envian al backend para crear o editar un perfil
