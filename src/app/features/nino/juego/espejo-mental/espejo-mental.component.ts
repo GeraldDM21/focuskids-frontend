@@ -1,6 +1,11 @@
-import { Component, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { GameFeedbackComponent } from '../../../../shared/game-feedback/game-feedback.component';
+import { VolumeControlComponent } from '../../../../shared/game-feedback/volume-control.component';
+import { GameFeedbackService, NivelVolumen } from '../../../../shared/game-feedback/game-feedback.service';
+import { ChildProfileService } from '../../../padre/perfiles/child-profile.service';
+import { MascotComponent } from '../../../../shared/components/mascot/mascot.component';
 
 type Estado = 'inicio' | 'cuenta' | 'mostrando' | 'input' | 'feedback' | 'resultados';
 type Mood   = 'idle' | 'thinking' | 'excited' | 'celebrate' | 'encourage';
@@ -12,15 +17,10 @@ interface ConfettiPiece { id: number; left: number; color: string; delay: number
 @Component({
   selector: 'app-espejo-mental',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, GameFeedbackComponent, VolumeControlComponent, MascotComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="game-wrapper">
-
-      <!-- Flash overlay -->
-      @if (showFlash) {
-        <div class="flash-overlay" [class.flash-verde]="flashVerde" [class.flash-rojo]="!flashVerde"></div>
-      }
 
       <!-- ══ INICIO ══════════════════════════════════════════ -->
       @if (estado === 'inicio') {
@@ -84,13 +84,19 @@ interface ConfettiPiece { id: number; left: number; color: string; delay: number
                 {{ voiceEnabled ? '🔊' : '🔇' }}
               </button>
             </div>
+
+            <div class="volumen-footer">
+              <app-volume-control [volumen]="volumenActual" (volumenChange)="onVolumenChange($event)"></app-volume-control>
+            </div>
           </div>
         </div>
       }
 
       <!-- ══ JUEGO ══════════════════════════════════════════ -->
       @if (estado === 'cuenta' || estado === 'mostrando' || estado === 'input' || estado === 'feedback') {
-        <div class="pantalla-juego">
+        <div class="pantalla-juego" (click)="saltarSiEsPosible()">
+
+          <app-game-feedback #feedback (incorrectShown)="onIncorrectShown()" (hintRequested)="onHintRequested()"></app-game-feedback>
 
           @if (showConfetti) {
             <div class="confetti-container">
@@ -135,22 +141,7 @@ interface ConfettiPiece { id: number; left: number; color: string; delay: number
           </div>
 
           <!-- Mascota prominente -->
-          <div class="mascota-area">
-            <div class="fox-game-wrap"
-              [class.fox-celebrate]="mascotMood === 'celebrate'"
-              [class.fox-encourage]="mascotMood === 'encourage'">
-              @if (mascotDecoEmoji) {
-                <div class="fox-deco-emoji">{{ mascotDecoEmoji }}</div>
-              }
-              <div class="fox-game-avatar">{{ mascotEmoji }}</div>
-            </div>
-            <div class="burbuja-dialogo"
-              [class.burbuja-verde]="mascotMood === 'celebrate'"
-              [class.burbuja-naranja]="mascotMood === 'encourage'"
-              [class.burbuja-azul]="mascotMood === 'thinking'">
-              {{ mascotMsg }}
-            </div>
-          </div>
+          <app-mascot game="espejo" [mood]="mascotMood" [message]="mascotMsg"></app-mascot>
 
           <!-- Combo -->
           @if (showCombo && combo >= 2) {
@@ -170,6 +161,8 @@ interface ConfettiPiece { id: number; left: number; color: string; delay: number
               <button class="elemento"
                 [class.activo]="elementoActivo === el.id"
                 [class.error-anim]="elementoError === el.id"
+                [class.correcto-highlight]="elementoCorrectoHighlight === el.id"
+                [class.pista-highlight]="elementoPista === el.id"
                 [class.clickable]="estado === 'input'"
                 [style.--color]="el.color"
                 [style.--color-activo]="el.colorActivo"
@@ -267,12 +260,6 @@ interface ConfettiPiece { id: number; left: number; color: string; delay: number
       font-family: 'Inter', -apple-system, sans-serif;
       color: white; overflow: hidden; position: relative;
     }
-
-    /* ── Flash ── */
-    .flash-overlay { position: fixed; inset: 0; z-index: 200; pointer-events: none; animation: flashAnim .4s ease forwards; }
-    .flash-verde { background: rgba(34,197,94,.28); }
-    .flash-rojo  { background: rgba(239,68,68,.28); }
-    @keyframes flashAnim { 0%{opacity:1} 100%{opacity:0} }
 
     /* ── Confetti ── */
     .confetti-container { position: fixed; inset: 0; pointer-events: none; z-index: 100; overflow: hidden; }
@@ -529,6 +516,14 @@ interface ConfettiPiece { id: number; left: number; color: string; delay: number
     .el-simbolo { font-size: 44px; line-height: 1; pointer-events: none; position: relative; z-index: 1; }
     .el-nombre  { font-size: 13px; font-weight: 800; color: rgba(255,255,255,.9); pointer-events: none; position: relative; z-index: 1; text-shadow: 0 1px 4px rgba(0,0,0,.4); }
     .error-anim { animation: errorShake .4s ease !important; border-color: #f87171 !important; box-shadow: 0 0 0 6px rgba(239,68,68,.5) !important; }
+    /* CA-03: resalta el elemento correcto en verde por 1.5s tras un fallo */
+    .correcto-highlight { border-color: #22c55e !important; box-shadow: 0 0 0 8px rgba(34,197,94,.5), 0 0 40px rgba(34,197,94,.6) !important; animation: correctoPulse 1.5s ease; }
+    @keyframes correctoPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+    /* CA-03: pista sin penalizar puntaje */
+    .pista-highlight { border-color: #fbbf24 !important; box-shadow: 0 0 0 10px rgba(251,191,36,.55), 0 0 50px rgba(251,191,36,.7) !important; animation: pistaBlink .7s ease-in-out; }
+    @keyframes pistaBlink { 0%,100% { opacity: 1; } 50% { opacity: .55; } }
+
+    .volumen-footer { margin-top: 18px; display: flex; justify-content: center; }
 
     .cuenta-overlay {
       position: absolute; inset: 0;
@@ -628,7 +623,7 @@ interface ConfettiPiece { id: number; left: number; color: string; delay: number
     @keyframes starPop    { from{transform:scale(0) rotate(-30deg)} to{transform:scale(1) rotate(0)} }
   `]
 })
-export class EspejoMentalComponent implements OnDestroy {
+export class EspejoMentalComponent implements OnInit, OnDestroy {
 
   readonly ELEMENTOS: Elemento[] = [
     { id: 0, color: '#dc2626', colorActivo: '#ff6b6b', glow: 'rgba(220,38,38,.9)',  simbolo: '🔴', nombre: 'Rojo'     },
@@ -665,14 +660,21 @@ export class EspejoMentalComponent implements OnDestroy {
 
   cuentaTexto = '3';
   cuentaPop = false;
-  showFlash = false;
-  flashVerde = true;
 
   mascotEmoji = '🦊';
   mascotMsg   = '¡Listo para jugar! 🎮';
   mascotMood: Mood = 'idle';
   voiceEnabled = true;
   private abortado = false;
+
+  // ── Retroalimentación visual/sonora (CA-01..CA-06) ─────────────────────
+  @ViewChild('feedback') feedback!: GameFeedbackComponent;
+  volumenActual: NivelVolumen = 75;
+  elementoCorrectoHighlight = -1; // CA-03: resalta el elemento correcto tras fallo
+  elementoPista = -1;             // CA-03: pista sin penalizar puntaje
+  private fallosParaPista = 0;    // contador independiente de erroresConsecutivos (dificultad)
+  private profileId: number | null = null;
+  private skipResolver: (() => void) | null = null;
 
   get secuenciaArray(): number[] { return Array.from({ length: this.longitudActual }); }
 
@@ -686,9 +688,32 @@ export class EspejoMentalComponent implements OnDestroy {
   private timers: ReturnType<typeof setTimeout>[] = [];
   private audioCtx: AudioContext | null = null;
 
-  constructor(private router: Router, private cdr: ChangeDetectorRef) {}
+  constructor(
+    private router: Router,
+    private cdr: ChangeDetectorRef,
+    private feedbackService: GameFeedbackService,
+    private childProfileService: ChildProfileService,
+  ) {}
+
+  ngOnInit(): void {
+    this.childProfileService.activeProfile$.subscribe(state => {
+      this.profileId = state.profileId;
+      this.volumenActual = (state.profileVolumen ?? 75) as NivelVolumen;
+      this.feedbackService.setVolumen(this.volumenActual);
+    });
+  }
 
   ngOnDestroy(): void { this.limpiarTimers(); this.audioCtx?.close(); window.speechSynthesis?.cancel(); }
+
+  // ── Volumen (CA-05) ─────────────────────────────────────────────────────
+
+  onVolumenChange(v: NivelVolumen): void {
+    this.volumenActual = v;
+    this.feedbackService.setVolumen(v);
+    if (this.profileId != null) {
+      this.childProfileService.updateVolumen(this.profileId, v).subscribe();
+    }
+  }
 
   // ── AUDIO ─────────────────────────────────────────
 
@@ -736,13 +761,7 @@ export class EspejoMentalComponent implements OnDestroy {
   }
 
   private sonarElemento(id: number): void { this.tocar(this.TONOS[id], 0.28, 'sine', 0.4); }
-  private sonarAcierto(): void {
-    [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => this.tocar(f, 0.18, 'sine', 0.35), i * 75));
-  }
-  private sonarError(): void {
-    this.tocar(220, 0.12, 'sawtooth', 0.3);
-    setTimeout(() => this.tocar(180, 0.22, 'sawtooth', 0.25, 140), 100);
-  }
+  // Los sonidos de acierto/error del CA-04 ahora los reproduce GameFeedbackService (assets OGG/MP3).
   private sonarTick(): void { this.tocar(440, 0.07, 'triangle', 0.22); }
   private sonarYa(): void {
     this.tocar(880, 0.12, 'sine', 0.45);
@@ -838,6 +857,8 @@ export class EspejoMentalComponent implements OnDestroy {
 
   clicarElemento(id: number): void {
     if (this.estado !== 'input') return;
+    // CA-01: se marca el inicio justo en el input; el cálculo correcto/incorrecto es 100% local.
+    const t0 = this.feedbackService.marcarInicio();
     this.sonarElemento(id);
     const ms       = Date.now() - this.tiempoInicioInput;
     const esperado = this.secuencia[this.respuestaJugador.length];
@@ -849,34 +870,71 @@ export class EspejoMentalComponent implements OnDestroy {
       this.elementoError = id;
       this.cdr.detectChanges();
       this.timers.push(setTimeout(() => { this.elementoError = -1; this.cdr.detectChanges(); }, 450));
-      this.manejarError();
+      this.manejarError(esperado);
+      this.feedbackService.registrarLatencia(t0);
       return;
     }
-    if (this.respuestaJugador.length === this.secuencia.length) this.manejarAcierto();
+    if (this.respuestaJugador.length === this.secuencia.length) {
+      this.manejarAcierto();
+      this.feedbackService.registrarLatencia(t0);
+    }
   }
 
   private manejarAcierto(): void {
     this.aciertos++; this.rondas++;
     this.combo++; this.maxCombo = Math.max(this.maxCombo, this.combo);
     this.erroresConsecutivos = 0;
+    this.fallosParaPista = 0;
+    this.elementoPista = -1;
     // Sube 1 elemento solo cada 2 aciertos seguidos (max 8 para niños)
     if (this.combo > 0 && this.combo % 2 === 0) {
       this.longitudActual = Math.min(this.longitudActual + 1, 8);
     }
     this.maxLongitud = Math.max(this.maxLongitud, this.longitudActual);
     this.showCombo = this.combo >= 2;
-    this.sonarAcierto();
-    this.mostrarFlash(true);
-    this.dispararConfeti();
+    this.feedback.showCorrect(); // CA-02: sonido + borde verde + check + partículas, <=1.2s
     this.estado = 'feedback';
     this.cdr.detectChanges();
 
     const speechDone = this.setMascota('celebrate');
-    const minPausa   = new Promise<void>(r => setTimeout(r, 1400));
+    const minPausa   = this.crearPausaCancelable(1400);
 
     Promise.all([speechDone, minPausa]).then(() => {
       if (this.abortado) return;
       this.showConfetti = false;
+      if (this.rondas >= this.MAX_RONDAS) {
+        this.dispararConfeti(); // celebración solo al terminar la partida completa
+        this.estado = 'resultados'; this.sonarFanfare();
+        const txt = (this.tituloFinal + '. ' + this.mensajeFinal).replace(/[\u{1F300}-\u{1FFFF}]/gu, '').trim();
+        setTimeout(() => this.hablar(txt, 0.88, 1.1), 800);
+      } else {
+        this.nuevaRonda();
+      }
+      this.cdr.detectChanges();
+    });
+  }
+
+  private manejarError(elementoCorrecto: number): void {
+    this.errores++; this.rondas++;
+    this.combo = 0; this.erroresConsecutivos++;
+    this.fallosParaPista++;
+    if (this.erroresConsecutivos >= 2) {
+      this.longitudActual = Math.max(this.longitudActual - 1, 2);
+      this.erroresConsecutivos = 0;
+    }
+    // CA-03: resalta el elemento correcto en verde por 1.5s
+    this.elementoCorrectoHighlight = elementoCorrecto;
+    this.timers.push(setTimeout(() => { this.elementoCorrectoHighlight = -1; this.cdr.detectChanges(); }, 1500));
+
+    this.feedback.showIncorrect(undefined, this.fallosParaPista >= 3); // CA-03/CA-04
+    this.estado = 'feedback';
+    this.cdr.detectChanges();
+
+    const speechDone = this.setMascota('encourage');
+    const minPausa   = this.crearPausaCancelable(1400);
+
+    Promise.all([speechDone, minPausa]).then(() => {
+      if (this.abortado) return;
       if (this.rondas >= this.MAX_RONDAS) {
         this.estado = 'resultados'; this.sonarFanfare();
         const txt = (this.tituloFinal + '. ' + this.mensajeFinal).replace(/[\u{1F300}-\u{1FFFF}]/gu, '').trim();
@@ -888,32 +946,40 @@ export class EspejoMentalComponent implements OnDestroy {
     });
   }
 
-  private manejarError(): void {
-    this.errores++; this.rondas++;
-    this.combo = 0; this.erroresConsecutivos++;
-    if (this.erroresConsecutivos >= 2) {
-      this.longitudActual = Math.max(this.longitudActual - 1, 2);
-      this.erroresConsecutivos = 0;
-    }
-    this.sonarError();
-    this.mostrarFlash(false);
-    this.estado = 'feedback';
-    this.cdr.detectChanges();
+  // ── CA-06: skip de la animación de transición entre rondas ─────────────
 
-    const speechDone = this.setMascota('encourage');
-    const minPausa   = new Promise<void>(r => setTimeout(r, 1400));
-
-    Promise.all([speechDone, minPausa]).then(() => {
-      if (this.abortado) return;
-      if (this.rondas >= this.MAX_RONDAS) {
-        this.estado = 'resultados'; this.sonarFanfare();
-        const txt = (this.tituloFinal + '. ' + this.mensajeFinal).replace(/[\u{1F300}-\u{1FFFF}]/gu, '').trim();
-        setTimeout(() => this.hablar(txt, 0.88, 1.1), 800);
-      } else {
-        this.nuevaRonda();
-      }
-      this.cdr.detectChanges();
+  /** Crea una pausa que se resuelve sola tras `ms`, o antes si el niño hace clic para saltarla (<100ms). */
+  private crearPausaCancelable(ms: number): Promise<void> {
+    return new Promise<void>(resolve => {
+      const timer = setTimeout(resolve, ms);
+      this.skipResolver = () => { clearTimeout(timer); resolve(); };
     });
+  }
+
+  saltarSiEsPosible(): void {
+    if (this.estado === 'cuenta') {
+      this.timers.forEach(t => clearTimeout(t));
+      this.timers = [];
+      this.mostrarSecuencia();
+    } else if (this.estado === 'feedback' && this.skipResolver) {
+      const resolver = this.skipResolver;
+      this.skipResolver = null;
+      resolver();
+    }
+  }
+
+  onIncorrectShown(): void {
+    // El feedback de error ya es visible; el resaltado del elemento correcto
+    // se activó al mismo tiempo desde manejarError() (CA-03).
+  }
+
+  onHintRequested(): void {
+    // CA-03: pista sin penalizar puntaje — resalta brevemente el próximo elemento esperado.
+    this.fallosParaPista = 0;
+    const esperado = this.secuencia[this.respuestaJugador.length];
+    this.elementoPista = esperado;
+    this.cdr.detectChanges();
+    this.timers.push(setTimeout(() => { this.elementoPista = -1; this.cdr.detectChanges(); }, 700));
   }
 
   terminarSesion(): void {
@@ -950,13 +1016,6 @@ export class EspejoMentalComponent implements OnDestroy {
     this.mascotEmoji = '🦊';
     const textoVoz = this.mascotMsg.replace(/[\u{1F300}-\u{1FFFF}]/gu, '').trim();
     return this.hablar(textoVoz);
-  }
-
-  private mostrarFlash(verde: boolean): void {
-    this.flashVerde = verde;
-    this.showFlash = true;
-    this.cdr.detectChanges();
-    this.timers.push(setTimeout(() => { this.showFlash = false; this.cdr.detectChanges(); }, 420));
   }
 
   private dispararConfeti(): void {

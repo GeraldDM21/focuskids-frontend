@@ -8,6 +8,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { Router} from '@angular/router';
 import { take } from 'rxjs';
+import { MascotComponent } from '../../../../shared/components/mascot/mascot.component';
 
 import {
   CascadaResultadoResponse,
@@ -29,7 +30,7 @@ import {
 @Component({
   selector: 'app-cascada-numerica',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, MascotComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './cascada-numerica.component.html',
   styleUrl: './cascada-numerica.component.scss'
@@ -44,7 +45,7 @@ export class CascadaNumericaComponent implements OnDestroy {
   estado: EstadoJuego = 'inicio';
   sonidoActivo = true;
   mascotMood: Mood = 'idle';
-  mascotMsg = '¡Vamos a entrenar tu cálculo mental!';
+  mascotMsg = '¡Hola! Soy Ollie 🦉 ¡Vamos a entrenar tu cálculo mental!';
 
   cuentaRegresiva = 3;
   cuentaTexto = '3';
@@ -276,7 +277,7 @@ export class CascadaNumericaComponent implements OnDestroy {
     this.feedbackCorrecto = false;
 
     this.mascotMood = 'idle';
-    this.mascotMsg = '¡Vamos a entrenar tu cálculo mental!';
+    this.mascotMsg = '¡Hola! Soy Ollie 🦉 ¡Vamos a entrenar tu cálculo mental!';
 
     if (reiniciarBackend) {
       this.sesionBackendId = null;
