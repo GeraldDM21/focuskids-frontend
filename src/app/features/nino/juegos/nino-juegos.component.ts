@@ -812,7 +812,7 @@ export class NinoJuegosComponent implements OnInit {
   private readonly implementados = [
     '/nino/juego/espejo-mental', '/nino/juego/palabras-ocultas',
     '/nino/juego/historia-viva', '/nino/juego/piezas-tiempo',
-    '/nino/juego/cascada-numerica'
+    '/nino/juego/cascada-numerica', '/nino/juego/laberinto'
   ];
 
   private readonly CAT_COLORS: Record<string, [string, string]> = {
