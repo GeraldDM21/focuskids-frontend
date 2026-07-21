@@ -1,0 +1,367 @@
+<div class="game-wrapper">
+
+  @if (estado === 'inicio') {
+    <section class="pantalla-inicio">
+
+      <button
+        type="button"
+        class="btn-volver"
+        (click)="volverAJuegos()"
+        aria-label="Volver al panel de juegos"
+      >
+        ← Volver
+      </button>
+
+      <div class="decoracion decoracion-uno">✦</div>
+      <div class="decoracion decoracion-dos">⭐</div>
+      <div class="decoracion decoracion-tres">＋</div>
+
+      <div class="inicio-contenido">
+
+        <div class="mascota-presentacion">
+          <div class="mascota-circulos">
+            <div class="circulo circulo-1"></div>
+            <div class="circulo circulo-2"></div>
+            <div class="circulo circulo-3"></div>
+
+            <div class="foxy-principal">
+              🦊
+            </div>
+          </div>
+
+          <div class="burbuja-presentacion">
+            <strong>¡Hola! Soy Foxy 🦊</strong>
+
+            <span>
+              ¡Tu guía de cálculo! ¿Listo para atrapar
+              los números correctos?
+            </span>
+          </div>
+        </div>
+
+        <div class="titulo-juego">
+          <h1>
+            <span>Cascada</span> Numérica
+          </h1>
+
+          <p>
+            Resuelve la operación y atrapa el número correcto
+            antes de que llegue al suelo.
+          </p>
+        </div>
+
+        <div class="instrucciones-grid">
+
+          <article class="instruccion instruccion-verde">
+            <span class="instruccion-numero">1</span>
+
+            <div class="instruccion-icono">
+              🧮
+            </div>
+
+            <p>
+              Mira la operación matemática.
+            </p>
+          </article>
+
+          <article class="instruccion instruccion-azul">
+            <span class="instruccion-numero">2</span>
+
+            <div class="instruccion-icono">
+              🔢
+            </div>
+
+            <p>
+              Observa los tres números que caen.
+            </p>
+          </article>
+
+          <article class="instruccion instruccion-morada">
+            <span class="instruccion-numero">3</span>
+
+            <div class="instruccion-icono">
+              👆
+            </div>
+
+            <p>
+              Toca el resultado correcto a tiempo.
+            </p>
+          </article>
+
+          <article class="instruccion instruccion-naranja">
+            <span class="instruccion-numero">4</span>
+
+            <div class="instruccion-icono">
+              🚀
+            </div>
+
+            <p>
+              La velocidad cambia según tu desempeño.
+            </p>
+          </article>
+
+        </div>
+
+        <div class="acciones-inicio">
+
+          <button
+            type="button"
+            class="btn-empezar"
+            (click)="iniciarJuego()"
+          >
+            <span>🎮</span>
+            ¡Empezar!
+          </button>
+
+          <button
+            type="button"
+            class="btn-sonido"
+            [class.sonido-desactivado]="!sonidoActivo"
+            (click)="alternarSonido()"
+            [attr.aria-label]="
+              sonidoActivo
+                ? 'Desactivar sonido'
+                : 'Activar sonido'
+            "
+          >
+            {{ sonidoActivo ? '🔊' : '🔇' }}
+          </button>
+
+        </div>
+
+      </div>
+    </section>
+  }
+
+  @if (estado === 'cuenta') {
+    <section class="pantalla-cuenta">
+
+      <div class="cuenta-juego-fondo">
+
+        <header class="game-header cuenta-game-header">
+          <div>
+            Operación:
+            {{ operacionesCompletadas + 1 }}
+            /
+            {{ MAX_OPERACIONES }}
+          </div>
+
+          <div>
+            ⏱️ {{ tiempoFormateado }}
+          </div>
+
+          <div>
+            ✅ {{ aciertos }}
+            ❌ {{ errores }}
+            ⏳ {{ omisiones }}
+          </div>
+        </header>
+
+        <div class="mascota-area cuenta-mascota-area">
+          <div class="fox-game-avatar">
+            🦊
+          </div>
+
+          <div class="mascot-message">
+            {{ mascotMsg }}
+          </div>
+        </div>
+
+        @if (operacionActual) {
+          <div class="operacion">
+            {{ operacionActual.texto }} = ?
+          </div>
+        }
+
+        <div class="campo-juego cuenta-campo-juego">
+
+          @for (
+            numero of numerosCayendo;
+            track numero.id
+            ) {
+            <button
+              type="button"
+              class="numero-cayendo numero-preview"
+              [style.left.%]="numero.posicionX"
+            >
+              {{ numero.valor }}
+            </button>
+          }
+
+          <div class="suelo"></div>
+        </div>
+
+      </div>
+
+      <div class="cuenta-capa"></div>
+
+      <div class="cuenta-contenido">
+
+        <div
+          class="cuenta-numero"
+          [class.cuenta-ya]="cuentaTexto === '¡YA!'"
+        >
+          {{ cuentaTexto }}
+        </div>
+
+        <div class="cuenta-subtitulo">
+          {{
+            cuentaTexto === '¡YA!'
+              ? '¡COMENZAMOS!'
+              : '¡PREPÁRATE!'
+          }}
+        </div>
+
+      </div>
+
+    </section>
+  }
+
+  @if (
+    estado === 'jugando' ||
+    estado === 'feedback'
+    ) {
+    <section class="pantalla-juego">
+
+      <header class="game-header">
+        <div>
+          Operación:
+          {{ operacionesCompletadas + 1 }}
+          /
+          {{ MAX_OPERACIONES }}
+        </div>
+
+        <div>
+          ⏱️ {{ tiempoFormateado }}
+        </div>
+
+        <div>
+          ✅ {{ aciertos }}
+          ❌ {{ errores }}
+          ⏳ {{ omisiones }}
+        </div>
+      </header>
+
+      <div class="mascota-area">
+        <div class="fox-game-avatar">
+          🦊
+        </div>
+
+        <div class="mascot-message">
+          {{ mascotMsg }}
+        </div>
+      </div>
+
+      @if (operacionActual) {
+        <div class="operacion">
+          {{ operacionActual.texto }} = ?
+        </div>
+      }
+
+      <div class="campo-juego">
+
+        @if (estado === 'jugando') {
+          @for (
+            numero of numerosCayendo;
+            track numero.id
+            ) {
+            <button
+              type="button"
+              class="numero-cayendo"
+              [class.numero-seleccionado]="numero.seleccionado"
+              [class.numero-bloqueado]="respuestaBloqueada"
+              [style.left.%]="numero.posicionX"
+              [style.animation-duration.ms]="numero.duracionMs"
+              [disabled]="respuestaBloqueada"
+              (click)="seleccionarNumero(numero)"
+            >
+              {{ numero.valor }}
+            </button>
+          }
+        }
+
+        @if (estado === 'feedback') {
+          <div
+            class="feedback"
+            [class.feedback-correcto]="feedbackCorrecto"
+            [class.feedback-error]="!feedbackCorrecto"
+          >
+            {{ mensajeFeedback }}
+          </div>
+        }
+
+        <div class="suelo"></div>
+      </div>
+
+    </section>
+  }
+
+  @if (estado === 'resultados') {
+    <section class="pantalla-resultados">
+
+      <div class="resultados-card">
+        <div class="fox-avatar">
+          🦊
+        </div>
+
+        <h2>
+          ¡Sesión terminada!
+        </h2>
+
+        <div class="resultado-grid">
+
+          <div>
+            <strong>
+              {{ aciertos }}
+            </strong>
+
+            <span>
+              Aciertos
+            </span>
+          </div>
+
+          <div>
+            <strong>
+              {{ errores }}
+            </strong>
+
+            <span>
+              Errores
+            </span>
+          </div>
+
+          <div>
+            <strong>
+              {{ omisiones }}
+            </strong>
+
+            <span>
+              Omisiones
+            </span>
+          </div>
+
+          <div>
+            <strong>
+              {{ operacionesCompletadas }}
+            </strong>
+
+            <span>
+              Operaciones
+            </span>
+          </div>
+
+        </div>
+
+        <button
+          type="button"
+          class="btn-empezar"
+          (click)="iniciarJuego()"
+        >
+          🔄 Jugar otra vez
+        </button>
+      </div>
+
+    </section>
+  }
+
+</div>
