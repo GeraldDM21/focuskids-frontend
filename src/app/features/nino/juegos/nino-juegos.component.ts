@@ -1,10 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { of } from 'rxjs';
+import { of, forkJoin } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { ChildProfileService } from '../../padre/perfiles/child-profile.service';
 import { DocenteService, AsignacionPerfil } from '../../docente/docente.service';
+import { SesionJuego, Metrica } from '../../padre/padre.service';
 
 interface Juego       { nombre: string; tipo: string; icono: string; color: string; nivelTxt: string; progreso: number; ruta: string; }
 interface ProgresoItem{ nombre: string; valor: number; color: string; icono: string; }
@@ -737,22 +738,23 @@ export class NinoJuegosComponent implements OnInit {
   profileAvatar = '🦊';
   perfilId: number | null = null;
 
-  streak        = 7;
-  puntosTotales = 1240;
-  precision     = 85;
-  xpActual      = 680;
+  streak        = 0;
+  puntosTotales = 0;
+  precision     = 0;
+  xpActual      = 0;
   xpMax         = 1000;
-  nivelNum      = 4;
-  nivelNombre   = 'Explorador';
+  nivelNum      = 1;
+  nivelNombre   = 'Principiante';
   activeTab     = 'inicio';
+  loadingStats  = false;
 
   // Tareas
   tareas:        AsignacionPerfil[] = [];
   loadingTareas  = false;
 
-  totalSesiones  = 34;
-  tiempoPromedio = 8;
-  mejorRacha     = 7;
+  totalSesiones  = 0;
+  tiempoPromedio = 0;
+  mejorRacha     = 0;
 
   sonidoJuego      = true;
   vozMascota       = true;
@@ -788,38 +790,23 @@ export class NinoJuegosComponent implements OnInit {
     { nombre:'Mapa Aventura',       tipo:'Geografía',  icono:'🗺️', color:'#65A30D', nivelTxt:'Nivel 1 · Básico',      progreso:0,  ruta:'/nino/juego/mapa-aventura' },
     { nombre:'Lab de Ciencias',     tipo:'Lógica',     icono:'🔬', color:'#DB2777', nivelTxt:'Nivel 1 · Básico',      progreso:0,  ruta:'/nino/juego/lab-ciencias' },
   ];
-  readonly progresos: ProgresoItem[] = [
-    { nombre:'Atención', valor:75, color:'#7C3AED', icono:'🪞' },
-    { nombre:'Lectura',  valor:45, color:'#D97706', icono:'📖' },
-    { nombre:'Cálculo',  valor:90, color:'#059669', icono:'🔢' },
-    { nombre:'Memoria',  valor:30, color:'#EA580C', icono:'🌀' },
-  ];
-  readonly logrosRecientes: Logro[] = [
-    { icono:'🌟', nombre:'Semana perfecta!', desc:'7 días seguidos jugando',    puntos:50 },
-    { icono:'🏆', nombre:'1000 puntos',       desc:'Superaste los 1,000 puntos', puntos:30 },
-    { icono:'⚡', nombre:'Velocidad récord',   desc:'Completaste Espejo en 45s',  puntos:25 },
-  ];
-  readonly logrosCompletos: LogroFull[] = [
-    { icono:'🌟', nombre:'Semana perfecta',    desc:'7 días seguidos jugando',                  puntos:50,  ganado:true,  cat:'Constancia' },
-    { icono:'🏆', nombre:'1000 puntos',         desc:'Supera 1,000 puntos en total',             puntos:30,  ganado:true,  cat:'Maestría'   },
-    { icono:'⚡', nombre:'Velocidad récord',    desc:'Termina un juego en menos de 45s',         puntos:25,  ganado:true,  cat:'Velocidad'  },
+  progresos: ProgresoItem[] = [];
+  logrosRecientes: Logro[] = [];
+  logrosCompletos: LogroFull[] = [
+    { icono:'🌟', nombre:'Semana perfecta',    desc:'7 días seguidos jugando',                  puntos:50,  ganado:false, cat:'Constancia' },
+    { icono:'🏆', nombre:'1000 puntos',         desc:'Supera 1,000 puntos en total',             puntos:30,  ganado:false, cat:'Maestría'   },
+    { icono:'⚡', nombre:'Velocidad récord',    desc:'Termina un juego en menos de 45s',         puntos:25,  ganado:false, cat:'Velocidad'  },
     { icono:'🎯', nombre:'Precisión perfecta',  desc:'Logra 100% de aciertos en una sesión',    puntos:40,  ganado:false, cat:'Maestría'   },
     { icono:'🔥', nombre:'En llamas',           desc:'10 días seguidos jugando',                 puntos:75,  ganado:false, cat:'Constancia' },
     { icono:'🧠', nombre:'Maestro cognitivo',   desc:'Completa sesiones en 6 juegos distintos', puntos:100, ganado:false, cat:'Maestría'   },
-    { icono:'🚀', nombre:'Despegue',            desc:'Sube al nivel Experto en cualquier juego', puntos:50, ganado:false, cat:'Velocidad'  },
-    { icono:'🌈', nombre:'Explorador',          desc:'Juega todos los tipos de categoría',       puntos:35,  ganado:false, cat:'Maestría'   },
+    { icono:'🚀', nombre:'Despegue',            desc:'Alcanza 3,000 puntos totales',             puntos:50,  ganado:false, cat:'Velocidad'  },
+    { icono:'🌈', nombre:'Explorador',          desc:'Juega al menos 3 categorías distintas',    puntos:35,  ganado:false, cat:'Maestría'   },
     { icono:'💎', nombre:'Diamante',            desc:'Acumula 5,000 puntos en total',            puntos:150, ganado:false, cat:'Maestría'   },
     { icono:'🎪', nombre:'Jugador incansable',  desc:'Completa 50 sesiones de juego',            puntos:60,  ganado:false, cat:'Constancia' },
-    { icono:'🤝', nombre:'Compañero',           desc:'Tu tutor revisa tu progreso esta semana',  puntos:15,  ganado:false, cat:'Social'     },
-    { icono:'🥇', nombre:'Top del día',         desc:'Mayor puntaje en una sesión del día',      puntos:20,  ganado:false, cat:'Social'     },
+    { icono:'🤝', nombre:'Compañero',           desc:'Completa tu primera sesión',               puntos:15,  ganado:false, cat:'Social'     },
+    { icono:'🥇', nombre:'Top del día',         desc:'Supera los 200 puntos en una sesión',      puntos:20,  ganado:false, cat:'Social'     },
   ];
-  readonly ultimasSesiones: Sesion[] = [
-    { juego:'Espejo Mental',    icono:'🪞', hace:'Hace 1 hora',  precision:85, pts:120 },
-    { juego:'Palabras Ocultas', icono:'📝', hace:'Ayer',         precision:72, pts:90  },
-    { juego:'Piezas en Tiempo', icono:'🧩', hace:'Ayer',         precision:65, pts:75  },
-    { juego:'Historia Viva',    icono:'📖', hace:'Hace 2 días',  precision:90, pts:150 },
-    { juego:'Espejo Mental',    icono:'🪞', hace:'Hace 3 días',  precision:78, pts:110 },
-  ];
+  ultimasSesiones: Sesion[] = [];
 
   private readonly implementados = [
     '/nino/juego/espejo-mental', '/nino/juego/palabras-ocultas',
@@ -854,8 +841,159 @@ export class NinoJuegosComponent implements OnInit {
       this.avatarSeleccionado = state.profileAvatar || 'fox';
       this.perfilId           = state.profileId;
       this.loadTareas(state.profileId);
+      this.loadDatos(state.profileId);
     });
   }
+
+  private loadDatos(perfilId: number): void {
+    this.loadingStats = true;
+    forkJoin({
+      sesiones: this.docSvc.getSesiones(perfilId).pipe(catchError(() => of([]))),
+      metricas: this.docSvc.getMetricas(perfilId).pipe(catchError(() => of([]))),
+    }).subscribe(({ sesiones, metricas }) => {
+      const sess = sesiones as SesionJuego[];
+      const mets = metricas as Metrica[];
+
+      // ── Stats globales ──────────────────────────────────────────────────
+      this.totalSesiones  = sess.filter(s => s.completada).length;
+      this.puntosTotales  = sess.reduce((s, x) => s + (x.puntaje ?? 0), 0);
+      this.xpActual       = this.puntosTotales % 1000;
+      this.nivelNum       = Math.max(1, Math.floor(this.puntosTotales / 1000) + 1);
+      this.nivelNombre    = this.calcNivel(this.nivelNum);
+
+      const precs = mets.filter(m => m.precisionPct != null).map(m => m.precisionPct!);
+      this.precision = precs.length ? Math.round(precs.reduce((s, v) => s + v, 0) / precs.length) : 0;
+
+      const tiempos = mets.filter(m => m.tiempoReaccionProm != null).map(m => m.tiempoReaccionProm! / 1000);
+      this.tiempoPromedio = tiempos.length ? Math.round(tiempos.reduce((s, v) => s + v, 0) / tiempos.length) : 0;
+
+      this.streak    = this.calcStreak(sess);
+      this.mejorRacha = this.streak;
+
+      // ── Últimas 5 sesiones ─────────────────────────────────────────────
+      const metMap = new Map<number, number>(); // sesionId → precisionPct
+      mets.forEach(m => { if (m.sesion?.id && m.precisionPct != null) metMap.set(m.sesion.id, m.precisionPct); });
+
+      this.ultimasSesiones = [...sess]
+        .sort((a, b) => new Date(b.inicio).getTime() - new Date(a.inicio).getTime())
+        .slice(0, 5)
+        .map(s => ({
+          juego:     s.juego.nombre,
+          icono:     this.juegoIcoNino(s.juego.nombre),
+          hace:      this.haceCuanto(s.inicio),
+          precision: metMap.has(s.id) ? Math.round(metMap.get(s.id)!) : 0,
+          pts:       s.puntaje ?? 0,
+        }));
+
+      // ── Progreso por categoría ──────────────────────────────────────────
+      const catData: Record<string, { total: number; prec: number[] }> = {};
+      sess.forEach(s => {
+        const cat = this.JUEGO_CAT[s.juego.nombre] ?? s.juego.tipo ?? 'Otros';
+        if (!catData[cat]) catData[cat] = { total: 0, prec: [] };
+        catData[cat].total++;
+        const p = metMap.get(s.id);
+        if (p != null) catData[cat].prec.push(p);
+      });
+
+      this.progresos = Object.entries(catData)
+        .sort((a, b) => b[1].total - a[1].total)
+        .slice(0, 4)
+        .map(([cat, data]) => {
+          const avg = data.prec.length
+            ? Math.round(data.prec.reduce((s, v) => s + v, 0) / data.prec.length) : 0;
+          return { nombre: cat, valor: avg, color: this.CAT_COLOR_MAP[cat] ?? '#7C3AED', icono: this.CAT_ICO_MAP[cat] ?? '🎮' };
+        });
+
+      // ── Evaluar logros con datos reales ────────────────────────────────
+      const juegosPorSesion = new Map<number, number>(); // juegoId → mejor puntaje
+      const categoriaSet = new Set<string>();
+      sess.forEach(s => {
+        const best = juegosPorSesion.get(s.juego.id) ?? 0;
+        juegosPorSesion.set(s.juego.id, Math.max(best, s.puntaje ?? 0));
+        categoriaSet.add(this.JUEGO_CAT[s.juego.nombre] ?? 'Otros');
+      });
+      const mejorSesionPts = Math.max(0, ...sess.map(s => s.puntaje ?? 0));
+
+      this.logrosCompletos = this.logrosCompletos.map(l => ({
+        ...l,
+        ganado: this.evaluarLogro(l.nombre, { pts: this.puntosTotales, streak: this.streak,
+          sesiones: this.totalSesiones, precision: this.precision,
+          categorias: categoriaSet.size, juegoCount: juegosPorSesion.size,
+          mejorSesionPts })
+      }));
+
+      this.logrosRecientes = this.logrosCompletos.filter(l => l.ganado).slice(0, 4)
+        .map(l => ({ icono: l.icono, nombre: l.nombre, desc: l.desc, puntos: l.puntos }));
+
+      this.loadingStats = false;
+    });
+  }
+
+  private calcStreak(sess: SesionJuego[]): number {
+    if (!sess.length) return 0;
+    const days = new Set(sess.map(s => s.inicio.slice(0, 10)));
+    const sorted = [...days].sort();
+    const today = new Date().toISOString().slice(0, 10);
+    const yest  = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+    if (sorted[sorted.length - 1] !== today && sorted[sorted.length - 1] !== yest) return 0;
+    let streak = 1;
+    for (let i = sorted.length - 2; i >= 0; i--) {
+      const diff = (new Date(sorted[i+1]).getTime() - new Date(sorted[i]).getTime()) / 86400000;
+      if (diff === 1) streak++;
+      else break;
+    }
+    return streak;
+  }
+
+  private calcNivel(n: number): string {
+    return (['Principiante','Aprendiz','Explorador','Aventurero','Maestro','Leyenda'])[Math.min(n - 1, 5)];
+  }
+
+  private haceCuanto(fecha: string): string {
+    const diff = Math.floor((Date.now() - new Date(fecha).getTime()) / 60000);
+    if (diff < 60)  return `Hace ${diff} min`;
+    const h = Math.floor(diff / 60);
+    if (h < 24) return `Hace ${h}h`;
+    const d = Math.floor(h / 24);
+    return d === 1 ? 'Ayer' : `Hace ${d} días`;
+  }
+
+  private evaluarLogro(nombre: string, d: {
+    pts: number; streak: number; sesiones: number; precision: number;
+    categorias: number; juegoCount: number; mejorSesionPts: number;
+  }): boolean {
+    switch (nombre) {
+      case 'Semana perfecta':    return d.streak >= 7;
+      case '1000 puntos':        return d.pts >= 1000;
+      case 'Velocidad récord':   return d.mejorSesionPts >= 100;   // proxy: buena sesión
+      case 'Precisión perfecta': return d.precision >= 95;
+      case 'En llamas':          return d.streak >= 10;
+      case 'Maestro cognitivo':  return d.juegoCount >= 6;
+      case 'Despegue':           return d.pts >= 3000;
+      case 'Explorador':         return d.categorias >= 3;
+      case 'Diamante':           return d.pts >= 5000;
+      case 'Jugador incansable': return d.sesiones >= 50;
+      case 'Compañero':          return d.sesiones >= 1;
+      case 'Top del día':        return d.mejorSesionPts >= 200;
+      default: return false;
+    }
+  }
+
+  private readonly JUEGO_CAT: Record<string, string> = {
+    'Espejo Mental':'Atención', 'Foco Extremo':'Atención', 'Reacción Controlada':'Atención',
+    'Historia Viva':'Lectura',  'Palabras Ocultas':'Lenguaje',
+    'Cascada Numérica':'Cálculo', 'Maratón Mental':'Cálculo',
+    'Laberinto Cognitivo':'Memoria', 'Ritmo y Patrón':'Memoria',
+    'Piezas en Tiempo':'Percepción',
+  };
+  private readonly CAT_COLOR_MAP: Record<string, string> = {
+    'Atención':'#7C3AED','Lectura':'#D97706','Lenguaje':'#EA580C',
+    'Cálculo':'#059669','Memoria':'#4F46E5','Percepción':'#0891B2',
+  };
+  private readonly CAT_ICO_MAP: Record<string, string> = {
+    'Atención':'🪞','Lectura':'📖','Lenguaje':'📝',
+    'Cálculo':'🔢','Memoria':'🌀','Percepción':'🧩',
+  };
 
   private loadTareas(perfilId: number): void {
     this.loadingTareas = true;
