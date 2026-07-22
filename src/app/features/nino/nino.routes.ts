@@ -52,7 +52,11 @@ export const ninoRoutes: Routes = [
   {
     path: 'juego/laberinto',
     loadComponent: () =>
-
+  import('./juego/laberinto/laberinto.component').then((m) => m.LaberintoComponent),
+},
+{
+  path: 'juego/maraton-mental',
+    loadComponent: () =>
       import('./juego/maraton-mental/maraton-mental.component').then((m) => m.MaratonMentalComponent),
   },
   {
