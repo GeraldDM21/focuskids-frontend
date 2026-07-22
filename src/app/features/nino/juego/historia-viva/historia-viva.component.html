@@ -3,51 +3,48 @@
   <!-- ══ INICIO ══════════════════════════════════════════════════════════ -->
   @if (estado === 'inicio') {
     <div class="pantalla-inicio">
-      <div class="orb orb-1"></div>
-      <div class="orb orb-2"></div>
 
-      <div class="inicio-content">
-        <div class="hero-mascota">
-          <div class="fox-sparkles">
-            <span class="sp sp-1">📖</span>
-            <span class="sp sp-2">✨</span>
-            <span class="sp sp-3">⭐</span>
-            <span class="sp sp-4">💫</span>
+      <img class="bg-escena" src="mascotas/benny-escena.png" alt="Biblioteca mágica de Benny">
+
+      <!-- Libros flotantes + chispas -->
+      <div class="magia-overlay" aria-hidden="true">
+        <div class="libro-3d l1">📖</div>
+        <div class="libro-3d l2">📚</div>
+        <div class="libro-3d l3">📖</div>
+        <div class="libro-3d l4">📝</div>
+        <div class="libro-3d l5">📚</div>
+        <span class="chispa ch1">✦</span>
+        <span class="chispa ch2">✧</span>
+        <span class="chispa ch3">⭐</span>
+        <span class="chispa ch4">✦</span>
+        <span class="chispa ch5">✧</span>
+        <span class="chispa ch6">💫</span>
+        <span class="chispa ch7">✦</span>
+      </div>
+
+      <div class="inicio-velo"></div>
+
+      <!-- Benny explica las instrucciones desde su burbuja -->
+      <div class="benny-habla">
+        <div class="habla-bubble">
+          <p class="habla-saludo">¡Hola! Soy <strong>Benny</strong> 🐰</p>
+          <p class="habla-intro">Para jugar Historia Viva:</p>
+          <div class="habla-pasos">
+            <div class="habla-paso"><span class="h-ico">📖</span><span>Lee el cuento con calma</span></div>
+            <div class="habla-paso"><span class="h-ico">🔊</span><span>Escúchalo con el audio</span></div>
+            <div class="habla-paso"><span class="h-ico">🤔</span><span>¡Responde mis preguntas!</span></div>
           </div>
-          <div class="fox-ring"><div class="fox-avatar">🐰</div></div>
-          <div class="fox-bubble-inicio">
-            ¡Hola! Soy <strong>Benny</strong> 🐰<br>
-            ¡Hoy te voy a contar una historia increíble! Lee con atención y responde mis preguntas. 📚
-          </div>
+          <p class="habla-animo">¡Yo te ayudo! 📚</p>
         </div>
+        <div class="habla-tail"></div>
+      </div>
 
+      <!-- Panel derecho — título y botón -->
+      <div class="inicio-panel">
         <h1 class="titulo-juego">
-          <span class="titulo-grad">Historia</span><span class="titulo-blanco"> Viva</span>
+          <span class="titulo-grad">Historia </span><span class="titulo-blanco">Viva</span>
         </h1>
-        <p class="subtitulo-juego">Lee el cuento, escúchalo con audio y responde preguntas de comprensión</p>
-
-        <div class="instrucciones-grid">
-          <div class="instr-card instr-azul">
-            <span class="instr-num">1</span>
-            <div class="instr-emoji">📖</div>
-            <div class="instr-text">Lee el micro-relato con calma</div>
-          </div>
-          <div class="instr-card instr-verde">
-            <span class="instr-num">2</span>
-            <div class="instr-emoji">🔊</div>
-            <div class="instr-text">Puedes escucharlo con el audio</div>
-          </div>
-          <div class="instr-card instr-morado">
-            <span class="instr-num">3</span>
-            <div class="instr-emoji">🤔</div>
-            <div class="instr-text">Responde 3 preguntas de comprensión</div>
-          </div>
-          <div class="instr-card instr-naranja">
-            <span class="instr-num">4</span>
-            <div class="instr-emoji">💡</div>
-            <div class="instr-text">Si fallas, recibirás una pista</div>
-          </div>
-        </div>
+        <p class="subtitulo-juego">¡Lee cuentos y demuestra que los entendiste!</p>
 
         <div class="nivel-indicador">
           <span class="nivel-dot" [class.activo]="nivelActual >= 1">⭐</span>
@@ -56,15 +53,10 @@
           <span class="nivel-txt">Nivel {{ nivelActual }}</span>
         </div>
 
-        <div class="inicio-footer">
-          <button class="btn-empezar" (click)="iniciarLectura()">
-            <span>📖</span> ¡Empezar a leer!
-            <span class="btn-shine"></span>
-          </button>
-          <button class="btn-voz" (click)="toggleVoz()" [title]="voiceEnabled ? 'Silenciar' : 'Activar voz'">
-            {{ voiceEnabled ? '🔊' : '🔇' }}
-          </button>
-        </div>
+        <button class="btn-empezar" (click)="iniciarLectura()">
+          📖 ¡Empezar a leer!
+          <span class="btn-shine"></span>
+        </button>
 
         <div class="volumen-footer">
           <app-volume-control [volumen]="volumenActual" (volumenChange)="onVolumenChange($event)"></app-volume-control>
@@ -75,119 +67,161 @@
 
   <!-- ══ LECTURA ══════════════════════════════════════════════════════════ -->
   @if (estado === 'lectura') {
-    <div class="pantalla-lectura">
+    <div class="pantalla-juego">
 
-      <!-- Header lectura -->
-      <div class="lectura-header">
-        <button class="btn-salir" (click)="volver()">← Salir</button>
-        <div class="header-titulo">{{ historiaActual?.titulo }}</div>
-        <div class="header-nivel">Nivel {{ nivelActual }}</div>
+      <!-- Fondo mágico -->
+      <div class="juego-bg-fx" aria-hidden="true">
+        <div class="orb orb1"></div>
+        <div class="orb orb2"></div>
+        <div class="orb orb3"></div>
+        <div class="orb-center"></div>
+        <span class="runa r1">📖</span>
+        <span class="runa r2">✦</span>
+        <span class="runa r3">📚</span>
+        <span class="runa r4">✧</span>
+        <span class="runa r5">⭐</span>
       </div>
 
-      <!-- Mascota -->
-      <app-mascot game="historia" [mood]="mascotMood" [message]="mascotMsg"></app-mascot>
-
-      <!-- Historia card -->
-      <div class="historia-card">
-        <div class="historia-titulo">{{ historiaActual?.titulo }}</div>
-        @for (parrafo of parrafos; track $index) {
-          <p class="historia-parrafo">{{ parrafo }}</p>
-        }
+      <!-- Benny flotante -->
+      <div class="mascota-lateral">
+        <img class="benny-lateral-img" src="mascotas/benny-portrait.png" alt="Benny">
+        <div class="lateral-bubble" [class.bubble-celebrate]="mascotMood === 'celebrate'"
+             [class.bubble-encourage]="mascotMood === 'encourage'"
+             [class.bubble-thinking]="mascotMood === 'thinking'">
+          {{ mascotMsg }}
+        </div>
       </div>
 
-      <!-- Audio controls -->
-      <div class="audio-row">
-        @if (!leyendoAudio) {
-          <button class="btn-audio" (click)="leerHistoria()">
-            🔊 Escuchar el cuento
-            @if (usoAudio > 0) { <span class="audio-badge">×{{ usoAudio }}</span> }
-          </button>
-        } @else {
-          <button class="btn-audio btn-audio-stop" (click)="detenerAudio()">
-            ⏹ Detener audio
-          </button>
-        }
-        <button class="btn-voz-sm" (click)="toggleVoz()">{{ voiceEnabled ? '🔊' : '🔇' }}</button>
+      <!-- Área de lectura -->
+      <div class="game-area">
+
+        <div class="lectura-header">
+          <button class="btn-salir" (click)="volver()">← Salir</button>
+          <div class="header-titulo">{{ historiaActual?.titulo }}</div>
+          <div class="header-nivel">Nivel {{ nivelActual }}</div>
+        </div>
+
+        <div class="historia-card">
+          <div class="historia-titulo">{{ historiaActual?.titulo }}</div>
+          @for (parrafo of parrafos; track $index) {
+            <p class="historia-parrafo">{{ parrafo }}</p>
+          }
+        </div>
+
+        <div class="audio-row">
+          @if (!leyendoAudio) {
+            <button class="btn-audio" (click)="leerHistoria()">
+              🔊 Escuchar el cuento
+              @if (usoAudio > 0) { <span class="audio-badge">×{{ usoAudio }}</span> }
+            </button>
+          } @else {
+            <button class="btn-audio btn-audio-stop" (click)="detenerAudio()">
+              ⏹ Detener audio
+            </button>
+          }
+          <button class="btn-voz-sm" (click)="toggleVoz()">{{ voiceEnabled ? '🔊' : '🔇' }}</button>
+        </div>
+
+        <button class="btn-listo" (click)="iniciarPreguntas()">
+          {{ modoRelectura ? 'Continuar respondiendo →' : 'Listo para responder →' }}
+        </button>
+
       </div>
-
-      <button class="btn-listo" (click)="iniciarPreguntas()">
-        {{ modoRelectura ? 'Continuar respondiendo →' : 'Listo para responder →' }}
-      </button>
-
     </div>
   }
 
   <!-- ══ PREGUNTA ══════════════════════════════════════════════════════════ -->
   @if (estado === 'pregunta' && historiaActual) {
-    <div class="pantalla-pregunta" (click)="saltarSiEsPosible()">
+    <div class="pantalla-juego" (click)="saltarSiEsPosible()">
+
+      <!-- Fondo mágico -->
+      <div class="juego-bg-fx" aria-hidden="true">
+        <div class="orb orb1"></div>
+        <div class="orb orb2"></div>
+        <div class="orb orb3"></div>
+        <div class="orb-center"></div>
+        <span class="runa r1">📖</span>
+        <span class="runa r2">✦</span>
+        <span class="runa r3">📚</span>
+        <span class="runa r4">✧</span>
+        <span class="runa r5">⭐</span>
+      </div>
 
       <app-game-feedback #feedback></app-game-feedback>
 
-      <!-- Header pregunta -->
-      <div class="game-header">
-        <button class="btn-salir" (click)="volver()">
-          <span>←</span> <span>Salir</span>
-        </button>
-        <div class="header-centro">
-          <div class="progreso-wrap">
-            <div class="progreso-barra">
-              <div class="progreso-fill" [style.width.%]="(preguntaIdx / historiaActual.preguntas.length) * 100"></div>
-            </div>
-            <span class="progreso-label">{{ preguntaIdx + 1 }}/{{ historiaActual.preguntas.length }}</span>
-          </div>
-        </div>
-        <div class="header-stats">
-          <div class="stat-badge badge-oro"><span class="badge-ico">⭐</span><span class="badge-num">{{ preguntasCorrectas }}</span></div>
-          <div class="stat-badge badge-rojo"><span class="badge-ico">💡</span><span class="badge-num">{{ intentosTotales }}</span></div>
+      <!-- Benny flotante -->
+      <div class="mascota-lateral">
+        <img class="benny-lateral-img" src="mascotas/benny-portrait.png" alt="Benny"
+             [class.benny-celebrate]="mascotMood === 'celebrate'"
+             [class.benny-encourage]="mascotMood === 'encourage'">
+        <div class="lateral-bubble" [class.bubble-celebrate]="mascotMood === 'celebrate'"
+             [class.bubble-encourage]="mascotMood === 'encourage'"
+             [class.bubble-thinking]="mascotMood === 'thinking'">
+          {{ mascotMsg }}
         </div>
       </div>
 
-      <!-- Mascota -->
-      <app-mascot game="historia" [mood]="mascotMood" [message]="mascotMsg"></app-mascot>
+      <!-- Área de pregunta -->
+      <div class="game-area">
 
-      <!-- Pregunta -->
-      <div class="pregunta-card">
-        <div class="pregunta-tipo">{{ tipoLabel }}</div>
-        <div class="pregunta-texto">{{ preguntaActual?.texto }}</div>
-      </div>
-
-      <!-- Opciones -->
-      <div class="opciones-grid">
-        @for (op of preguntaActual?.opciones ?? []; track $index) {
-          <button class="opcion"
-            [class.opcion-correcta]="respondioCorrectamente && respuestaSeleccionada === $index"
-            [class.opcion-correcta-temporal]="mostrarCorrectaTemporal && $index === preguntaActual?.correcta"
-            [class.opcion-errada]="opcionesErradas.includes($index)"
-            [class.opcion-disabled]="opcionesErradas.includes($index) || respondioCorrectamente === true"
-            (click)="seleccionarOpcion($index)">
-            <span class="opcion-letra">{{ LETRAS[$index] }}</span>
-            <span class="opcion-txt">{{ op }}</span>
+        <div class="game-header">
+          <button class="btn-salir" (click)="volver()">
+            <span>←</span><span>Salir</span>
           </button>
-        }
-      </div>
-
-      <!-- Pista -->
-      @if (mostrandoPista) {
-        <div class="pista-box">
-          <div class="pista-header">💡 Pista de Benny:</div>
-          <div class="pista-texto">{{ preguntaActual?.pista }}</div>
+          <div class="header-centro">
+            <div class="progreso-wrap">
+              <div class="progreso-barra">
+                <div class="progreso-fill" [style.width.%]="(preguntaIdx / historiaActual.preguntas.length) * 100"></div>
+              </div>
+              <span class="progreso-label">{{ preguntaIdx + 1 }}/{{ historiaActual.preguntas.length }}</span>
+            </div>
+          </div>
+          <div class="header-stats">
+            <div class="stat-badge badge-oro"><span class="badge-ico">⭐</span><span class="badge-num">{{ preguntasCorrectas }}</span></div>
+            <div class="stat-badge badge-rojo"><span class="badge-ico">💡</span><span class="badge-num">{{ intentosTotales }}</span></div>
+          </div>
         </div>
-      }
 
-      <!-- Releer cuento -->
-      <div class="releer-section">
-        <button class="btn-releer" (click)="toggleReleer()">
-          {{ mostrandoTexto ? '▲ Ocultar cuento' : '📖 Releer el cuento' }}
-        </button>
-        @if (mostrandoTexto) {
-          <div class="releer-texto">
-            @for (parrafo of parrafos; track $index) {
-              <p class="historia-parrafo mini">{{ parrafo }}</p>
-            }
+        <div class="pregunta-card">
+          <div class="pregunta-tipo">{{ tipoLabel }}</div>
+          <div class="pregunta-texto">{{ preguntaActual?.texto }}</div>
+        </div>
+
+        <div class="opciones-grid">
+          @for (op of preguntaActual?.opciones ?? []; track $index) {
+            <button class="opcion"
+              [class.opcion-correcta]="respondioCorrectamente && respuestaSeleccionada === $index"
+              [class.opcion-correcta-temporal]="mostrarCorrectaTemporal && $index === preguntaActual?.correcta"
+              [class.opcion-errada]="opcionesErradas.includes($index)"
+              [class.opcion-disabled]="opcionesErradas.includes($index) || respondioCorrectamente === true"
+              (click)="seleccionarOpcion($index)">
+              <span class="opcion-letra">{{ LETRAS[$index] }}</span>
+              <span class="opcion-txt">{{ op }}</span>
+            </button>
+          }
+        </div>
+
+        @if (mostrandoPista) {
+          <div class="pista-box">
+            <div class="pista-header">💡 Pista de Benny:</div>
+            <div class="pista-texto">{{ preguntaActual?.pista }}</div>
           </div>
         }
-      </div>
 
+        <div class="releer-section">
+          <button class="btn-releer" (click)="toggleReleer()">
+            {{ mostrandoTexto ? '▲ Ocultar cuento' : '📖 Releer el cuento' }}
+          </button>
+          @if (mostrandoTexto) {
+            <div class="releer-texto">
+              @for (parrafo of parrafos; track $index) {
+                <p class="historia-parrafo mini">{{ parrafo }}</p>
+              }
+            </div>
+          }
+        </div>
+
+      </div>
     </div>
   }
 
@@ -204,10 +238,8 @@
       </div>
 
       <div class="resultados-card">
-        <!-- Fox resultado -->
         <div class="fox-resultado-hero">
-          <div class="fox-resultado-ring"></div>
-          <div class="fox-resultado-face">🐰</div>
+          <img class="benny-resultado-img" src="mascotas/benny-portrait.png" alt="Benny">
           <div class="fox-resultado-trophy">{{ trofeoEmoji }}</div>
         </div>
 
@@ -232,7 +264,6 @@
           </div>
         </div>
 
-        <!-- Métricas (CA-04) -->
         <div class="metricas-row">
           <div class="metrica"><div class="m-icon">✅</div><div class="m-val verde">{{ preguntasCorrectas }}/{{ historiaActual?.preguntas?.length }}</div><div class="m-lbl">Correctas</div></div>
           <div class="metrica"><div class="m-icon">⏱️</div><div class="m-val azul">{{ tiempoLecturaFmt }}</div><div class="m-lbl">Lectura</div></div>
@@ -240,7 +271,6 @@
           <div class="metrica"><div class="m-icon">📖</div><div class="m-val naranja">{{ releidasCount }}</div><div class="m-lbl">Relecturas</div></div>
         </div>
 
-        <!-- Inferencias (CA-06) -->
         @if (tiposInferencia.length > 0) {
           <div class="inferencias-section">
             <div class="inf-titulo">Tipos de inferencia:</div>
@@ -256,9 +286,8 @@
           </div>
         }
 
-        <!-- Benny mensaje -->
         <div class="foxy-msg-final">
-          <div class="foxy-msg-avatar">🐰</div>
+          <img class="benny-msg-avatar" src="mascotas/benny-portrait.png" alt="Benny">
           <div class="foxy-msg-bubble">{{ mascotMsg }}</div>
         </div>
 
