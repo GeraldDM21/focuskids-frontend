@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { SesionJuegoService } from '../../../../core/services/sesion-juego.service';
 import { ChildProfileService } from '../../../padre/perfiles/child-profile.service';
 import { Juego, NivelDificultad } from '../../../../core/models/juego.model';
+import { MascotComponent } from '../../../../shared/components/mascot/mascot.component';
 
 type Estado = 'inicio' | 'cuenta' | 'mostrando' | 'input' | 'feedback' | 'resultados';
 type Mood   = 'idle' | 'thinking' | 'excited' | 'celebrate' | 'encourage';
@@ -15,7 +16,7 @@ interface ConfettiPiece { id: number; left: number; color: string; delay: number
 @Component({
   selector: 'app-ritmo-patron',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, MascotComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="game-wrapper">
@@ -135,22 +136,7 @@ interface ConfettiPiece { id: number; left: number; color: string; delay: number
             </div>
           </div>
 
-          <div class="mascota-area">
-            <div class="fox-game-wrap"
-              [class.fox-celebrate]="mascotMood === 'celebrate'"
-              [class.fox-encourage]="mascotMood === 'encourage'">
-              @if (mascotDecoEmoji) {
-                <div class="fox-deco-emoji">{{ mascotDecoEmoji }}</div>
-              }
-              <div class="fox-game-avatar">{{ mascotEmoji }}</div>
-            </div>
-            <div class="burbuja-dialogo"
-              [class.burbuja-verde]="mascotMood === 'celebrate'"
-              [class.burbuja-naranja]="mascotMood === 'encourage'"
-              [class.burbuja-azul]="mascotMood === 'thinking'">
-              {{ mascotMsg }}
-            </div>
-          </div>
+          <app-mascot [game]="'ritmo'" [mood]="mascotMood" [message]="mascotMsg"></app-mascot>
 
           @if (showCombo && combo >= 2) {
             <div class="combo-badge">🔥 ¡Combo x{{ combo }}!</div>
@@ -653,8 +639,7 @@ export class RitmoPatronComponent implements OnInit, OnDestroy {
   showFlash = false;
   flashVerde = true;
 
-  mascotEmoji = '🐵';
-  mascotMsg   = '¡Listo para tocar! 🥁';
+  mascotMsg  = '¡Listo para tocar! 🥁';
   mascotMood: Mood = 'idle';
   voiceEnabled = true;
   private abortado = false;
@@ -670,13 +655,6 @@ export class RitmoPatronComponent implements OnInit, OnDestroy {
   private sesionId: number | null = null;
 
   get secuenciaArray(): number[] { return Array.from({ length: this.longitudActual }); }
-
-  get mascotDecoEmoji(): string {
-    const map: Record<Mood, string> = {
-      idle: '', thinking: '👂', excited: '💪', celebrate: '🎉', encourage: '💗'
-    };
-    return map[this.mascotMood];
-  }
 
   private timers: ReturnType<typeof setTimeout>[] = [];
   private audioCtx: AudioContext | null = null;
@@ -1049,7 +1027,6 @@ export class RitmoPatronComponent implements OnInit, OnDestroy {
     this.mascotMood = mood;
     const msgs = this.MASCOTA_MSGS[mood];
     this.mascotMsg = msgs[Math.floor(Math.random() * msgs.length)];
-    this.mascotEmoji = '🐵';
     const textoVoz = this.mascotMsg.replace(/[\u{1F300}-\u{1FFFF}]/gu, '').trim();
     return this.hablar(textoVoz);
   }

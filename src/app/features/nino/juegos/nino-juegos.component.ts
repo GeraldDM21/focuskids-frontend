@@ -785,7 +785,7 @@ export class NinoJuegosComponent implements OnInit {
     { nombre:'Cascada Numérica',    tipo:'Cálculo',    icono:'🔢', personaje:'🦉', color:'#059669', nivelTxt:'Nivel 2 · Intermedio',  progreso:30, ruta:'/nino/juego/cascada-numerica' },
     { nombre:'Laberinto Cognitivo', tipo:'Memoria',    icono:'🌀', personaje:'🐱', color:'#7C3AED', nivelTxt:'Nivel 1 · Básico',      progreso:15, ruta:'/nino/juego/laberinto' },
     { nombre:'Maratón Mental',      tipo:'Cálculo',    icono:'🏃', personaje:'🐨', color:'#059669', nivelTxt:'Nivel 1 · Básico',      progreso:10, ruta:'/nino/juego/maraton-mental' },
-    { nombre:'Ritmo y Patrón',      tipo:'Memoria',    icono:'🎵', personaje:'🐭', color:'#9333EA', nivelTxt:'Nivel 1 · Básico',      progreso:0,  ruta:'/nino/juego/ritmo-patron' },
+    { nombre:'Ritmo y Patrón',      tipo:'Memoria',    icono:'🎵', personaje:'🐵', color:'#9333EA', nivelTxt:'Nivel 1 · Básico',      progreso:0,  ruta:'/nino/juego/ritmo-patron' },
     { nombre:'Palabras Ocultas',    tipo:'Lenguaje',   icono:'📝', personaje:'🐼', color:'#EA580C', nivelTxt:'Nivel 1 · Básico',      progreso:0,  ruta:'/nino/juego/palabras-ocultas' },
     { nombre:'Piezas en Tiempo',    tipo:'Percepción', icono:'🧩', personaje:'🐯', color:'#0891B2', nivelTxt:'Nivel 1 · Básico',      progreso:0,  ruta:'/nino/juego/piezas-tiempo' },
     { nombre:'Mapa Aventura',       tipo:'Geografía',  icono:'🗺️', personaje:'🦁', color:'#65A30D', nivelTxt:'Nivel 1 · Básico',      progreso:0,  ruta:'/nino/juego/mapa-aventura' },
@@ -812,7 +812,10 @@ export class NinoJuegosComponent implements OnInit {
   private readonly implementados = [
     '/nino/juego/espejo-mental', '/nino/juego/palabras-ocultas',
     '/nino/juego/historia-viva', '/nino/juego/piezas-tiempo',
-    '/nino/juego/cascada-numerica'
+    '/nino/juego/cascada-numerica', '/nino/juego/foco-extremo',
+    '/nino/juego/ritmo-patron', '/nino/juego/reaccion-controlada',
+    '/nino/juego/laberinto', '/nino/juego/maraton-mental',
+    '/nino/juego/mapa-aventura', '/nino/juego/lab-ciencias',
   ];
 
   private readonly CAT_COLORS: Record<string, [string, string]> = {
@@ -1043,7 +1046,7 @@ export class NinoJuegosComponent implements OnInit {
   private avatarEmoji(av: string): string {
     const m: Record<string, string> = {
       fox:'🦊', frog:'🐸', lion:'🦁', panda:'🐼', koala:'🐨',
-      unicorn:'🦄', dog:'🐶', cat:'🐱', rabbit:'🐰', tiger:'🐯', bear:'🐻', mouse:'🐭'
+      unicorn:'🦄', dog:'🐶', cat:'🐱', rabbit:'🐰', tiger:'🐯', bear:'🐻', monkey:'🐵'
     };
     return m[av] ?? '🦊';
   }

@@ -1,0 +1,195 @@
+<div class="juego-wrapper">
+
+  @if (estado === 'inicio') {
+  <div class="pantalla-inicio">
+
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+    <div class="inicio-content">
+
+      <div class="mascota-area">
+        <div class="sparkles">
+          <span class="sp sp-1">✨</span>
+          <span class="sp sp-2">⭐</span>
+          <span class="sp sp-3">💫</span>
+          <span class="sp sp-4">✨</span>
+        </div>
+        <div class="mascota-ring">
+          <div class="mascota-avatar">🦄</div>
+        </div>
+        <div class="mascota-bubble">
+          ¡Hola! Soy <strong>Uni</strong> 🦄<br>
+          ¡Vamos a entrenar tu atención y tu autocontrol! 🎯
+        </div>
+      </div>
+
+      <h1 class="titulo-juego">
+        <span class="titulo-parte1">Foco</span>
+        <span class="titulo-parte2"> Extremo</span>
+      </h1>
+      <p class="titulo-sub">Presiona solo cuando aparezca tu objetivo</p>
+
+      <div class="instrucciones-grid">
+        <div class="instruccion-card">
+          <span class="ic-num">1</span>
+          <span class="ic-emoji">🎯</span>
+          <span class="ic-texto">Verás un dibujo objetivo antes de empezar</span>
+        </div>
+        <div class="instruccion-card">
+          <span class="ic-num">2</span>
+          <span class="ic-emoji">👆</span>
+          <span class="ic-texto">Toca o presiona espacio SOLO con ese dibujo</span>
+        </div>
+        <div class="instruccion-card">
+          <span class="ic-num">3</span>
+          <span class="ic-emoji">🚫</span>
+          <span class="ic-texto">Si aparece otro dibujo, no toques nada</span>
+        </div>
+        <div class="instruccion-card">
+          <span class="ic-num">4</span>
+          <span class="ic-emoji">🐢</span>
+          <span class="ic-texto">Si te equivocas mucho, iremos más despacio</span>
+        </div>
+      </div>
+
+      <div class="inicio-botones">
+        <button class="btn-empezar" (click)="iniciarJuego('FACIL')">
+          ⚡ ¡Empezar!
+        </button>
+        <button class="btn-sonido" (click)="toggleSonido()" [title]="sonidoActivo ? 'Silenciar' : 'Activar sonido'">
+          {{ sonidoActivo ? '🔊' : '🔇' }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+  }
+
+  @if (estado === 'jugando' && config) {
+  <div class="pantalla-juego">
+
+    <div class="juego-topbar">
+      <button class="btn-salir" (click)="volverInicio()">← Salir</button>
+
+      <div class="timer-area">
+        <div class="timer-bar-bg">
+          <div class="timer-bar-fill" [style.width.%]="timerPorcentaje" [style.background]="timerColor"></div>
+        </div>
+        <span class="timer-texto">⏱ {{ formatTiempo(tiempoRestante) }}</span>
+      </div>
+
+      <div class="contadores">
+        <div class="contador">
+          <span>✅</span>
+          <span>{{ aciertos }}</span>
+        </div>
+        <div class="contador rojo">
+          <span>❌</span>
+          <span>{{ falsasAlarmas }}</span>
+        </div>
+      </div>
+
+      <button class="btn-sonido-top" (click)="toggleSonido()">{{ sonidoActivo ? '🔊' : '🔇' }}</button>
+    </div>
+
+    <div class="juego-subtitulo">
+      🎯 Tu objetivo:<span class="objetivo-recordatorio">{{ config.estimuloObjetivo }}</span> · {{ nivelLabel }}
+    </div>
+
+    <div class="juego-body">
+
+      @if (mostrandoObjetivo) {
+      <div class="preparacion-card">
+        <p class="prep-texto">¡Presiona solo cuando veas!</p>
+        <div class="prep-objetivo">{{ config.estimuloObjetivo }}</div>
+        <p class="prep-sub">Prepárate...</p>
+      </div>
+      }
+
+      @if (!mostrandoObjetivo) {
+      <div class="estimulo-wrap"
+           style="touch-action: manipulation;"
+           (pointerdown)="presionar()">
+        <div class="estimulo-box"
+             [class.ok]="feedbackEstado === 'ok'"
+             [class.error]="feedbackEstado === 'error'">
+          @if (estimuloActual) {
+          <span class="estimulo-simbolo">{{ estimuloActual.simbolo }}</span>
+          }
+        </div>
+        <p class="estimulo-ayuda">Toca la pantalla o presiona espacio</p>
+      </div>
+      }
+
+      <div class="objetivo-panel">
+        <p class="panel-titulo">Presiona solo con:</p>
+        <div class="objetivo-panel-simbolo">{{ config.estimuloObjetivo }}</div>
+        <p class="panel-nota">Todo lo demás: no lo toques 🚫</p>
+      </div>
+
+    </div>
+  </div>
+  }
+
+  @if (estado === 'completado' && resultado) {
+  <div class="pantalla-resultado">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <div class="resultado-card">
+      <div class="res-icono">🎉</div>
+      <div class="res-espacio"></div>
+      <h2 class="res-titulo">¡Sesión completada!</h2>
+
+      @if (seRedujoCadencia) {
+      <div class="ia-badge">
+        🤖 Motor IA: bajamos la velocidad para ayudarte a pensar mejor
+      </div>
+      }
+
+      @if (nivelSugerido) {
+      <div class="ia-badge">
+        🤖 ¡Motor IA: nivel sugerido <strong>{{ nivelSugerido }}</strong>!
+      </div>
+      }
+
+      <div class="res-stats">
+        <div class="res-stat">
+          <span class="rs-num verde">{{ resultado.indicePrecision }}%</span>
+          <span class="rs-label">Precisión</span>
+        </div>
+        <div class="res-stat">
+          <span class="rs-num celeste">{{ resultado.indiceControlImpulsos }}%</span>
+          <span class="rs-label">Control de impulsos</span>
+        </div>
+        <div class="res-stat">
+          <span class="rs-num amarillo">{{ resultado.tiempoReaccionPromedioMs ?? '—' }}</span>
+          <span class="rs-label">Reacción (ms)</span>
+        </div>
+      </div>
+
+      <div class="res-detalle">
+        <span class="pw-badge pw-ok">✓ {{ resultado.aciertos }} aciertos</span>
+        <span class="pw-badge pw-no">✗ {{ resultado.falsasAlarmas }} falsas alarmas</span>
+        <span class="pw-badge pw-omision">· {{ resultado.omisiones }} omisiones</span>
+      </div>
+
+      <div class="res-botones">
+        @if (nivelSugerido) {
+        <button class="btn-ia" (click)="subirNivel()">⬆️ Jugar en {{ nivelSugerido }}</button>
+        }
+        <button class="btn-reintentar" (click)="jugarDeNuevo()">🔄 Jugar de nuevo</button>
+        <button class="btn-cambiar" (click)="volverInicio()">🎯 Elegir de nuevo</button>
+        <button class="btn-volver" (click)="volverLobby()">← Volver a juegos</button>
+      </div>
+    </div>
+  </div>
+  }
+
+  @if (estado === 'jugando') {
+  <app-mascot game="foco" [mood]="mascotMood" [message]="mascotMsg"></app-mascot>
+  }
+
+</div>
