@@ -1,0 +1,639 @@
+<div class="lab-wrapper">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  @if (estado === 'inicio') {
+    <section class="pantalla inicio">
+      <div class="inicio-content">
+
+        <div class="mascota-inicio">
+          <div class="sparkles">
+            ✨ 🔬 ✨
+          </div>
+
+          <div class="mascota-ring">
+            🐶
+          </div>
+
+          <div class="burbuja">
+            ¡Soy Buddy! Observa, mezcla y
+            descubre la regla de cada experimento.
+          </div>
+        </div>
+
+        <div>
+          <h1>
+            <span>Lab de</span>
+            <strong>Ciencias</strong>
+          </h1>
+
+          <p class="subtitulo">
+            Razonamiento deductivo y
+            pensamiento científico
+          </p>
+        </div>
+
+        <div class="instrucciones-grid">
+          <article>
+            <b>1</b>
+            <span>🎯</span>
+            <p>Lee el objetivo</p>
+          </article>
+
+          <article>
+            <b>2</b>
+            <span>🧪</span>
+            <p>Elige dos ingredientes</p>
+          </article>
+
+          <article>
+            <b>3</b>
+            <span>👀</span>
+            <p>Observa la reacción</p>
+          </article>
+
+          <article>
+            <b>4</b>
+            <span>🧠</span>
+            <p>Deduce la regla</p>
+          </article>
+        </div>
+
+        <div class="nivel-seccion">
+          <h2>Elige tu dificultad</h2>
+
+          <div class="niveles-row">
+            @for (
+              nivel of niveles;
+              track nivel.id
+              ) {
+              <button
+                type="button"
+                class="nivel-btn"
+                [class.activo]="
+                  nivelActual === nivel.id
+                "
+                (click)="
+                  seleccionarNivel(nivel.id)
+                "
+              >
+                <span>{{ nivel.emoji }}</span>
+
+                <b>{{ nivel.label }}</b>
+
+                <small>
+                  {{ nivel.desc }}
+                </small>
+              </button>
+            }
+          </div>
+        </div>
+
+        @if (errorApi) {
+          <div class="error-api">
+            ⚠️ {{ errorApi }}
+          </div>
+        }
+
+        <div class="inicio-botones">
+          <button
+            type="button"
+            class="btn-principal"
+            (click)="iniciarJuego()"
+          >
+            Entrar al laboratorio 🚀
+          </button>
+
+          <button
+            type="button"
+            class="btn-icon"
+            (click)="toggleSonido()"
+            [attr.aria-label]="
+              sonidoActivo
+                ? 'Desactivar sonido'
+                : 'Activar sonido'
+            "
+          >
+            {{
+              sonidoActivo
+                ? '🔊'
+                : '🔇'
+            }}
+          </button>
+        </div>
+
+        <button
+          type="button"
+          class="btn-link"
+          (click)="volverLobby()"
+        >
+          ← Volver a juegos
+        </button>
+      </div>
+    </section>
+  }
+
+  @if (estado === 'cargando') {
+    <section class="pantalla carga">
+      <div class="carga-card">
+
+        <div class="perro-carga">
+          🐶
+        </div>
+
+        <div class="tubo-carga">
+          🧪
+
+          <span
+            class="burbuja-carga b1"
+          ></span>
+
+          <span
+            class="burbuja-carga b2"
+          ></span>
+
+          <span
+            class="burbuja-carga b3"
+          ></span>
+        </div>
+
+        <h1>Lab de Ciencias</h1>
+
+        <p>
+          {{ cargandoTexto }}
+        </p>
+
+        <div class="barra-carga">
+          <div
+            [style.width.%]="progresoCarga"
+          ></div>
+        </div>
+
+        <b>
+          {{ progresoCarga }}%
+        </b>
+      </div>
+    </section>
+  }
+
+  @if (
+    estado === 'jugando'
+    && experimentoActual
+    ) {
+    <section class="pantalla juego">
+
+      <header class="topbar">
+        <button
+          type="button"
+          (click)="volverInicio()"
+        >
+          ✕ Salir
+        </button>
+
+        <div class="progreso">
+          <span>
+            Experimento
+            {{ experimentoActualIndex + 1 }}
+            de
+            {{ experimentos.length }}
+          </span>
+
+          <div>
+            <i
+              [style.width.%]="
+                progresoExperimentos
+              "
+            ></i>
+          </div>
+        </div>
+
+        <div class="stats-mini">
+          🧪 {{ intentosTotales }}
+
+          <span>
+            ⭐ {{ puntaje }}
+          </span>
+        </div>
+
+        <button
+          type="button"
+          class="solo-icon"
+          (click)="toggleSonido()"
+        >
+          {{
+            sonidoActivo
+              ? '🔊'
+              : '🔇'
+          }}
+        </button>
+      </header>
+
+      <div class="objetivo-card">
+        <div class="objetivo-icon">
+          🎯
+        </div>
+
+        <div>
+          <small>
+            OBJETIVO DEL EXPERIMENTO
+          </small>
+
+          <h2>
+            {{ experimentoActual.titulo }}
+          </h2>
+
+          <p>
+            {{ experimentoActual.objetivo }}
+          </p>
+
+          @if (mostrarPista) {
+            <div class="pista">
+              💡 {{ experimentoActual.pista }}
+            </div>
+          }
+        </div>
+      </div>
+
+      <main class="laboratorio-grid">
+
+        <section class="ingredientes-panel">
+          <h3>
+            Ingredientes disponibles
+          </h3>
+
+          <p>
+            Selecciona
+            {{ cantidadIngredientesRequerida }}
+            ingredientes para realizar la mezcla
+          </p>
+
+          <div class="ingredientes-grid">
+            @for (
+              ingrediente of ingredientes;
+              track ingrediente.id
+              ) {
+              <button
+                type="button"
+                class="ingrediente"
+                draggable="true"
+                [class.elegido]="
+                  seleccionados.includes(
+                    ingrediente
+                  )
+                "
+                [style.--ing-color]="
+                  ingrediente.color
+                "
+                (dragstart)="
+                  onDragStart(
+                    $event,
+                    ingrediente
+                  )
+                "
+                (click)="
+                  seleccionarIngrediente(
+                    ingrediente
+                  )
+                "
+              >
+                <span>
+                  {{ ingrediente.emoji }}
+                </span>
+
+                <b>
+                  {{ ingrediente.nombre }}
+                </b>
+
+                <small>
+                  {{ ingrediente.descripcion }}
+                </small>
+              </button>
+            }
+          </div>
+        </section>
+
+        <section class="mesa-panel">
+          <h3>
+            Mesa de experimentos
+          </h3>
+
+          <div
+            class="recipiente"
+            [class.mezclando]="mezclando"
+            [class.exito]="
+              resultadoVisible
+              && resultadoExitoso
+            "
+            [class.fallo]="
+              resultadoVisible
+              && !resultadoExitoso
+            "
+            (drop)="onDrop($event)"
+            (dragover)="permitirDrop($event)"
+          >
+            <div class="vaso">
+              {{
+                mezclando
+                  ? '⚗️'
+                  : emojiResultado
+              }}
+            </div>
+
+            <p>
+              {{
+                seleccionados.length
+                < cantidadIngredientesRequerida
+                  ? (
+                    'Selecciona '
+                    + cantidadIngredientesRequerida
+                    + ' ingredientes'
+                  )
+                  : '¡Listo para mezclar!'
+              }}
+            </p>
+
+            <div class="seleccionados">
+              @for (
+                item of seleccionados;
+                track item.id;
+                let i = $index
+                ) {
+                @if (i > 0) {
+                  <b class="signo-mas">
+                    +
+                  </b>
+                }
+
+                <button
+                  type="button"
+                  (click)="quitarSeleccionado(i)"
+                >
+      <span>
+        {{ item.emoji }}
+      </span>
+
+                  {{ item.nombre }} ✕
+                </button>
+              }
+            </div>
+          </div>
+
+          <button
+            type="button"
+            class="btn-mezclar"
+            [disabled]="!puedeMezclar"
+            (click)="mezclar()"
+          >
+            {{
+              mezclando
+                ? 'Observando reacción...'
+                : 'Mezclar ingredientes 🧪'
+            }}
+          </button>
+
+          <div class="intentos">
+            Intentos en este experimento:
+
+            <b>
+              {{ intentosExperimento }}
+            </b>
+          </div>
+        </section>
+      </main>
+
+      @if (resultadoVisible) {
+        <div class="resultado-overlay">
+          <article
+            class="resultado-modal"
+            [class.ok]="resultadoExitoso"
+            [class.no]="!resultadoExitoso"
+          >
+            <div class="resultado-emoji">
+              {{ emojiResultado }}
+            </div>
+
+            <h2>
+              {{
+                resultadoExitoso
+                  ? '¡Hipótesis correcta!'
+                  : 'La hipótesis no funcionó'
+              }}
+            </h2>
+
+            <p>
+              {{ mensajeResultado }}
+            </p>
+
+            <div class="explicacion">
+              <b>
+                {{
+                  resultadoExitoso
+                    ? '🔬 ¿Qué ocurrió?'
+                    : '🧠 Evidencia obtenida'
+                }}
+              </b>
+
+              <span>
+                {{ explicacionActual }}
+              </span>
+            </div>
+
+            <button
+              type="button"
+              class="btn-principal"
+              (click)="continuar()"
+            >
+              {{
+                resultadoExitoso
+                  ? (
+                    experimentoActualIndex + 1
+                    < experimentos.length
+                      ? 'Siguiente experimento →'
+                      : 'Ver resultados 🏆'
+                  )
+                  : 'Probar otra combinación ↻'
+              }}
+            </button>
+          </article>
+        </div>
+      }
+
+      <app-mascot
+        game="juego10"
+        [mood]="mascotMood"
+        [message]="mascotMsg"
+      ></app-mascot>
+    </section>
+  }
+
+  @if (estado === 'completado') {
+    <section class="pantalla final">
+
+      @if (confettiActivo) {
+        <div class="confetti-container">
+          @for (
+            pieza of confettiPiezas;
+            track pieza.id
+            ) {
+            <span
+              class="confetti-piece"
+              [style.left.%]="pieza.left"
+              [style.animation-delay.s]="
+          pieza.delay
+        "
+              [style.animation-duration.s]="
+          pieza.duration
+        "
+              [style.--rotation]="
+          pieza.rotation + 'deg'
+        "
+            >
+        {{ pieza.emoji }}
+      </span>
+          }
+        </div>
+      }
+
+      <div class="confeti">
+        ✨ 🎉 ⭐ 🧪 🎊 ✨
+      </div>
+
+      <article class="final-card">
+        <div class="trofeo">
+          🏆
+        </div>
+
+        <h1>
+          ¡Laboratorio completado!
+        </h1>
+
+        <p>
+          Buddy está orgulloso de
+          tu pensamiento científico.
+        </p>
+
+        <div class="nivel-final">
+          {{ nivelLabel() }}
+
+          ·
+
+          {{ experimentosCompletados }}
+          experimentos
+        </div>
+
+        <div class="stats-final">
+          <div>
+            <span>✅</span>
+
+            <b>
+              {{ hipotesisCorrectas }}
+            </b>
+
+            <small>
+              Hipótesis correctas
+            </small>
+          </div>
+
+          <div>
+            <span>🔁</span>
+
+            <b>
+              {{ promedioIntentos() }}
+            </b>
+
+            <small>
+              Intentos promedio
+            </small>
+          </div>
+
+          <div>
+            <span>⏱️</span>
+
+            <b>
+              {{ tiempoPromedio() }}
+            </b>
+
+            <small>
+              Descubrimiento promedio
+            </small>
+          </div>
+
+          <div>
+            <span>⭐</span>
+
+            <b>
+              {{ puntaje }}
+            </b>
+
+            <small>
+              Puntaje
+            </small>
+          </div>
+        </div>
+
+        <div class="mensaje-final">
+          🔬 En ciencia, observar los
+          resultados y cambiar la hipótesis
+          es parte del descubrimiento.
+        </div>
+
+        @if (
+          nivelSugerido
+          && nivelSugerido !== nivelActual
+          ) {
+          <div class="sugerencia">
+            🚀 Tu desempeño sugiere
+            probar el nivel
+
+            <b>
+              {{ nivelLabel(nivelSugerido) }}
+            </b>.
+          </div>
+        }
+
+        @if (errorApi) {
+          <div class="error-api">
+            ⚠️ {{ errorApi }}
+          </div>
+        }
+
+        <div class="acciones-final">
+          <button
+            type="button"
+            class="btn-principal"
+            (click)="jugarDeNuevo()"
+          >
+            Repetir nivel
+          </button>
+
+          @if (siguienteNivel) {
+            <button
+              type="button"
+              class="btn-subir-nivel"
+              (click)="subirNivel()"
+            >
+              Subir a
+              {{ nivelLabel(siguienteNivel) }}
+              🚀
+            </button>
+          }
+
+          <button
+            type="button"
+            class="btn-secundario"
+            (click)="volverLobby()"
+          >
+            Volver a juegos
+          </button>
+        </div>
+      </article>
+
+      <app-mascot
+        game="juego10"
+        mood="celebrate"
+        message="¡Excelente trabajo, científico! 🐶"
+      ></app-mascot>
+    </section>
+  }
+</div>
