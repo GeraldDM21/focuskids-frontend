@@ -17,6 +17,7 @@ export const MASCOTAS: Record<string, MascotConfig> = {
   sopa:     { emoji: '🐼', name: 'Pandi', color: '#10B981' },
   piezas:   { emoji: '🐯', name: 'Tigre', color: '#EF4444' },
   ritmo:    { emoji: '🐵', name: 'Bongo', color: '#7C3AED' },
+  reaccion: { emoji: '🐸', name: 'Froggy', color: '#22C55E' },
   juego7:   { emoji: '🦁', name: 'Leo',   color: '#F59E0B' },
   juego8:   { emoji: '🐨', name: 'Koby',  color: '#6366F1' },
   juego9:   { emoji: '🦄', name: 'Uni',   color: '#D946EF' },
