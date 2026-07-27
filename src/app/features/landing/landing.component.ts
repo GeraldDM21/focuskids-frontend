@@ -511,7 +511,7 @@ interface Miembro {
     .back-to-top {
       position: fixed;
       bottom: 32px;
-      left: 28px;
+      right: 28px;
       z-index: 999;
       width: 44px;
       height: 44px;
