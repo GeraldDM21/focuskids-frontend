@@ -5,6 +5,7 @@ import { SopaLetrasService } from './sopa-letras.service';
 import { ChildProfileService } from '../../../padre/perfiles/child-profile.service';
 import { SopaLetrasConfig, PalabraColocada, Tema, Nivel } from './sopa-letras.model';
 import { MascotComponent, MascotMood } from '../../../../shared/components/mascot/mascot.component';
+import { SesionJuegoService } from '../../../../core/services/sesion-juego.service';
 
 type Estado = 'inicio' | 'jugando' | 'completado' | 'tiempo-agotado';
 
@@ -103,6 +104,12 @@ export class SopaLetrasComponent implements OnInit, OnDestroy {
   private dragStart: { row: number; col: number } | null = null;
   private dragCurrent: { row: number; col: number } | null = null;
 
+  // ── Backend session tracking ──
+  private readonly JUEGO_ID = 5;  // "Palabras Ocultas" en el seeder
+  private sesionBackendId: number | null = null;
+  private nivelFacilId: number | null = null;
+  private tiempoInicioRonda = 0;  // CA-05: tiempo por palabra
+
   // Resultado IA (CA-05)
   subioNivel = false;
   nivelSugerido: string | null = null;
@@ -117,7 +124,8 @@ export class SopaLetrasComponent implements OnInit, OnDestroy {
   constructor(
     private sopaLetrasService: SopaLetrasService,
     private childProfileService: ChildProfileService,
-    private router: Router
+    private router: Router,
+    private sesionJuegoService: SesionJuegoService,
   ) {}
 
   ngOnInit(): void {
@@ -128,6 +136,10 @@ export class SopaLetrasComponent implements OnInit, OnDestroy {
       }
       this.perfilId = state.profileId;
       this.perfilNombre = state.profileName || 'Jugador';
+    });
+    this.sesionJuegoService.obtenerNiveles(this.JUEGO_ID).subscribe({
+      next: niveles => { this.nivelFacilId = niveles[0]?.id ?? null; },
+      error: () => {}
     });
   }
 
@@ -156,6 +168,24 @@ export class SopaLetrasComponent implements OnInit, OnDestroy {
     this.subioNivel = false;
     this.nivelSugerido = null;
     this.estado = 'jugando';
+    this.tiempoInicioRonda = Date.now();
+
+    // Backend: iniciar sesión (CA-01)
+    this.sesionBackendId = null;
+    if (this.perfilId && this.nivelFacilId) {
+      this.sesionJuegoService.iniciarSesion({
+        perfilId: this.perfilId,
+        juegoId:  this.JUEGO_ID,
+        nivelId:  this.nivelFacilId,
+      }).subscribe({
+        next: sesion => {
+          this.sesionBackendId = sesion.id ?? null;
+          if (sesion.id) this.sesionJuegoService.comenzarTracking(sesion.id);  // CA-04
+        },
+        error: () => {}
+      });
+    }
+    this.sesionJuegoService.marcarElementoAparece();  // CA-08: palabras visibles desde el inicio
     this.iniciarTimer();
     setTimeout(() => this.startBgMusic(), 200);
     this.setMascot('excited', '¡Arriba Pandi! 🐼 ¡A buscar palabras! Arrastrá sobre las letras.');
@@ -461,6 +491,10 @@ export class SopaLetrasComponent implements OnInit, OnDestroy {
         this.palabrasEncontradasCount++;
         pw.celdas.forEach(c => { this.cellState[c.row][c.col] = 'found'; });
         this.dragStart = this.dragCurrent = null;
+        this.sesionJuegoService.trackClick(window.innerWidth / 2, window.innerHeight / 2, pw.palabra, true);  // CA-07/09
+        this.sesionJuegoService.trackRespuestaMs(Date.now() - this.tiempoInicioRonda);  // CA-05
+        this.tiempoInicioRonda = Date.now();
+        this.sesionJuegoService.marcarElementoAparece();  // CA-08: próxima palabra
         this.playPalabraEncontrada();
         this.speak(this.frasesCelebracion[Math.floor(Math.random() * this.frasesCelebracion.length)]);
         const restantes = this.palabrasColocadas.length - this.palabrasEncontradasCount;
@@ -477,6 +511,8 @@ export class SopaLetrasComponent implements OnInit, OnDestroy {
 
     // Seleccion incorrecta
     this.errores++;
+    const palabraIntentada = celdas.map(c => this.grid[c.row]?.[c.col] ?? '').join('');
+    this.sesionJuegoService.trackClick(window.innerWidth / 2, window.innerHeight / 2, palabraIntentada, false);  // CA-07/09
     this.playError();
     this.setMascot('encourage', '¡No era ahí! 😅 Recordá: seguí una línea recta.');
     celdas.forEach(c => { if (this.cellState[c.row][c.col] !== 'found') this.cellState[c.row][c.col] = 'error'; });
@@ -503,6 +539,14 @@ export class SopaLetrasComponent implements OnInit, OnDestroy {
   private finalizarSesion(nuevoEstado: 'completado' | 'tiempo-agotado'): void {
     this.estado = nuevoEstado;
     this.stopBgMusic();
+
+    // CA-03: fire-and-forget con 3 reintentos + localStorage fallback
+    if (this.sesionBackendId) {
+      const puntaje = Math.round((this.palabrasEncontradasCount / Math.max(this.palabrasColocadas.length, 1)) * 100);
+      const intentos = this.palabrasEncontradasCount + this.errores;
+      this.sesionJuegoService.finalizarSesion(this.sesionBackendId, puntaje, intentos, this.palabrasEncontradasCount);
+      this.sesionBackendId = null;
+    }
     if (nuevoEstado === 'completado') {
       this.playCompletado();
       this.speak('¡Lo lograste! ¡Excelente trabajo!');

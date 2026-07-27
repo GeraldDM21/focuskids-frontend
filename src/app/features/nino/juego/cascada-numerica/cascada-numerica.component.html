@@ -261,7 +261,7 @@
               [style.left.%]="numero.posicionX"
               [style.animation-duration.ms]="numero.duracionMs"
               [disabled]="respuestaBloqueada"
-              (click)="seleccionarNumero(numero)"
+              (click)="seleccionarNumero($event, numero)"
             >
               {{ numero.valor }}
             </button>

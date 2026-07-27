@@ -158,7 +158,7 @@ interface ConfettiPiece { id: number; left: number; color: string; delay: number
                 [style.--color-activo]="el.colorActivo"
                 [style.--glow]="el.glow"
                 [disabled]="estado !== 'input'"
-                (click)="clicarElemento(el.id)">
+                (click)="clicarElemento($event, el.id)">
                 <span class="el-simbolo">{{ el.simbolo }}</span>
                 <span class="el-nombre">{{ el.nombre }}</span>
               </button>
@@ -812,7 +812,10 @@ export class RitmoPatronComponent implements OnInit, OnDestroy {
         perfilId: this.perfilId,
         juegoId: this.juegoActual.id,
         nivelId: this.nivelActual.id,
-      }).subscribe(sesion => { this.sesionId = sesion.id; });
+      }).subscribe(sesion => {
+        this.sesionId = sesion.id ?? null;
+        if (sesion.id) this.sesionJuegoService.comenzarTracking(sesion.id);  // CA-04
+      });
     }
 
     this.nuevaRonda();
@@ -886,12 +889,13 @@ export class RitmoPatronComponent implements OnInit, OnDestroy {
     this.timers.push(setTimeout(() => {
       this.estado = 'input';
       this.tiempoInicioInput = Date.now();
+      this.sesionJuegoService.marcarElementoAparece();  // CA-08
       this.setMascota('excited');
       this.cdr.detectChanges();
     }, delay + 200));
   }
 
-  clicarElemento(id: number): void {
+  clicarElemento(event: MouseEvent, id: number): void {
     if (this.estado !== 'input') return;
     this.sonarElemento(id);
     const ms       = Date.now() - this.tiempoInicioInput;
@@ -899,15 +903,7 @@ export class RitmoPatronComponent implements OnInit, OnDestroy {
     const correcto = id === esperado;
     this.metricas.push({ elementId: id, ms, correcto });
     this.respuestaJugador.push(id);
-
-    // Backend: registra el evento de click (aciertos/errores/tiempo de respuesta, CA-06)
-    if (this.sesionId) {
-      this.sesionJuegoService.registrarEvento(this.sesionId, {
-        elementoId: this.ELEMENTOS[id].nombre,
-        timestampMs: ms,
-        fueAcierto: correcto,
-      }).subscribe();
-    }
+    this.sesionJuegoService.trackClick(event.clientX, event.clientY, this.ELEMENTOS[id].nombre, correcto);  // CA-07/08/09
 
     if (!correcto) {
       this.elementoError = id;
@@ -920,6 +916,9 @@ export class RitmoPatronComponent implements OnInit, OnDestroy {
   }
 
   private manejarAcierto(): void {
+    const msRonda = this.metricas[this.metricas.length - 1]?.ms;
+    if (msRonda !== undefined) this.sesionJuegoService.trackRespuestaMs(msRonda);  // CA-05
+
     this.aciertos++; this.rondas++;
     this.combo++; this.maxCombo = Math.max(this.maxCombo, this.combo);
     this.erroresConsecutivos = 0;
@@ -955,6 +954,9 @@ export class RitmoPatronComponent implements OnInit, OnDestroy {
   }
 
   private manejarError(): void {
+    const msRonda = this.metricas[this.metricas.length - 1]?.ms;
+    if (msRonda !== undefined) this.sesionJuegoService.trackRespuestaMs(msRonda);  // CA-05
+
     this.errores++; this.rondas++;
     this.combo = 0; this.erroresConsecutivos++;
     if (this.erroresConsecutivos >= 2) {
@@ -986,9 +988,10 @@ export class RitmoPatronComponent implements OnInit, OnDestroy {
     const txt = (this.tituloFinal + '. ' + this.mensajeFinal).replace(/[\u{1F300}-\u{1FFFF}]/gu, '').trim();
     setTimeout(() => this.hablar(txt, 0.88, 1.1), 800);
 
-    // Backend: cierra la sesion y guarda la longitud maxima alcanzada como puntaje (CA-06)
+    // CA-03: fire-and-forget con 3 reintentos + localStorage fallback
     if (this.sesionId) {
-      this.sesionJuegoService.finalizarSesion(this.sesionId, this.maxLongitud).subscribe();
+      this.sesionJuegoService.finalizarSesion(this.sesionId, this.puntuacion, this.aciertos + this.errores, this.aciertos);
+      this.sesionId = null;
     }
   }
 
@@ -1001,7 +1004,8 @@ export class RitmoPatronComponent implements OnInit, OnDestroy {
     setTimeout(() => this.hablar(this.tituloFinal + '. ' + this.mensajeFinal.replace(/[\u{1F300}-\u{1FFFF}]/gu, '').trim(), 0.88, 1.1), 800);
 
     if (this.sesionId) {
-      this.sesionJuegoService.finalizarSesion(this.sesionId, this.maxLongitud).subscribe();
+      this.sesionJuegoService.finalizarSesion(this.sesionId, this.puntuacion, this.aciertos + this.errores, this.aciertos);
+      this.sesionId = null;
     }
   }
 

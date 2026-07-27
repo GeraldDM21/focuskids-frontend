@@ -1,4 +1,4 @@
-import { Component, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 
@@ -7,6 +7,8 @@ import { GameFeedbackComponent } from '../../../../shared/game-feedback/game-fee
 import { MascotComponent } from '../../../../shared/components/mascot/mascot.component';
 
 import { ReaccionControladaService } from './reaccion-controlada.service';
+import { SesionJuegoService } from '../../../../core/services/sesion-juego.service';
+import { ChildProfileService } from '../../../padre/perfiles/child-profile.service';
 import {
   ComparacionSesion,
   ConfettiPiece,
@@ -28,7 +30,7 @@ const TOTAL_ENSAYOS_SESION = 20;
   templateUrl: './reaccion-controlada.component.html',
   styleUrls: ['./reaccion-controlada.component.css'],
 })
-export class ReaccionControladaComponent implements OnDestroy {
+export class ReaccionControladaComponent implements OnInit, OnDestroy {
 
   @ViewChild('feedback') feedback!: GameFeedbackComponent;
 
@@ -58,6 +60,12 @@ export class ReaccionControladaComponent implements OnDestroy {
   // ensayo ya resuelto) cierre por error el ensayo siguiente.
   private trialId = 0;
 
+  // ── Backend / métricas ────────────────────────────────────────────────────
+  private readonly JUEGO_ID = 8;
+  private sesionBackendId: number | null = null;
+  private nivelFacilId: number | null = null;
+  private profileId: number | null = null;
+
   // ── Resultados finales ───────────────────────────────────────────────────
   metricasFinal: MetricasSesion | null = null;
   comparacionSesion: ComparacionSesion | null = null;
@@ -69,7 +77,19 @@ export class ReaccionControladaComponent implements OnDestroy {
     private router: Router,
     private cdr: ChangeDetectorRef,
     private reaccionService: ReaccionControladaService,
+    private sesionJuegoService: SesionJuegoService,
+    private childProfileService: ChildProfileService,
   ) {}
+
+  ngOnInit(): void {
+    this.childProfileService.activeProfile$.subscribe(state => {
+      this.profileId = state.profileId;
+    });
+    this.sesionJuegoService.obtenerNiveles(this.JUEGO_ID).subscribe({
+      next: niveles => { this.nivelFacilId = niveles[0]?.id ?? null; },
+      error: () => { /* continúa sin backend */ }
+    });
+  }
 
   ngOnDestroy(): void {
     this.detenerTimers();
@@ -120,9 +140,25 @@ export class ReaccionControladaComponent implements OnDestroy {
     this.metricasFinal = null;
     this.comparacionSesion = null;
     this.sesionActiva = true;
+    this.sesionBackendId = null;
     this.estado = 'juego';
     this.setMascota('thinking', '¡Atrápalas cuando veas la mosca 🪰, pero quieta con la abeja 🐝!');
     this.cdr.detectChanges();
+
+    // Backend session (CA-04)
+    if (this.profileId != null && this.nivelFacilId != null) {
+      this.sesionJuegoService.iniciarSesion({
+        perfilId: this.profileId,
+        juegoId: this.JUEGO_ID,
+        nivelId: this.nivelFacilId,
+      }).subscribe({
+        next: sesion => {
+          this.sesionBackendId = sesion.id ?? null;
+          if (sesion.id) this.sesionJuegoService.comenzarTracking(sesion.id);  // CA-04
+        },
+        error: () => { /* continúa sin backend */ }
+      });
+    }
 
     this.programarSiguienteEstimulo();
   }
@@ -153,6 +189,7 @@ export class ReaccionControladaComponent implements OnDestroy {
     this.estimuloVisible = true;
     this.yaPresiono = false;
     this.tiempoInicioEstimulo = Date.now();
+    this.sesionJuegoService.marcarElementoAparece();  // CA-08
     this.cdr.detectChanges();
 
     const ventana = this.reaccionService.ventanaLimiteMs(tipo);
@@ -160,7 +197,7 @@ export class ReaccionControladaComponent implements OnDestroy {
   }
 
   // El niño presiona el botón de reacción mientras el estímulo está visible.
-  presionarBoton(): void {
+  presionarBoton(event: PointerEvent): void {
     if (!this.estimuloVisible || this.yaPresiono || !this.estimuloActual) return;
     this.yaPresiono = true;
 
@@ -169,6 +206,18 @@ export class ReaccionControladaComponent implements OnDestroy {
     if (this.timerVentana) { clearTimeout(this.timerVentana); this.timerVentana = null; }
 
     const tiempoReaccionMs = Date.now() - this.tiempoInicioEstimulo;
+    const esGo = this.estimuloActual.tipo === 'go';
+
+    this.sesionJuegoService.trackClick(  // CA-07
+      event.clientX,
+      event.clientY,
+      this.estimuloActual.emoji,
+      esGo
+    );
+    if (esGo) {
+      this.sesionJuegoService.trackRespuestaMs(tiempoReaccionMs);  // CA-05
+    }
+
     this.registrarEnsayo(this.estimuloActual.tipo, true, tiempoReaccionMs);
   }
 
@@ -213,6 +262,18 @@ export class ReaccionControladaComponent implements OnDestroy {
 
     const metricas = this.reaccionService.calcularMetricas(this.resultados);
     this.metricasFinal = metricas;
+
+    // CA-03: fire-and-forget metrics finalization
+    if (this.sesionBackendId != null) {
+      const totalGo = this.resultados.filter(r => r.tipo === 'go').length;
+      const aciertosGo = this.resultados.filter(r => r.tipo === 'go' && r.correcto).length;
+      this.sesionJuegoService.finalizarSesion(
+        this.sesionBackendId,
+        Math.max(0, 100 - metricas.indiceImpulsividad),
+        totalGo,
+        aciertosGo
+      );
+    }
 
     const sesionAnterior = this.reaccionService.obtenerSesionAnterior();
     // CA-05: notificación positiva si el SSRT mejora más de un 15% vs la sesión anterior.

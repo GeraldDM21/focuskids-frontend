@@ -28,6 +28,10 @@ import {
 } from './lab-ciencias.service';
 
 import {
+  SesionJuegoService
+} from '../../../../core/services/sesion-juego.service';
+
+import {
   EstadoLab,
   ExperimentoLab,
   FinalizarLabRequest,
@@ -256,7 +260,10 @@ export class LabCienciasComponent
     Router,
 
     private readonly cdr:
-    ChangeDetectorRef
+    ChangeDetectorRef,
+
+    private readonly sesionJuegoService:
+    SesionJuegoService
   ) {
   }
 
@@ -349,6 +356,8 @@ export class LabCienciasComponent
         next: response => {
           this.sesionId =
             response.sesionId;
+
+          this.sesionJuegoService.comenzarTracking(response.sesionId);  // CA-04
 
           this.animarCarga();
         },
@@ -467,6 +476,8 @@ export class LabCienciasComponent
 
     this.inicioExperimentoMs =
       Date.now();
+
+    this.sesionJuegoService.marcarElementoAparece();  // CA-08
   }
 
   get experimentoActual():
@@ -627,7 +638,7 @@ export class LabCienciasComponent
     );
   }
 
-  mezclar(): void {
+  mezclar(event: MouseEvent): void {
     if (
       !this.puedeMezclar
       || !this.experimentoActual
@@ -673,6 +684,17 @@ export class LabCienciasComponent
     const tiempoIntento =
       Date.now()
       - this.inicioExperimentoMs;
+
+    // CA-07 / CA-05: track the mezcla action
+    this.sesionJuegoService.trackClick(
+      event.clientX,
+      event.clientY,
+      idsSeleccionados.join(','),
+      exito
+    );
+    if (exito) {
+      this.sesionJuegoService.trackRespuestaMs(tiempoIntento);
+    }
 
     const request:
       RegistrarIntentoRequest = {
@@ -858,6 +880,14 @@ export class LabCienciasComponent
     if (this.sesionId === null) {
       return;
     }
+
+    // CA-03: fire-and-forget metrics finalization
+    this.sesionJuegoService.finalizarSesion(
+      this.sesionId,
+      this.puntaje,
+      this.intentosTotales,
+      this.hipotesisCorrectas
+    );
 
     const request:
       FinalizarLabRequest = {

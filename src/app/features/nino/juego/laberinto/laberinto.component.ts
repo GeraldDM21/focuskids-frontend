@@ -8,6 +8,7 @@ import { GameFeedbackService, NivelVolumen } from '../../../../shared/game-feedb
 import { ChildProfileService } from '../../../padre/perfiles/child-profile.service';
 import { MascotComponent } from '../../../../shared/components/mascot/mascot.component';
 import { LaberintoCognitivoService } from '../../../../core/services/laberinto-cognitivo.service';
+import { SesionJuegoService } from '../../../../core/services/sesion-juego.service';
 
 import { Celda, Direccion, EstadoJuego, Laberinto, Mood, Posicion } from './laberinto.types';
 import {
@@ -445,9 +446,11 @@ export class LaberintoComponent implements OnInit, OnDestroy {
   volumenActual: NivelVolumen = 75;
   errorBackend: string | null = null;
 
+  private readonly JUEGO_ID = 4;
   private celdaObstaculoReciente: Posicion | null = null;
   private tiempoInicioJugando = 0;
   private tiempoInicioSesion = 0;
+  private tiempoInicioMovimiento = 0;
   private sesionBackendId: number | null = null;
   private profileId: number | null = null;
   private touchInicio: { x: number; y: number } | null = null;
@@ -486,6 +489,7 @@ export class LaberintoComponent implements OnInit, OnDestroy {
     private feedbackService: GameFeedbackService,
     private childProfileService: ChildProfileService,
     private laberintoService: LaberintoCognitivoService,
+    private sesionJuegoService: SesionJuegoService,
   ) {}
 
   ngOnInit(): void {
@@ -533,6 +537,7 @@ export class LaberintoComponent implements OnInit, OnDestroy {
     this.laberintoService.iniciarSesion(this.profileId).subscribe({
       next: respuesta => {
         this.sesionBackendId = respuesta.sesionId;
+        this.sesionJuegoService.comenzarTracking(respuesta.sesionId);  // CA-04
         this.comenzarRonda();
       },
       error: () => {
@@ -573,6 +578,8 @@ export class LaberintoComponent implements OnInit, OnDestroy {
         this.despliegueInterval = null;
         this.estado = 'jugando';
         this.tiempoInicioJugando = Date.now();
+        this.tiempoInicioMovimiento = Date.now();
+        this.sesionJuegoService.marcarElementoAparece();  // CA-08
         this.setMascota('excited');
         this.cdr.detectChanges();
       }
@@ -637,6 +644,17 @@ export class LaberintoComponent implements OnInit, OnDestroy {
       this.callejonesSinSalidaTotal++;
       this.setMascota('encourage');
     }
+
+    // CA-05 / CA-07: track response time and click position
+    const msMovimiento = Date.now() - this.tiempoInicioMovimiento;
+    this.sesionJuegoService.trackRespuestaMs(msMovimiento);
+    this.sesionJuegoService.trackClick(
+      nuevaPos.col * this.tamanoCelda,
+      nuevaPos.fila * this.tamanoCelda,
+      direccion,
+      !esCallejon
+    );
+    this.tiempoInicioMovimiento = Date.now();
 
     this.registrarPasoBackend(direccion, nuevaPos, esCallejon);
 
@@ -714,6 +732,14 @@ export class LaberintoComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
 
     if (this.sesionBackendId == null) return;
+
+    // CA-03: fire-and-forget metrics finalization
+    this.sesionJuegoService.finalizarSesion(
+      this.sesionBackendId,
+      this.eficienciaTotal,
+      this.pasosUsadosTotal,
+      this.pasosOptimosTotal
+    );
 
     this.laberintoService.finalizarSesion(this.sesionBackendId, {
       rondasCompletadas: this.rondaActual,

@@ -112,7 +112,7 @@
     <button
       class="rc-btn-reaccion"
       [class.rc-btn-reaccion-disabled]="!estimuloVisible || yaPresiono"
-      (pointerdown)="presionarBoton()">
+      (pointerdown)="presionarBoton($event)">
       👅 ¡Atrápala!
     </button>
 
