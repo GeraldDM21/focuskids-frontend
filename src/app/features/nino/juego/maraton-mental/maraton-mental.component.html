@@ -1,0 +1,243 @@
+<div class="mm-root">
+
+  @if (estado === 'inicio') {
+    <div class="mm-inicio">
+      <div class="mm-inicio-header">
+        <div class="mm-inicio-emoji">🏃🧠</div>
+        <h1>Maratón Mental</h1>
+        <p>Vas a resolver <strong>dos retos al mismo tiempo</strong>: contar objetos y encontrar colores.
+          Primero practicamos cada uno por separado, ¡y luego los combinamos!</p>
+      </div>
+
+      <div class="mm-niveles">
+        @for (n of niveles; track n.id) {
+          <button
+            type="button"
+            class="mm-nivel-card"
+            [class.mm-nivel-activo]="nivelActual === n.id"
+            (click)="seleccionarNivel(n.id)"
+          >
+            <span class="mm-nivel-emoji">{{ n.emoji }}</span>
+            <span class="mm-nivel-label">{{ n.label }}</span>
+            <span class="mm-nivel-desc">{{ n.desc }}</span>
+          </button>
+        }
+      </div>
+
+      @if (errorApi) {
+        <p class="mm-error">{{ errorApi }}</p>
+      }
+
+      <div class="mm-inicio-acciones">
+        <button type="button" class="mm-btn-primario" (click)="iniciarJuego()">🚀 Empezar</button>
+        <button type="button" class="mm-btn-secundario" (click)="volverLobby()">← Volver a juegos</button>
+      </div>
+    </div>
+  }
+
+  @if (estado === 'cargando') {
+    <div class="mm-cargando">
+      <div class="mm-spinner"></div>
+      <p>Preparando el maratón...</p>
+    </div>
+  }
+
+  @if (estado === 'calibracion_a' || estado === 'calibracion_b') {
+    <div class="mm-calibracion">
+      <div class="mm-banner-info">
+        🔎 Ronda de práctica {{ calibracionRondaActual }}/{{ config?.rondasCalibracionPorTarea }}
+        — primero cada tarea por separado
+      </div>
+
+      <div class="mm-zona mm-zona-sola" [class.mm-zona-a]="estado === 'calibracion_a'" [class.mm-zona-b]="estado === 'calibracion_b'">
+
+        @if (estado === 'calibracion_a') {
+          <app-game-feedback #feedbackA></app-game-feedback>
+        }
+        @if (estado === 'calibracion_b') {
+          <app-game-feedback #feedbackB></app-game-feedback>
+        }
+
+        @if (estado === 'calibracion_a' && estimuloConteo) {
+          <h2 class="mm-zona-titulo">🔢 Cuenta los objetos</h2>
+          <div class="mm-objetos-grid">
+            @for (o of arrayDe(estimuloConteo.cantidad); track $index) {
+              <span class="mm-objeto">{{ estimuloConteo.emoji }}</span>
+            }
+          </div>
+          <div class="mm-opciones-fila">
+            @for (op of estimuloConteo.opciones; track op) {
+              <button type="button" class="mm-opcion-btn" (click)="responderCalibracionConteo(op)">{{ op }}</button>
+            }
+          </div>
+        }
+
+        @if (estado === 'calibracion_b' && estimuloColor) {
+          <h2 class="mm-zona-titulo">🎨 Encuentra este color</h2>
+          <div class="mm-color-objetivo" [style.background]="estimuloColor.objetivo.hex">
+            {{ estimuloColor.objetivo.nombre }}
+          </div>
+          <div class="mm-opciones-fila mm-opciones-color">
+            @for (op of estimuloColor.opciones; track op.id) {
+              <button
+                type="button"
+                class="mm-color-btn"
+                [style.background]="op.hex"
+                [attr.aria-label]="op.nombre"
+                (click)="responderCalibracionColor(op)"
+              ></button>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  @if (estado === 'transicion_dual') {
+    <div class="mm-transicion">
+      <div class="mm-transicion-emoji">🧠⚡</div>
+      <h2>¡Ahora las dos tareas al mismo tiempo!</h2>
+      <p>Pantalla dividida: una tarea a la izquierda, otra a la derecha. ¡Atento a las dos!</p>
+    </div>
+  }
+
+  @if (estado === 'dual') {
+    <div class="mm-dual-wrap">
+      <div class="mm-dual-header">
+        <div class="mm-ronda-info">Ronda {{ rondaDualActual }}/{{ config?.rondasDuales }}</div>
+        <div class="mm-timer-bar-wrap">
+          <div
+            class="mm-timer-bar"
+            [style.width.%]="tiempoRestantePct"
+            [class.mm-timer-urgente]="tiempoRestantePct < 25"
+          ></div>
+        </div>
+      </div>
+
+      @if (avisoAjusteMsg) {
+        <div class="mm-aviso-ajuste">💡 {{ avisoAjusteMsg }}</div>
+      }
+
+      <div class="mm-dual-zonas">
+        <div class="mm-zona mm-zona-a" [class.mm-zona-respondida]="tareaARespondidaRonda">
+          <app-game-feedback #feedbackA></app-game-feedback>
+          <h3 class="mm-zona-titulo">🔢 Contar Objetos</h3>
+
+          @if (estimuloConteoDual) {
+            <div class="mm-objetos-grid mm-objetos-grid-dual">
+              @for (o of arrayDe(estimuloConteoDual.cantidad); track $index) {
+                <span class="mm-objeto">{{ estimuloConteoDual.emoji }}</span>
+              }
+            </div>
+            <div class="mm-opciones-fila">
+              @for (op of estimuloConteoDual.opciones; track op) {
+                <button
+                  type="button"
+                  class="mm-opcion-btn"
+                  [disabled]="tareaARespondidaRonda"
+                  (click)="responderDualConteo(op, $event)"
+                >{{ op }}</button>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="mm-zona mm-zona-b" [class.mm-zona-respondida]="tareaBRespondidaRonda">
+          <app-game-feedback #feedbackB></app-game-feedback>
+          <h3 class="mm-zona-titulo">🎨 Identificar Color</h3>
+
+          @if (estimuloColorDual) {
+            <div class="mm-color-objetivo" [style.background]="estimuloColorDual.objetivo.hex">
+              {{ estimuloColorDual.objetivo.nombre }}
+            </div>
+            <div class="mm-opciones-fila mm-opciones-color">
+              @for (op of estimuloColorDual.opciones; track op.id) {
+                <button
+                  type="button"
+                  class="mm-color-btn"
+                  [disabled]="tareaBRespondidaRonda"
+                  [style.background]="op.hex"
+                  [attr.aria-label]="op.nombre"
+                  (click)="responderDualColor(op, $event)"
+                ></button>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (estado === 'completado') {
+    <div class="mm-resultado">
+
+      @if (confettiActivo) {
+        <div class="mm-confetti">
+          @for (p of confettiPiezas; track p.id) {
+            <span
+              class="mm-confetti-pieza"
+              [style.left.%]="p.left"
+              [style.animation-delay.s]="p.delay"
+              [style.animation-duration.s]="p.duration"
+            >{{ p.emoji }}</span>
+          }
+        </div>
+      }
+
+      <h1>🎉 ¡Maratón completado!</h1>
+
+      @if (resultadoFinal) {
+        <div class="mm-resumen-grid">
+          <div class="mm-resumen-card">
+            <h3>🔢 Contar Objetos</h3>
+            <p>Tú solo: <strong>{{ resultadoFinal.precisionIndividualAPorcentaje }}%</strong></p>
+            <p>En dual: <strong>{{ resultadoFinal.precisionDualAPorcentaje }}%</strong></p>
+            <p class="mm-costo">Costo por dividir la atención: {{ resultadoFinal.costoDualAPorcentaje }}%</p>
+          </div>
+          <div class="mm-resumen-card">
+            <h3>🎨 Identificar Color</h3>
+            <p>Tú solo: <strong>{{ resultadoFinal.precisionIndividualBPorcentaje }}%</strong></p>
+            <p>En dual: <strong>{{ resultadoFinal.precisionDualBPorcentaje }}%</strong></p>
+            <p class="mm-costo">Costo por dividir la atención: {{ resultadoFinal.costoDualBPorcentaje }}%</p>
+          </div>
+        </div>
+
+        <div class="mm-carga-cognitiva" [class]="'mm-carga-' + resultadoFinal.cargaCognitivaCategoria.toLowerCase()">
+          Carga cognitiva estimada: <strong>{{ resultadoFinal.cargaCognitivaCategoria }}</strong>
+          ({{ resultadoFinal.cargaCognitivaEstimada }}%)
+        </div>
+
+        @if (resultadoFinal.tareaMasDebil !== 'NINGUNA') {
+          <div class="mm-area-reforzar">
+            💪 Área para reforzar: {{ resultadoFinal.tareaMasDebil === 'A' ? 'Contar Objetos' : 'Identificar Color' }}
+          </div>
+        }
+
+        <div class="mm-puntaje">⭐ Puntaje: {{ resultadoFinal.puntaje }} pts</div>
+
+        @if (resultadoFinal.nivelSugerido !== resultadoFinal.nivelFinal) {
+          <button type="button" class="mm-btn-primario" (click)="subirNivel()">
+            ⬆️ Subir a nivel {{ resultadoFinal.nivelSugerido }}
+          </button>
+        }
+      }
+
+      @if (errorApi) {
+        <p class="mm-error">{{ errorApi }}</p>
+      }
+
+      <div class="mm-resultado-acciones">
+        <button type="button" class="mm-btn-primario" (click)="jugarDeNuevo()">🔁 Jugar de nuevo</button>
+        <button type="button" class="mm-btn-secundario" (click)="volverLobby()">← Volver a juegos</button>
+      </div>
+    </div>
+  }
+
+  @if (estado !== 'inicio' && estado !== 'cargando') {
+    <div class="mm-barra-inferior">
+      <app-mascot game="juego8" [mood]="mascotMood" [message]="mascotMsg"></app-mascot>
+      <app-volume-control [volumen]="volumenActual" (volumenChange)="onVolumenChange($event)"></app-volume-control>
+    </div>
+  }
+
+</div>
