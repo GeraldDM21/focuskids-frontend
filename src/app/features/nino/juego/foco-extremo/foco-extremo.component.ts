@@ -112,8 +112,26 @@ export class FocoExtremoComponent implements OnInit, OnDestroy {
       this.perfilId = state.profileId;
       this.perfilNombre = state.profileName || 'Jugador';
     });
+    // Cargar niveles y preseleccionar el recomendado por IA (CA-03)
     this.sesionJuegoService.obtenerNiveles(this.JUEGO_ID).subscribe({
-      next: niveles => { this.nivelFacilId = niveles[0]?.id ?? null; },
+      next: niveles => {
+        this.nivelFacilId = niveles[0]?.id ?? null;
+        if (this.perfilId) {
+          this.sesionJuegoService.obtenerRecomendacion(this.perfilId, this.JUEGO_ID)
+            .subscribe(rec => {
+              const match = rec?.nivelRecomendado?.id
+                ? niveles.find(n => n.id === rec.nivelRecomendado.id)
+                : null;
+              if (match) {
+                this.nivelFacilId = match.id;
+                if (rec!.nivelRecomendado.nivel) {
+                  this.nivelActual = rec!.nivelRecomendado.nivel as Nivel;
+                }
+                this.cdr.detectChanges();
+              }
+            });
+        }
+      },
       error: () => {}
     });
   }
