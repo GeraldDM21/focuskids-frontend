@@ -125,6 +125,8 @@ export class MaratonMentalComponent implements OnInit, OnDestroy {
   private roundCountdownInterval: ReturnType<typeof setInterval> | null = null;
   private avanceTimeout: ReturnType<typeof setTimeout> | null = null;
   private audioCtx: AudioContext | null = null;
+  private readonly JUEGO_ID = 11;  // Maratón Mental (DataSeeder ID)
+
   private readonly destruir$ = new Subject<void>();
 
   constructor(
@@ -146,6 +148,14 @@ export class MaratonMentalComponent implements OnInit, OnDestroy {
       this.perfilNombre = state.profileName || 'Jugador';
       this.volumenActual = (state.profileVolumen ?? 75) as NivelVolumen;
       this.feedbackService.setVolumen(this.volumenActual);
+      // Preseleccionar nivel recomendado por IA (CA-03)
+      this.sesionJuegoService.obtenerRecomendacion(state.profileId, this.JUEGO_ID)
+        .pipe(takeUntil(this.destruir$))
+        .subscribe(rec => {
+          if (rec?.nivelRecomendado?.nivel) {
+            this.nivelActual = rec.nivelRecomendado.nivel as NivelMaraton;
+          }
+        });
       this.detectarCambios();
     });
   }

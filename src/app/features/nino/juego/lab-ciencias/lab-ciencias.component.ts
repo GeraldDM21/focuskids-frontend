@@ -246,6 +246,8 @@ export class LabCienciasComponent
   private audioCtx: AudioContext | null =
     null;
 
+  private readonly JUEGO_ID = 10;  // Lab de Ciencias (DataSeeder ID)
+
   private readonly destruir$ =
     new Subject<void>();
 
@@ -282,6 +284,15 @@ export class LabCienciasComponent
         }
 
         this.perfilId = state.profileId;
+        // Preseleccionar nivel recomendado por IA (CA-03)
+        this.sesionJuegoService.obtenerRecomendacion(state.profileId, this.JUEGO_ID)
+          .pipe(takeUntil(this.destruir$))
+          .subscribe(rec => {
+            if (rec?.nivelRecomendado?.nivel) {
+              this.nivelActual = rec.nivelRecomendado.nivel as NivelLab;
+              this.cdr.detectChanges();
+            }
+          });
       });
   }
 
