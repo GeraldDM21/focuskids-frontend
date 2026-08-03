@@ -110,9 +110,20 @@ export class EspejoMentalComponent implements OnInit, OnDestroy {
       this.volumenActual = (state.profileVolumen ?? 75) as NivelVolumen;
       this.feedbackService.setVolumen(this.volumenActual);
     });
-    // Cargar el primer nivel del juego (FACIL) para usarlo en iniciarSesion
+    // Cargar niveles y preseleccionar el recomendado por IA (CA-03)
     this.sesionService.obtenerNiveles(this.JUEGO_ID).subscribe({
-      next: niveles => { this.nivelFacilId = niveles[0]?.id ?? null; },
+      next: niveles => {
+        this.nivelFacilId = niveles[0]?.id ?? null;
+        if (this.profileId) {
+          this.sesionService.obtenerRecomendacion(this.profileId, this.JUEGO_ID)
+            .subscribe(rec => {
+              const match = rec?.nivelRecomendado?.id
+                ? niveles.find(n => n.id === rec.nivelRecomendado.id)
+                : null;
+              if (match) { this.nivelFacilId = match.id; this.cdr.detectChanges(); }
+            });
+        }
+      },
       error: () => {}
     });
     this.cargarVozFoxy();

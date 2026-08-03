@@ -200,7 +200,7 @@ const TIEMPO_MAX_MS = 8 * 60 * 1000; // CA-05: maximo 8 minutos
                    [class.pin-incorrecto]="pinResultado[pais.id] === 'incorrecto'"
                    [class.pin-clickable]="preguntaActual?.tipo === 'UBICACION' && !respondido"
                    [attr.transform]="'translate(' + (pais.x*10) + ',' + (pais.y*5) + ')'"
-                   (click)="clicPin(pais)">
+                   (click)="clicPin(pais, $event)">
                   <circle class="pin-halo" r="16"/>
                   <circle class="pin-punto" r="8"/>
                   <text class="pin-label" y="-16" text-anchor="middle">{{ pais.nombre }}</text>
@@ -217,7 +217,7 @@ const TIEMPO_MAX_MS = 8 * 60 * 1000; // CA-05: maximo 8 minutos
                   [class.correcta]="respondido && op === preguntaActual!.pais.capital"
                   [class.incorrecta]="respondido && op === opcionElegida && op !== preguntaActual!.pais.capital"
                   [disabled]="respondido"
-                  (click)="clicOpcion(op)">
+                  (click)="clicOpcion(op, $event)">
                   {{ op }}
                 </button>
               }
@@ -658,7 +658,10 @@ export class MapaAventuraComponent implements OnInit, OnDestroy {
         juegoId: this.juegoActual.id,
         nivelId: this.nivelActual.id,
       }).subscribe({
-        next: sesion => this.sesionId = sesion.id,
+        next: sesion => {
+          this.sesionId = sesion.id;
+          this.sesionJuegoService.comenzarTracking(sesion.id);
+        },
         error: () => this.sesionId = null
       });
     }
@@ -695,40 +698,42 @@ export class MapaAventuraComponent implements OnInit, OnDestroy {
     this.preguntaActual = generarPregunta(pais, tipo);
     this.paisesExplorados.add(pais.id);
     this.tiempoInicioPregunta = Date.now();
+    this.sesionJuegoService.marcarElementoAparece();
 
     this.setMascota('thinking', this.tituloPregunta);
     this.cdr.detectChanges();
   }
 
-  clicPin(pais: Pais): void {
+  clicPin(pais: Pais, event: MouseEvent): void {
     if (this.respondido || !this.preguntaActual || this.preguntaActual.tipo !== 'UBICACION') return;
     const correcto = pais.id === this.preguntaActual.pais.id;
     this.pinResultado[pais.id] = correcto ? 'correcto' : 'incorrecto';
     if (!correcto) this.pinResultado[this.preguntaActual.pais.id] = 'correcto';
-    this.responder(correcto);
+    this.responder(correcto, event);
   }
 
-  clicOpcion(capital: string): void {
+  clicOpcion(capital: string, event: MouseEvent): void {
     if (this.respondido || !this.preguntaActual || this.preguntaActual.tipo !== 'CAPITAL') return;
     this.opcionElegida = capital;
     const correcto = capital === this.preguntaActual.pais.capital;
-    this.responder(correcto);
+    this.responder(correcto, event);
   }
 
-  // CA-03: correcto -> se ilumina en verde + dato curioso. Incorrecto -> se
-  // muestra la ubicacion correcta.
-  private responder(correcto: boolean): void {
+  // CA-03/07/08/09: registra la respuesta con métricas de click y tiempo.
+  private responder(correcto: boolean, event?: MouseEvent): void {
     this.respondido = true;
     this.resultado = correcto ? 'correcto' : 'incorrecto';
     this.rondas++;
 
     const ms = Date.now() - this.tiempoInicioPregunta;
-    if (this.sesionId && this.preguntaActual) {
-      this.sesionJuegoService.registrarEvento(this.sesionId, {
-        elementoId: this.preguntaActual.pais.id,
-        timestampMs: ms,
-        fueAcierto: correcto,
-      }).subscribe({ error: () => {} });
+    this.sesionJuegoService.trackRespuestaMs(ms);
+    if (this.preguntaActual) {
+      this.sesionJuegoService.trackClick(
+        event?.clientX ?? 0,
+        event?.clientY ?? 0,
+        this.preguntaActual.pais.id,
+        correcto,
+      );
     }
 
     if (correcto) {
@@ -766,9 +771,9 @@ export class MapaAventuraComponent implements OnInit, OnDestroy {
     const txt = (this.tituloFinal + '. ' + this.mensajeFinal).replace(/[\u{1F300}-\u{1FFFF}]/gu, '').trim();
     setTimeout(() => this.hablar(txt), 800);
 
-    // CA-06: guarda el cierre de la sesion (puntaje = % de precision lograda)
+    // CA-03: fire-and-forget, guarda métricas de la sesión
     if (this.sesionId) {
-      this.sesionJuegoService.finalizarSesion(this.sesionId, this.puntuacion).subscribe();
+      this.sesionJuegoService.finalizarSesion(this.sesionId, this.puntuacion, this.rondas, this.aciertos);
     }
   }
 

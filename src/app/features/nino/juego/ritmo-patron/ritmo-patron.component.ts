@@ -683,7 +683,19 @@ export class RitmoPatronComponent implements OnInit, OnDestroy {
       this.juegoActual = juego;
       this.sesionJuegoService.obtenerNiveles(juego.id).subscribe(niveles => {
         this.nivelActual = niveles.find(n => n.nivel === 'FACIL') ?? niveles[0] ?? null;
-        this.cdr.detectChanges();
+        // Preseleccionar nivel recomendado por IA (CA-03)
+        if (this.perfilId && niveles.length > 0) {
+          this.sesionJuegoService.obtenerRecomendacion(this.perfilId, juego.id)
+            .subscribe(rec => {
+              if (rec?.nivelRecomendado?.id) {
+                const match = niveles.find(n => n.id === rec.nivelRecomendado.id);
+                if (match) { this.nivelActual = match; }
+              }
+              this.cdr.detectChanges();
+            });
+        } else {
+          this.cdr.detectChanges();
+        }
       });
     });
   }
