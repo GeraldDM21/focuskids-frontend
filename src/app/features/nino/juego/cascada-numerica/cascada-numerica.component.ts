@@ -231,6 +231,10 @@ export class CascadaNumericaComponent implements OnInit, OnDestroy {
   }
 
 
+  salirJuego(): void {
+    this.finalizarJuego();
+  }
+
   volverAJuegos(): void {
     this.limpiarTemporizadores();
 
