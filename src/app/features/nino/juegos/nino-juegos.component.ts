@@ -62,8 +62,79 @@ interface Avatar      { key: string; emoji: string; }
       </div>
     </header>
 
-    <!-- ── INICIO / JUEGOS ── -->
-    @if (activeTab === 'inicio' || activeTab === 'juegos') {
+    <!-- ── INICIO ── -->
+    @if (activeTab === 'inicio') {
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-icon stat-orange">🔥</div><div class="stat-info"><div class="stat-val">{{ streak }}</div><div class="stat-lbl">Días seguidos</div></div></div>
+        <div class="stat-card"><div class="stat-icon stat-yellow">⭐</div><div class="stat-info"><div class="stat-val">{{ puntosTotales | number }}</div><div class="stat-lbl">Puntos totales</div></div></div>
+        <div class="stat-card"><div class="stat-icon stat-teal">🎯</div><div class="stat-info"><div class="stat-val">{{ precision }}%</div><div class="stat-lbl">Precisión</div></div></div>
+        <div class="stat-card"><div class="stat-icon stat-mint">🏆</div><div class="stat-info"><div class="stat-val">{{ logrosGanados }}</div><div class="stat-lbl">Logros</div></div></div>
+      </div>
+      <div class="content-area">
+        <section class="games-section">
+          <div class="section-header">
+            <h2>Juegos destacados</h2>
+            <button class="see-all-btn" (click)="activeTab='juegos'">Ver todos →</button>
+          </div>
+          <div class="games-grid featured-grid">
+            @for (juego of juegos.slice(0, 4); track juego.nombre) {
+              <div class="game-card" [style.--accent]="juego.color"
+                   [class.locked]="!estaImplementado(juego.ruta)" (click)="irAJuego(juego)">
+                <div class="card-hero" [style.background]="juego.color + '18'">
+                  <span class="card-personaje">{{ juego.personaje }}</span>
+                  <span class="card-icon-sm">{{ juego.icono }}</span>
+                  <button class="play-btn" [style.background]="estaImplementado(juego.ruta) ? juego.color : '#cbd5e1'">{{ estaImplementado(juego.ruta) ? '▶' : '🔒' }}</button>
+                </div>
+                <div class="card-body">
+                  <div class="card-tipo"   [style.color]="juego.color">{{ juego.tipo }}</div>
+                  <div class="card-nombre">{{ juego.nombre }}</div>
+                  <div class="card-nivel"  [style.color]="juego.color">{{ juego.nivelTxt }}</div>
+                </div>
+                <div class="card-footer">
+                  <div class="prog-bar"><div class="prog-fill" [style.width.%]="juego.progreso" [style.background]="juego.color"></div></div>
+                  <div class="prog-txt">{{ juego.progreso }}% completado</div>
+                </div>
+              </div>
+            }
+          </div>
+        </section>
+        <aside class="right-panel">
+          <div class="panel-card">
+            <h3 class="panel-title">Actividad reciente</h3>
+            <div class="sesiones-list">
+              @if (ultimasSesiones.length === 0) {
+                <p class="empty-msg">Aún no has jugado. ¡Elige un juego!</p>
+              }
+              @for (s of ultimasSesiones.slice(0, 5); track s.hace) {
+                <div class="sesion-row">
+                  <div class="sesion-ico">{{ s.icono }}</div>
+                  <div class="sesion-info"><div class="sesion-nombre">{{ s.juego }}</div><div class="sesion-hace">{{ s.hace }}</div></div>
+                  <div class="sesion-right"><div class="sesion-precision">🎯 {{ s.precision }}%</div><div class="sesion-pts">+{{ s.pts }} pts</div></div>
+                </div>
+              }
+            </div>
+          </div>
+          <div class="panel-card">
+            <h3 class="panel-title">Logros recientes</h3>
+            <div class="logros-list">
+              @if (logrosRecientes.length === 0) {
+                <p class="empty-msg">¡Juega para desbloquear logros!</p>
+              }
+              @for (l of logrosRecientes; track l.nombre) {
+                <div class="logro-row">
+                  <div class="logro-ico">{{ l.icono }}</div>
+                  <div class="logro-info"><div class="logro-nombre">{{ l.nombre }}</div><div class="logro-desc">{{ l.desc }}</div></div>
+                  <div class="logro-pts">+{{ l.puntos }}</div>
+                </div>
+              }
+            </div>
+          </div>
+        </aside>
+      </div>
+    }
+
+    <!-- ── MIS JUEGOS ── -->
+    @if (activeTab === 'juegos') {
       <div class="stats-row">
         <div class="stat-card"><div class="stat-icon stat-orange">🔥</div><div class="stat-info"><div class="stat-val">{{ streak }}</div><div class="stat-lbl">Días seguidos</div></div></div>
         <div class="stat-card"><div class="stat-icon stat-yellow">⭐</div><div class="stat-info"><div class="stat-val">{{ puntosTotales | number }}</div><div class="stat-lbl">Puntos totales</div></div></div>
@@ -421,8 +492,12 @@ interface Avatar      { key: string; emoji: string; }
     /* Content area */
     .content-area { display: flex; gap: 20px; padding: 20px 28px 32px; flex: 1; align-items: flex-start; }
     .games-section { flex: 1; min-width: 0; }
-    .section-header { margin-bottom: 14px; }
+    .section-header { margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; }
     .section-header h2 { font-size: 18px; font-weight: 800; color: #1E293B; }
+    .see-all-btn { background: none; border: none; color: #7C3AED; font-size: 13px; font-weight: 700; cursor: pointer; padding: 4px 8px; border-radius: 8px; transition: background .2s; }
+    .see-all-btn:hover { background: #F5F3FF; }
+    .featured-grid { grid-template-columns: repeat(2, 1fr); }
+    .empty-msg { font-size: 13px; color: #94A3B8; text-align: center; padding: 12px 0; }
     .games-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
     .game-card { background: white; border-radius: 16px; overflow: hidden; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,.06); transition: all .22s cubic-bezier(.34,1.56,.64,1); border: 1.5px solid transparent; display: flex; flex-direction: column; }
     .game-card:hover { transform: translateY(-4px) scale(1.02); border-color: var(--accent); box-shadow: 0 8px 28px rgba(0,0,0,.1); }

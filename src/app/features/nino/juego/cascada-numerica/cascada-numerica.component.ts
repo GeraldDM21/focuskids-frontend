@@ -27,6 +27,8 @@ import {
   ChildProfileService
 } from '../../../padre/perfiles/child-profile.service';
 
+import { SesionJuegoService } from '../../../../core/services/sesion-juego.service';
+
 @Component({
   selector: 'app-cascada-numerica',
   standalone: true,
@@ -99,10 +101,9 @@ export class CascadaNumericaComponent implements OnDestroy {
   constructor(
     private readonly router: Router,
     private readonly cdr: ChangeDetectorRef,
-    private readonly cascadaService:
-    CascadaNumericaService,
-    private readonly childProfileService:
-    ChildProfileService
+    private readonly cascadaService: CascadaNumericaService,
+    private readonly childProfileService: ChildProfileService,
+    private readonly sesionJuegoService: SesionJuegoService,
   ) {}
 
   iniciarJuego(): void {
@@ -133,6 +134,10 @@ export class CascadaNumericaComponent implements OnDestroy {
 
                 this.velocidadCaidaMs =
                   respuesta.velocidadCaidaMs;
+
+                if (respuesta.sesionId) {
+                  this.sesionJuegoService.comenzarTracking(respuesta.sesionId);  // CA-04
+                }
 
                 this.comenzarJuegoLocal();
               },
@@ -710,6 +715,7 @@ export class CascadaNumericaComponent implements OnDestroy {
     );
 
     this.tiempoInicioOperacion = Date.now();
+    this.sesionJuegoService.marcarElementoAparece();  // CA-08
 
     this.timerCaida = setTimeout(() => {
       this.registrarOmision();
@@ -765,7 +771,7 @@ export class CascadaNumericaComponent implements OnDestroy {
     this.limpiarTimerCuenta();
   }
 
-  seleccionarNumero(numero: NumeroCayendo): void {
+  seleccionarNumero(event: MouseEvent, numero: NumeroCayendo): void {
     if (
       this.respuestaBloqueada ||
       this.estado !== 'jugando' ||
@@ -781,6 +787,13 @@ export class CascadaNumericaComponent implements OnDestroy {
 
     const tiempoRespuestaMs =
       Date.now() - this.tiempoInicioOperacion;
+
+    this.sesionJuegoService.trackClick(  // CA-07
+      event.clientX,
+      event.clientY,
+      String(numero.valor),
+      numero.correcto
+    );
 
     if (numero.correcto) {
       this.registrarAcierto(
@@ -898,6 +911,17 @@ export class CascadaNumericaComponent implements OnDestroy {
       return;
     }
 
+    // CA-03: fire-and-forget metrics finalization
+    const puntaje = this.aciertos > 0
+      ? Math.round((this.aciertos / Math.max(this.aciertos + this.errores + this.omisiones, 1)) * 100)
+      : 0;
+    this.sesionJuegoService.finalizarSesion(
+      this.sesionBackendId,
+      puntaje,
+      this.aciertos + this.errores + this.omisiones,
+      this.aciertos
+    );
+
     this.finalizandoBackend = true;
 
     this.cascadaService.finalizarSesion(
@@ -946,6 +970,8 @@ export class CascadaNumericaComponent implements OnDestroy {
       this.maxCombo,
       this.combo
     );
+
+    this.sesionJuegoService.trackRespuestaMs(tiempoRespuestaMs);  // CA-05
 
     this.guardarResultadoOperacion(
       'ACIERTO',

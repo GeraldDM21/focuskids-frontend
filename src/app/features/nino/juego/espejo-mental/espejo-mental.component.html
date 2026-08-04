@@ -158,7 +158,7 @@
               [style.--color-activo]="el.colorActivo"
               [style.--glow]="el.glow"
               [disabled]="estado !== 'input'"
-              (click)="clicarElemento(el.id)">
+              (click)="clicarElemento($event, el.id)">
               <span class="el-simbolo">{{ el.simbolo }}</span>
               <span class="el-nombre">{{ el.nombre }}</span>
             </button>

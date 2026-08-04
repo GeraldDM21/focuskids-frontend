@@ -1,4 +1,4 @@
-import { Component, AfterViewInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+import { Component, AfterViewInit, OnDestroy, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import * as THREE from 'three';
 
@@ -322,6 +322,13 @@ interface Miembro {
         <p>© 2026 FocusKids — Proyecto académico UCENFOTEC. Todos los derechos reservados.</p>
       </div>
     </footer>
+
+    <!-- ══ BACK TO TOP ══ -->
+    <button class="back-to-top" [class.visible]="mostrarBotonArriba" (click)="irArriba()" aria-label="Volver al inicio">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 19V5M5 12l7-7 7 7"/>
+      </svg>
+    </button>
   `,
   styles: [`
     :host { display: block; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #1E293B; }
@@ -499,10 +506,54 @@ interface Miembro {
     .footer-col a:hover { color:#818CF8; }
     .footer-bottom { max-width:1200px; margin:0 auto; padding:20px 24px; border-top:1px solid #0F172A; }
     .footer-bottom p { font-size:13px; color:#1E293B; margin:0; }
+
+    /* ── BACK TO TOP ── */
+    .back-to-top {
+      position: fixed;
+      bottom: 32px;
+      right: 28px;
+      z-index: 999;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: none;
+      background: linear-gradient(135deg, #6366F1, #8B5CF6);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(99,102,241,0.45);
+      opacity: 0;
+      transform: translateY(12px);
+      pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.25s ease, box-shadow 0.2s ease;
+    }
+    .back-to-top.visible {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+    .back-to-top:hover {
+      box-shadow: 0 6px 28px rgba(99,102,241,0.65);
+      transform: translateY(-2px);
+    }
+    .back-to-top:active { transform: scale(0.93); }
   `]
 })
 export class LandingComponent implements AfterViewInit, OnDestroy {
   @ViewChild('canvas3d') canvasRef!: ElementRef<HTMLCanvasElement>;
+
+  mostrarBotonArriba = false;
+
+  @HostListener('window:scroll')
+  onScroll(): void {
+    this.mostrarBotonArriba = window.scrollY > 400;
+  }
+
+  irArriba(): void {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 
   private renderer!: THREE.WebGLRenderer;
   private scene!: THREE.Scene;

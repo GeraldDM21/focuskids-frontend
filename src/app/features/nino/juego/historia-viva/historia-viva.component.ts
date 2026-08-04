@@ -185,8 +185,9 @@ export class HistoriaVivaComponent implements OnInit, OnDestroy {
   mostrandoTexto          = false;
 
   // ── Métricas (CA-04) ────────────────────────────────────────────────────────
-  tiempoInicioLectura = 0;
-  tiempoLectura       = 0;   // segundos
+  tiempoInicioLectura  = 0;
+  tiempoInicoPreguntas = 0;  // CA-05/CA-08: cuándo se mostró la pregunta actual
+  tiempoLectura        = 0;  // segundos
   usoAudio            = 0;
   releidasCount       = 0;
   preguntasCorrectas  = 0;
@@ -245,17 +246,25 @@ export class HistoriaVivaComponent implements OnInit, OnDestroy {
       juegoId:  this.JUEGO_ID,
       nivelId:  this.nivelFacilId,
     }).subscribe({
-      next: sesion => { this.sesionBackendId = sesion.id; },
+      next: sesion => {
+        this.sesionBackendId = sesion.id ?? null;
+        if (sesion.id) this.sesionService.comenzarTracking(sesion.id);  // CA-04
+      },
       error: () => {}
     });
   }
 
   private finalizarSesionBackend(): void {
     if (!this.sesionBackendId) return;
-    this.sesionService.finalizarSesion(this.sesionBackendId, this.puntuacion).subscribe({
-      next: () => { this.sesionBackendId = null; },
-      error: () => {}
-    });
+    const id = this.sesionBackendId;
+    this.sesionBackendId = null;
+    // CA-03: fire-and-forget con 3 reintentos + localStorage fallback
+    this.sesionService.finalizarSesion(
+      id,
+      this.puntuacion,
+      this.intentosTotales,
+      this.preguntasCorrectas
+    );
   }
 
   // ── Volumen (CA-05) ─────────────────────────────────────────────────────
@@ -348,11 +357,13 @@ export class HistoriaVivaComponent implements OnInit, OnDestroy {
     this.preguntaIdx   = 0;
     this.estado        = 'pregunta';
     this.resetPregunta();
+    this.tiempoInicoPreguntas = Date.now();
+    this.sesionService.marcarElementoAparece();  // CA-08
     this.setMascota('thinking', '¡Piensa bien antes de responder! 🤔');
     this.cdr.detectChanges();
   }
 
-  seleccionarOpcion(idx: number): void {
+  seleccionarOpcion(event: MouseEvent, idx: number): void {
     if (this.opcionesErradas.includes(idx)) return;
     if (this.respondioCorrectamente === true)  return;
 
@@ -362,6 +373,11 @@ export class HistoriaVivaComponent implements OnInit, OnDestroy {
     this.respuestaSeleccionada = idx;
     const correcto = idx === (this.preguntaActual?.correcta ?? -1);
     this.respondioCorrectamente = correcto;
+
+    // CA-05/CA-07/CA-08/CA-09
+    const msRespuesta = Date.now() - this.tiempoInicoPreguntas;
+    this.sesionService.trackRespuestaMs(msRespuesta);
+    this.sesionService.trackClick(event.clientX, event.clientY, `opcion_${idx}`, correcto);
 
     if (correcto) {
       this.preguntasCorrectas++;
@@ -418,6 +434,8 @@ export class HistoriaVivaComponent implements OnInit, OnDestroy {
     if (this.preguntaIdx + 1 < this.historiaActual.preguntas.length) {
       this.preguntaIdx++;
       this.resetPregunta();
+      this.tiempoInicoPreguntas = Date.now();
+      this.sesionService.marcarElementoAparece();  // CA-08: nueva pregunta visible
       this.setMascota('thinking', this.pick(['¿Y esta? ¡Tú puedes! 💪', '¡Siguiente pregunta! 🎯', '¡Vamos con la siguiente! 🧠']));
     } else {
       this.terminarJuego();

@@ -128,17 +128,25 @@ export class EspejoMentalComponent implements OnInit, OnDestroy {
       juegoId:  this.JUEGO_ID,
       nivelId:  this.nivelFacilId,
     }).subscribe({
-      next: sesion => { this.sesionBackendId = sesion.id; },
+      next: sesion => {
+        this.sesionBackendId = sesion.id ?? null;
+        if (sesion.id) this.sesionService.comenzarTracking(sesion.id);  // CA-04
+      },
       error: () => {}
     });
   }
 
   private finalizarSesionBackend(): void {
     if (!this.sesionBackendId) return;
-    this.sesionService.finalizarSesion(this.sesionBackendId, this.puntuacion).subscribe({
-      next: () => { this.sesionBackendId = null; },
-      error: () => {}
-    });
+    const id = this.sesionBackendId;
+    this.sesionBackendId = null;
+    // CA-03: fire-and-forget con 3 reintentos + localStorage fallback
+    this.sesionService.finalizarSesion(
+      id,
+      this.puntuacion,
+      this.aciertos + this.errores,
+      this.aciertos
+    );
   }
 
   private cargarVozFoxy(): void {
@@ -319,12 +327,13 @@ export class EspejoMentalComponent implements OnInit, OnDestroy {
     this.timers.push(setTimeout(() => {
       this.estado = 'input';
       this.tiempoInicioInput = Date.now();
+      this.sesionService.marcarElementoAparece();  // CA-08
       this.setMascota('excited');
       this.cdr.detectChanges();
     }, delay + 200));
   }
 
-  clicarElemento(id: number): void {
+  clicarElemento(event: MouseEvent, id: number): void {
     if (this.estado !== 'input') return;
     // CA-01: se marca el inicio justo en el input; el cálculo correcto/incorrecto es 100% local.
     const t0 = this.feedbackService.marcarInicio();
@@ -334,6 +343,7 @@ export class EspejoMentalComponent implements OnInit, OnDestroy {
     const correcto = id === esperado;
     this.metricas.push({ elementId: id, ms, correcto });
     this.respuestaJugador.push(id);
+    this.sesionService.trackClick(event.clientX, event.clientY, id.toString(), correcto);  // CA-07/08/09
 
     if (!correcto) {
       this.elementoError = id;
@@ -350,6 +360,10 @@ export class EspejoMentalComponent implements OnInit, OnDestroy {
   }
 
   private manejarAcierto(): void {
+    // CA-05: registrar tiempo de respuesta de la ronda
+    const msRonda = this.metricas[this.metricas.length - 1]?.ms;
+    if (msRonda !== undefined) this.sesionService.trackRespuestaMs(msRonda);
+
     this.aciertos++; this.rondas++;
     this.combo++; this.maxCombo = Math.max(this.maxCombo, this.combo);
     this.erroresConsecutivos = 0;
@@ -385,6 +399,10 @@ export class EspejoMentalComponent implements OnInit, OnDestroy {
   }
 
   private manejarError(elementoCorrecto: number): void {
+    // CA-05: registrar tiempo de respuesta de la ronda
+    const msRonda = this.metricas[this.metricas.length - 1]?.ms;
+    if (msRonda !== undefined) this.sesionService.trackRespuestaMs(msRonda);
+
     this.errores++; this.rondas++;
     this.combo = 0; this.erroresConsecutivos++;
     this.fallosParaPista++;

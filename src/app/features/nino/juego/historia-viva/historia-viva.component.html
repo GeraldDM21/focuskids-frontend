@@ -194,7 +194,7 @@
               [class.opcion-correcta-temporal]="mostrarCorrectaTemporal && $index === preguntaActual?.correcta"
               [class.opcion-errada]="opcionesErradas.includes($index)"
               [class.opcion-disabled]="opcionesErradas.includes($index) || respondioCorrectamente === true"
-              (click)="seleccionarOpcion($index)">
+              (click)="seleccionarOpcion($event, $index)">
               <span class="opcion-letra">{{ LETRAS[$index] }}</span>
               <span class="opcion-txt">{{ op }}</span>
             </button>

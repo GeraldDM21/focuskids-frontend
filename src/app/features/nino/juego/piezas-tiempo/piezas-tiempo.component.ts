@@ -6,6 +6,7 @@ import { PiezasTiempoService, COLORES_PIEZAS, FORMAS_SIMETRICAS } from './piezas
 import { ChildProfileService } from '../../../padre/perfiles/child-profile.service';
 import { PiezaData, SlotData, Nivel } from './piezas-tiempo.model';
 import { MascotComponent, MascotMood } from '../../../../shared/components/mascot/mascot.component';
+import { SesionJuegoService } from '../../../../core/services/sesion-juego.service';
 
 type Estado = 'inicio' | 'jugando' | 'completado' | 'tiempo-agotado';
 
@@ -107,6 +108,12 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
   private audioCtx: AudioContext | null = null;
   private bgInterval: any = null;
 
+  // ── Backend session tracking ──
+  private readonly JUEGO_ID = 7;  // "Piezas en Tiempo" en el seeder
+  private sesionBackendId: number | null = null;
+  private nivelFacilId: number | null = null;
+  private tiempoInicioRonda = 0;  // CA-05: tiempo por pieza
+
   readonly niveles: { id: Nivel; label: string; emoji: string; desc: string }[] = [
     { id: 'FACIL',   label: 'Fácil',   emoji: '🟢', desc: '3 piezas · 50s · 1 giro' },
     { id: 'MEDIO',   label: 'Medio',   emoji: '🟡', desc: '5 piezas · 42s · más giros' },
@@ -119,13 +126,18 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
     private profileService: ChildProfileService,
     private sanitizer: DomSanitizer,
     private cdr: ChangeDetectorRef,
-    private router: Router
+    private router: Router,
+    private sesionJuegoService: SesionJuegoService,
   ) {}
 
   ngOnInit(): void {
     this.profileService.activeProfile$.subscribe(state => {
       if (!state.profileId) { this.router.navigate(['/padre/perfiles/selector']); return; }
       this.perfilId = state.profileId;
+    });
+    this.sesionJuegoService.obtenerNiveles(this.JUEGO_ID).subscribe({
+      next: niveles => { this.nivelFacilId = niveles[0]?.id ?? null; },
+      error: () => {}
     });
   }
 
@@ -181,9 +193,27 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
     this.slots.forEach(s => this.slotSvgMap.set(s.id, this.buildSlotSvg(s.forma)));
 
     this.estado = 'jugando';
+    this.tiempoInicioRonda = Date.now();
     this.mascotMood = 'excited';
     this.mascotMsg  = '¡Vamos Tigre! 🐯 ¡Arrastrá las piezas a sus siluetas!';
     this.cdr.detectChanges();
+
+    // Backend: iniciar sesión (CA-01)
+    this.sesionBackendId = null;
+    if (this.perfilId && this.nivelFacilId) {
+      this.sesionJuegoService.iniciarSesion({
+        perfilId: this.perfilId,
+        juegoId:  this.JUEGO_ID,
+        nivelId:  this.nivelFacilId,
+      }).subscribe({
+        next: sesion => {
+          this.sesionBackendId = sesion.id ?? null;
+          if (sesion.id) this.sesionJuegoService.comenzarTracking(sesion.id);  // CA-04
+        },
+        error: () => {}
+      });
+    }
+    this.sesionJuegoService.marcarElementoAparece();  // CA-08: piezas visibles
     this.iniciarTimer();
     setTimeout(() => this.startBgMusic(), 200);
   }
@@ -295,6 +325,11 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
       this.piezaSeleccionada = null;
       this.piezasColocadas++;
       this.hintMsg = '';
+      // CA-05/07/09
+      this.sesionJuegoService.trackClick(window.innerWidth / 2, window.innerHeight / 2, pieza.forma, true);
+      this.sesionJuegoService.trackRespuestaMs(Date.now() - this.tiempoInicioRonda);
+      this.tiempoInicioRonda = Date.now();
+      this.sesionJuegoService.marcarElementoAparece();
       this.playPiezaColocada();
       this.speak(this.frasesCelebracion[Math.floor(Math.random() * this.frasesCelebracion.length)]);
 
@@ -309,6 +344,7 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
       }
     } else if (!formaOk) {
       this.fallidos++;
+      this.sesionJuegoService.trackClick(window.innerWidth / 2, window.innerHeight / 2, pieza.forma, false);  // CA-07/09
       this.triggerError(slot);
       pieza.seleccionada = false;
       this.piezaSeleccionada = null;
@@ -316,6 +352,7 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
     } else {
       // Forma ok pero rotación mal
       this.fallidos++;
+      this.sesionJuegoService.trackClick(window.innerWidth / 2, window.innerHeight / 2, pieza.forma, false);  // CA-07/09
       this.triggerError(slot);
       this.hintMsg = '¡Rota la pieza! 🔄';
       this.setMascot('encourage', '🔄 ¡Rotá la pieza primero y volvé a intentarlo!');
@@ -343,8 +380,16 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
 
   private finalizarSesion(nuevoEstado: 'completado' | 'tiempo-agotado'): void {
     this.estado = nuevoEstado;
-    this.cdr.detectChanges(); // forzar actualización inmediata de la vista
+    this.cdr.detectChanges();
     this.stopBgMusic();
+
+    // CA-03: fire-and-forget con 3 reintentos + localStorage fallback
+    if (this.sesionBackendId) {
+      const puntaje = Math.round((this.piezasColocadas / Math.max(this.slots.length, 1)) * 100);
+      const intentos = this.piezasColocadas + this.fallidos;
+      this.sesionJuegoService.finalizarSesion(this.sesionBackendId, puntaje, intentos, this.piezasColocadas);
+      this.sesionBackendId = null;
+    }
 
     if (nuevoEstado === 'completado') {
       this.puntosBonus = this.tiempoRestante;

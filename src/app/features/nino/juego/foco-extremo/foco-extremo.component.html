@@ -111,7 +111,7 @@
       @if (!mostrandoObjetivo) {
       <div class="estimulo-wrap"
            style="touch-action: manipulation;"
-           (pointerdown)="presionar()">
+           (pointerdown)="presionar($event)">
         <div class="estimulo-box"
              [class.ok]="feedbackEstado === 'ok'"
              [class.error]="feedbackEstado === 'error'">

@@ -13,6 +13,7 @@ import { FocoExtremoService } from './foco-extremo.service';
 import { ChildProfileService } from '../../../padre/perfiles/child-profile.service';
 import { FocoExtremoConfig, Estimulo, ResultadoSesion, Nivel } from './foco-extremo.model';
 import { MascotComponent, MascotMood } from '../../../../shared/components/mascot/mascot.component';
+import { SesionJuegoService } from '../../../../core/services/sesion-juego.service';
 
 type Estado = 'inicio' | 'jugando' | 'completado';
 
@@ -31,6 +32,10 @@ export class FocoExtremoComponent implements OnInit, OnDestroy {
 
   perfilId = 0;
   perfilNombre = '';
+
+  private readonly JUEGO_ID = 2;  // "Foco Extremo" en el seeder
+  private sesionBackendId: number | null = null;
+  private nivelFacilId: number | null = null;
 
   config: FocoExtremoConfig | null = null;
 
@@ -95,6 +100,7 @@ export class FocoExtremoComponent implements OnInit, OnDestroy {
     private childProfileService: ChildProfileService,
     private router: Router,
     private cdr: ChangeDetectorRef,
+    private sesionJuegoService: SesionJuegoService,
   ) {}
 
   ngOnInit(): void {
@@ -105,6 +111,10 @@ export class FocoExtremoComponent implements OnInit, OnDestroy {
       }
       this.perfilId = state.profileId;
       this.perfilNombre = state.profileName || 'Jugador';
+    });
+    this.sesionJuegoService.obtenerNiveles(this.JUEGO_ID).subscribe({
+      next: niveles => { this.nivelFacilId = niveles[0]?.id ?? null; },
+      error: () => {}
     });
   }
 
@@ -142,6 +152,22 @@ export class FocoExtremoComponent implements OnInit, OnDestroy {
     this.estimuloActual = null;
     this.feedbackEstado = '';
 
+    // Backend: iniciar sesión (CA-01)
+    this.sesionBackendId = null;
+    if (this.perfilId && this.nivelFacilId) {
+      this.sesionJuegoService.iniciarSesion({
+        perfilId: this.perfilId,
+        juegoId:  this.JUEGO_ID,
+        nivelId:  this.nivelFacilId,
+      }).subscribe({
+        next: sesion => {
+          this.sesionBackendId = sesion.id ?? null;
+          if (sesion.id) this.sesionJuegoService.comenzarTracking(sesion.id);  // CA-04
+        },
+        error: () => {}
+      });
+    }
+
     this.estado = 'jugando';
     this.mostrandoObjetivo = true;
     this.setMascot(
@@ -171,6 +197,7 @@ export class FocoExtremoComponent implements OnInit, OnDestroy {
     this.historial.push(estimulo);
     this.estimuloActual = estimulo;
     this.feedbackEstado = '';
+    this.sesionJuegoService.marcarElementoAparece();  // CA-08
     this.cdr.markForCheck();
 
     this.estimuloTimeout = setTimeout(() => this.cicloEstimulos(), this.cadenciaActual);
@@ -214,21 +241,28 @@ export class FocoExtremoComponent implements OnInit, OnDestroy {
     this.presionar();
   }
 
-  presionar(): void {
+  presionar(event?: PointerEvent | MouseEvent): void {
     if (this.estado !== 'jugando' || !this.estimuloActual || this.estimuloActual.respondido) return;
 
     const estimulo = this.estimuloActual;
     estimulo.respondido = true;
     const tiempoReaccionMs = Date.now() - estimulo.timestampMostrado;
     estimulo.tiempoReaccionMs = tiempoReaccionMs;
+    const esAcierto = estimulo.tipo === 'objetivo';
 
-    if (estimulo.tipo === 'objetivo') {
+    // CA-07/08/09: trackClick con coordenadas (teclado → centro de pantalla)
+    const cx = event?.clientX ?? window.innerWidth / 2;
+    const cy = event?.clientY ?? window.innerHeight / 2;
+    this.sesionJuegoService.trackClick(cx, cy, estimulo.simbolo, esAcierto);
+
+    if (esAcierto) {
       this.aciertos++;
       this.tiemposReaccion.push(tiempoReaccionMs);
       this.feedbackEstado = 'ok';
       this.playAcierto();
       this.registrarEnVentana('acierto');
       this.setMascot('celebrate', '¡Perfecto! ⚡');
+      this.sesionJuegoService.trackRespuestaMs(tiempoReaccionMs);  // CA-05
     } else {
       this.falsasAlarmas++;
       this.feedbackEstado = 'error';
@@ -306,6 +340,14 @@ export class FocoExtremoComponent implements OnInit, OnDestroy {
     this.estimuloActual = null;
     this.resultado = this.calcularResultado();
     this.playFinalizado();
+
+    // CA-03: fire-and-forget con 3 reintentos + localStorage fallback
+    if (this.sesionBackendId) {
+      const puntaje = this.resultado.indicePrecision;
+      const intentos = this.aciertos + this.falsasAlarmas;
+      this.sesionJuegoService.finalizarSesion(this.sesionBackendId, puntaje, intentos, this.aciertos);
+      this.sesionBackendId = null;
+    }
 
     const buenDesempeno =
       this.resultado.indicePrecision >= 75 && this.resultado.indiceControlImpulsos >= 75;
