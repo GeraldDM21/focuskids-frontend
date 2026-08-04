@@ -34,6 +34,28 @@
 .confeti { position: absolute; top: -20px; border-radius: 3px; animation: caer linear forwards; }
 @keyframes caer { 0%{transform:translateY(-20px) rotate(0deg);opacity:1} 100%{transform:translateY(110vh) rotate(720deg);opacity:0} }
 
+/* Botón volver en pantalla de inicio */
+.btn-volver-inicio {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  z-index: 4;
+  padding: 10px 16px;
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: 14px;
+  background: rgba(8,14,30,.7);
+  color: #dce7f8;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  transition: transform .2s ease, background .2s ease;
+}
+.btn-volver-inicio:hover {
+  transform: translateY(-2px);
+  background: rgba(255,255,255,.12);
+}
+
 /* ══ INICIO — cinematográfico ══ */
 .pantalla-inicio {
   min-height: 100vh; width: 100%;
