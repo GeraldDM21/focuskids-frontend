@@ -168,69 +168,73 @@ interface Avatar      { key: string; emoji: string; }
 
     <!-- ── MIS JUEGOS ── -->
     @if (activeTab === 'juegos') {
-      <div class="stats-row">
-        <div class="stat-card"><div class="stat-icon stat-orange">🔥</div><div class="stat-info"><div class="stat-val">{{ streak }}</div><div class="stat-lbl">Días seguidos</div></div></div>
-        <div class="stat-card"><div class="stat-icon stat-yellow">⭐</div><div class="stat-info"><div class="stat-val">{{ puntosTotales | number }}</div><div class="stat-lbl">Puntos totales</div></div></div>
-        <div class="stat-card"><div class="stat-icon stat-teal">🎯</div><div class="stat-info"><div class="stat-val">{{ precision }}%</div><div class="stat-lbl">Precisión</div></div></div>
-        <div class="stat-card"><div class="stat-icon stat-mint">🏆</div><div class="stat-info"><div class="stat-val">{{ logrosGanados }}</div><div class="stat-lbl">Logros</div></div></div>
-      </div>
-      <div class="content-area">
-        <section class="games-section">
-          <div class="section-header"><h2>Elige tu juego</h2></div>
-          <div class="games-grid">
-            @for (juego of juegos; track juego.nombre) {
-              <div class="game-card" [style.--accent]="juego.color"
-                   [class.locked]="!estaImplementado(juego.ruta)" (click)="irAJuego(juego)">
-                <div class="card-hero" [style.background]="juego.color + '18'">
-                  <span class="card-personaje">{{ juego.personaje }}</span>
-                  <span class="card-icon-sm">{{ juego.icono }}</span>
-                  <button class="play-btn" [style.background]="estaImplementado(juego.ruta) ? juego.color : '#cbd5e1'">{{ estaImplementado(juego.ruta) ? '▶' : '🔒' }}</button>
-                </div>
-                <div class="card-body">
-                  <div class="card-tipo"   [style.color]="juego.color">{{ juego.tipo }}</div>
-                  <div class="card-nombre">{{ juego.nombre }}</div>
-                  <div class="card-nivel"  [style.color]="juego.color">{{ juego.nivelTxt }}</div>
-                </div>
-                <div class="card-footer">
-                  <div class="prog-bar"><div class="prog-fill" [style.width.%]="juego.progreso" [style.background]="juego.color"></div></div>
-                  <div class="prog-txt">{{ juego.progreso }}% completado</div>
+      <div class="biblioteca-wrapper">
+
+        <!-- Encabezado -->
+        <div class="bib-header">
+          <div>
+            <h2 class="bib-titulo">Biblioteca de Juegos</h2>
+            <p class="bib-sub">{{ juegosFiltrados.length }} juego{{ juegosFiltrados.length !== 1 ? 's' : '' }} disponible{{ juegosFiltrados.length !== 1 ? 's' : '' }}</p>
+          </div>
+        </div>
+
+        <!-- Filtros por categoría -->
+        <div class="bib-filtros">
+          <button class="bib-filtro" [class.bib-filtro-activo]="filtroLib === 'Todos'"
+                  (click)="filtroLib = 'Todos'">
+            <span class="bib-filtro-ico" style="background:#EDE9FE">🎮</span>
+            <span>Todos</span>
+          </button>
+          @for (cat of categoriasUnicas; track cat) {
+            <button class="bib-filtro" [class.bib-filtro-activo]="filtroLib === cat"
+                    [style.--cat-color]="catColorLib(cat)"
+                    (click)="filtroLib = cat">
+              <span class="bib-filtro-ico" [style.background]="catColorLib(cat) + '22'">{{ catIcoLib(cat) }}</span>
+              <span>{{ cat }}</span>
+            </button>
+          }
+        </div>
+
+        <!-- Grid de tarjetas -->
+        <div class="bib-grid">
+          @for (juego of juegosFiltrados; track juego.nombre) {
+            <div class="bib-card" [style.--accent]="juego.color"
+                 [class.bib-locked]="!estaImplementado(juego.ruta)">
+              <div class="bib-card-hero"
+                   [style.background]="'linear-gradient(135deg,' + juego.color + '20,' + juego.color + '06)'">
+                <span class="bib-personaje">{{ juego.personaje }}</span>
+                <span class="bib-icono-sm">{{ juego.icono }}</span>
+                <!-- Overlay con botón Jugar aparece en hover -->
+                <div class="bib-play-overlay">
+                  <button class="bib-jugar-btn"
+                          [style.background]="estaImplementado(juego.ruta) ? juego.color : '#94A3B8'"
+                          (click)="irAJuego(juego)">
+                    {{ estaImplementado(juego.ruta) ? '▶ Jugar' : '🔒 Pronto' }}
+                  </button>
                 </div>
               </div>
-            }
-          </div>
-        </section>
-        <aside class="right-panel">
-          <div class="panel-card">
-            <h3 class="panel-title">Mi progreso</h3>
-            <div class="progreso-list">
-              @for (p of progresos; track p.nombre) {
-                <div class="progreso-row">
-                  <div class="prog-avatar" [style.background]="p.color+'22'" [style.border-color]="p.color+'44'">{{ p.icono }}</div>
-                  <div class="prog-data">
-                    <div class="prog-name">{{ p.nombre }}</div>
-                    <div class="prog-track">
-                      <div class="prog-bar-sm"><div class="prog-fill-sm" [style.width.%]="p.valor" [style.background]="p.color"></div></div>
-                      <span class="prog-pct">{{ p.valor }}%</span>
-                    </div>
+              <div class="bib-card-body">
+                <div class="bib-tipo" [style.color]="juego.color">{{ juego.tipo }}</div>
+                <div class="bib-nombre">{{ juego.nombre }}</div>
+                <div class="bib-nivel">{{ juego.nivelTxt }}</div>
+                <div class="bib-prog-wrap">
+                  <div class="bib-prog-bar">
+                    <div class="bib-prog-fill" [style.width.%]="juego.progreso" [style.background]="juego.color"></div>
                   </div>
+                  <span class="bib-prog-txt">{{ juego.progreso }}%</span>
                 </div>
-              }
+              </div>
             </div>
-          </div>
-          <div class="panel-card">
-            <h3 class="panel-title">Logros recientes</h3>
-            <div class="logros-list">
-              @for (l of logrosRecientes; track l.nombre) {
-                <div class="logro-row">
-                  <div class="logro-ico">{{ l.icono }}</div>
-                  <div class="logro-info"><div class="logro-nombre">{{ l.nombre }}</div><div class="logro-desc">{{ l.desc }}</div></div>
-                  <div class="logro-pts">+{{ l.puntos }}</div>
-                </div>
-              }
+          }
+          @if (juegosFiltrados.length === 0) {
+            <div class="bib-empty">
+              <span class="bib-empty-ico">🎮</span>
+              <p>No hay juegos en esta categoría aún.</p>
             </div>
-          </div>
-        </aside>
+          }
+        </div>
       </div>
+
     }
 
     <!-- ── MI PROGRESO ── -->
@@ -634,6 +638,172 @@ interface Avatar      { key: string; emoji: string; }
     }
     .cf-dot.cf-dot-active { width: 22px; border-radius: 4px; opacity: 1; }
     /* ── fin Cover Flow ─────────────────────────────────────── */
+
+    /* ══ BIBLIOTECA ══════════════════════════════════════════ */
+    .biblioteca-wrapper {
+      padding: 24px 28px 32px;
+      display: flex; flex-direction: column; gap: 20px;
+    }
+    .bib-header { display: flex; align-items: center; justify-content: space-between; }
+    .bib-titulo { font-size: 22px; font-weight: 900; color: #1E293B; }
+    .bib-sub    { font-size: 13px; color: #94A3B8; margin-top: 3px; font-weight: 600; }
+
+    /* ── filtros ── */
+    .bib-filtros {
+      display: flex; gap: 10px; flex-wrap: wrap;
+    }
+    .bib-filtro {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 16px; border-radius: 100px;
+      border: 1.5px solid #E2E8F0; background: white;
+      font-size: 13px; font-weight: 700; color: #475569;
+      cursor: pointer; transition: all .2s ease;
+      box-shadow: 0 1px 4px rgba(0,0,0,.05);
+    }
+    .bib-filtro:hover {
+      border-color: var(--cat-color, #7C3AED);
+      color: var(--cat-color, #7C3AED);
+      transform: translateY(-1px);
+      box-shadow: 0 3px 12px rgba(0,0,0,.08);
+    }
+    .bib-filtro-activo {
+      background: var(--cat-color, #7C3AED) !important;
+      border-color: var(--cat-color, #7C3AED) !important;
+      color: white !important;
+      box-shadow: 0 4px 14px rgba(0,0,0,.15) !important;
+    }
+    .bib-filtro-activo .bib-filtro-ico { background: rgba(255,255,255,.25) !important; }
+    .bib-filtro-ico {
+      width: 28px; height: 28px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px; flex-shrink: 0;
+    }
+
+    /* ── grid ── */
+    .bib-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+    @media (max-width: 1100px) { .bib-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 780px)  { .bib-grid { grid-template-columns: repeat(2, 1fr); } }
+
+    /* ── animaciones hover ── */
+    @keyframes bib-wiggle {
+      0%   { transform: rotate(0deg)   scale(1);    }
+      15%  { transform: rotate(-14deg) scale(1.14); }
+      30%  { transform: rotate(11deg)  scale(1.18); }
+      45%  { transform: rotate(-8deg)  scale(1.2);  }
+      60%  { transform: rotate(6deg)   scale(1.17); }
+      75%  { transform: rotate(-3deg)  scale(1.13); }
+      90%  { transform: rotate(2deg)   scale(1.1);  }
+      100% { transform: rotate(0deg)   scale(1.1);  }
+    }
+    @keyframes bib-shimmer {
+      0%   { transform: translateX(-120%) skewX(-18deg); opacity: 0;   }
+      15%  { opacity: 1; }
+      85%  { opacity: 1; }
+      100% { transform: translateX(260%)  skewX(-18deg); opacity: 0;   }
+    }
+    @keyframes bib-glow {
+      0%, 100% { box-shadow: 0 8px 24px rgba(0,0,0,.10), 0 0 0 2px var(--accent), 0 0 16px color-mix(in srgb, var(--accent) 45%, transparent); }
+      50%       { box-shadow: 0 12px 36px rgba(0,0,0,.15), 0 0 0 3px var(--accent), 0 0 28px color-mix(in srgb, var(--accent) 60%, transparent); }
+    }
+    @keyframes bib-badge-pop {
+      0%   { transform: scale(0) rotate(-15deg); opacity: 0; }
+      60%  { transform: scale(1.2) rotate(5deg);  opacity: 1; }
+      100% { transform: scale(1)   rotate(0deg);  opacity: 1; }
+    }
+
+    /* ── tarjeta ── */
+    .bib-card {
+      background: white; border-radius: 18px; overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0,0,0,.06);
+      border: 1.5px solid transparent;
+      transition: transform .28s cubic-bezier(.34,1.56,.64,1), border-color .2s ease;
+      display: flex; flex-direction: column; position: relative;
+    }
+    .bib-card:hover {
+      transform: translateY(-6px) scale(1.025);
+      border-color: var(--accent);
+      animation: bib-glow 1.4s ease infinite;
+    }
+    .bib-locked { opacity: .72; }
+
+    /* badge "¡Juega!" que aparece en hover */
+    .bib-card::before {
+      content: '⭐ ¡Juega!';
+      position: absolute; top: 8px; right: 8px; z-index: 5;
+      background: var(--accent); color: white;
+      font-size: 10px; font-weight: 800; padding: 3px 8px;
+      border-radius: 100px; pointer-events: none;
+      opacity: 0; transform: scale(0) rotate(-15deg);
+      transition: none;
+    }
+    .bib-locked::before { content: '🔒 Pronto'; }
+    .bib-card:hover::before {
+      animation: bib-badge-pop .35s cubic-bezier(.34,1.56,.64,1) .05s both;
+    }
+
+    .bib-card-hero {
+      position: relative; height: 100px;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+    /* barrido de luz */
+    .bib-card-hero::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(100deg, transparent 20%, rgba(255,255,255,.7) 50%, transparent 80%);
+      transform: translateX(-120%) skewX(-18deg);
+      pointer-events: none;
+    }
+    .bib-card:hover .bib-card-hero::after {
+      animation: bib-shimmer .55s ease .08s forwards;
+    }
+
+    .bib-personaje {
+      font-size: 54px; line-height: 1;
+      filter: drop-shadow(0 3px 8px rgba(0,0,0,.15));
+      display: inline-block;
+    }
+    .bib-card:hover .bib-personaje {
+      animation: bib-wiggle .55s cubic-bezier(.36,.07,.19,.97) both;
+    }
+    .bib-icono-sm { position: absolute; bottom: 6px; left: 10px; font-size: 16px; opacity: .6; }
+
+    /* overlay "Jugar" */
+    .bib-play-overlay {
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,.32);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity .2s ease;
+    }
+    .bib-card:hover .bib-play-overlay { opacity: 1; }
+    .bib-jugar-btn {
+      padding: 9px 22px; border: none; border-radius: 100px;
+      color: white; font-size: 14px; font-weight: 800;
+      cursor: pointer; box-shadow: 0 4px 18px rgba(0,0,0,.28);
+      transition: transform .15s ease;
+    }
+    .bib-jugar-btn:hover { transform: scale(1.08); }
+
+    .bib-card-body { padding: 12px 14px 14px; flex: 1; display: flex; flex-direction: column; gap: 3px; }
+    .bib-tipo  { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; }
+    .bib-nombre { font-size: 13px; font-weight: 800; color: #1E293B; line-height: 1.3; }
+    .bib-nivel  { font-size: 11px; color: #94A3B8; font-weight: 600; }
+    .bib-prog-wrap { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+    .bib-prog-bar  { flex: 1; height: 5px; background: #F1F0F9; border-radius: 100px; overflow: hidden; }
+    .bib-prog-fill { height: 100%; border-radius: 100px; }
+    .bib-prog-txt  { font-size: 10px; color: #94A3B8; font-weight: 700; flex-shrink: 0; }
+
+    .bib-empty {
+      grid-column: 1 / -1; text-align: center; padding: 40px 0;
+      color: #94A3B8; font-size: 14px; font-weight: 600;
+      display: flex; flex-direction: column; align-items: center; gap: 10px;
+    }
+    .bib-empty-ico { font-size: 36px; opacity: .4; }
+    /* ══ fin BIBLIOTECA ══════════════════════════════════════ */
     .games-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
     .game-card { background: white; border-radius: 16px; overflow: hidden; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,.06); transition: all .22s cubic-bezier(.34,1.56,.64,1); border: 1.5px solid transparent; display: flex; flex-direction: column; }
     .game-card:hover { transform: translateY(-4px) scale(1.02); border-color: var(--accent); box-shadow: 0 8px 28px rgba(0,0,0,.1); }
@@ -959,6 +1129,39 @@ export class NinoJuegosComponent implements OnInit {
   nivelNombre   = 'Principiante';
   activeTab     = 'inicio';
   loadingStats  = false;
+
+  // ── Biblioteca ───────────────────────────────────────────
+  filtroLib = 'Todos';
+
+  get categoriasUnicas(): string[] {
+    return [...new Set(this.juegos.map(j => j.tipo))];
+  }
+
+  get juegosFiltrados(): Juego[] {
+    if (this.filtroLib === 'Todos') return this.juegos;
+    return this.juegos.filter(j => j.tipo === this.filtroLib);
+  }
+
+  catColorLib(cat: string): string {
+    const map: Record<string, string> = {
+      Atención:   '#7C3AED', Cálculo:    '#059669',
+      Memoria:    '#9333EA', Lectura:    '#D97706',
+      Lenguaje:   '#EA580C', Percepción: '#0891B2',
+      Geografía:  '#65A30D', Lógica:     '#DB2777',
+    };
+    return map[cat] ?? '#64748B';
+  }
+
+  catIcoLib(cat: string): string {
+    const map: Record<string, string> = {
+      Atención:   '👁️', Cálculo:    '🔢',
+      Memoria:    '🧠', Lectura:    '📖',
+      Lenguaje:   '📝', Percepción: '🧩',
+      Geografía:  '🗺️', Lógica:    '🔬',
+    };
+    return map[cat] ?? '🎮';
+  }
+  // ── fin Biblioteca ───────────────────────────────────────
 
   // ── Cover Flow ───────────────────────────────────────────
   activeJuegoIndex = 0;
