@@ -76,25 +76,58 @@ interface Avatar      { key: string; emoji: string; }
             <h2>Juegos destacados</h2>
             <button class="see-all-btn" (click)="activeTab='juegos'">Ver todos →</button>
           </div>
-          <div class="games-grid featured-grid">
-            @for (juego of juegos.slice(0, 4); track juego.nombre) {
-              <div class="game-card" [style.--accent]="juego.color"
-                   [class.locked]="!estaImplementado(juego.ruta)" (click)="irAJuego(juego)">
-                <div class="card-hero" [style.background]="juego.color + '18'">
-                  <span class="card-personaje">{{ juego.personaje }}</span>
-                  <span class="card-icon-sm">{{ juego.icono }}</span>
-                  <button class="play-btn" [style.background]="estaImplementado(juego.ruta) ? juego.color : '#cbd5e1'">{{ estaImplementado(juego.ruta) ? '▶' : '🔒' }}</button>
+          <!-- ── Cover Flow 3D ── -->
+          <div class="coverflow-container">
+            <button class="cf-arrow cf-arrow-left" (click)="prevJuego()">&#8249;</button>
+
+            <div class="coverflow-stage">
+              @for (juego of juegos; track juego.nombre; let i = $index) {
+                <div class="cf-card" [ngClass]="getCarouselPosition(i)"
+                     (click)="onCarouselCardClick(i, juego)">
+                  <div class="cf-card-inner"
+                       [style.border-color]="getCarouselPosition(i) === 'cf-center' ? juego.color : 'transparent'">
+                    <div class="cf-card-hero"
+                         [style.background]="'linear-gradient(135deg,' + juego.color + '28,' + juego.color + '08)'">
+                      <span class="cf-personaje">{{ juego.personaje }}</span>
+                      <span class="cf-icono-sm">{{ juego.icono }}</span>
+                      @if (!estaImplementado(juego.ruta)) {
+                        <span class="cf-lock">🔒</span>
+                      }
+                    </div>
+                    <div class="cf-card-body">
+                      <div class="cf-tipo" [style.color]="juego.color">{{ juego.tipo }}</div>
+                      <div class="cf-nombre">{{ juego.nombre }}</div>
+                      <div class="cf-nivel">{{ juego.nivelTxt }}</div>
+                      <div class="cf-prog-bar">
+                        <div class="cf-prog-fill" [style.width.%]="juego.progreso" [style.background]="juego.color"></div>
+                      </div>
+                      <div class="cf-prog-txt">{{ juego.progreso }}% completado</div>
+                    </div>
+                    @if (getCarouselPosition(i) === 'cf-center') {
+                      <div class="cf-play-row">
+                        <button class="cf-play-btn"
+                                [style.background]="estaImplementado(juego.ruta) ? juego.color : '#94A3B8'"
+                                (click)="$event.stopPropagation(); irAJuego(juego)">
+                          {{ estaImplementado(juego.ruta) ? '▶ Jugar ahora' : '🔒 Próximamente' }}
+                        </button>
+                      </div>
+                    }
+                  </div>
                 </div>
-                <div class="card-body">
-                  <div class="card-tipo"   [style.color]="juego.color">{{ juego.tipo }}</div>
-                  <div class="card-nombre">{{ juego.nombre }}</div>
-                  <div class="card-nivel"  [style.color]="juego.color">{{ juego.nivelTxt }}</div>
-                </div>
-                <div class="card-footer">
-                  <div class="prog-bar"><div class="prog-fill" [style.width.%]="juego.progreso" [style.background]="juego.color"></div></div>
-                  <div class="prog-txt">{{ juego.progreso }}% completado</div>
-                </div>
-              </div>
+              }
+            </div>
+
+            <button class="cf-arrow cf-arrow-right" (click)="nextJuego()">&#8250;</button>
+          </div>
+
+          <!-- Indicadores de posición -->
+          <div class="cf-dots">
+            @for (juego of juegos; track juego.nombre; let i = $index) {
+              <button class="cf-dot"
+                      [class.cf-dot-active]="i === activeJuegoIndex"
+                      [style.background]="i === activeJuegoIndex ? juegos[i].color : '#CBD5E1'"
+                      (click)="setJuegoActivo(i)">
+              </button>
             }
           </div>
         </section>
@@ -498,6 +531,109 @@ interface Avatar      { key: string; emoji: string; }
     .see-all-btn:hover { background: #F5F3FF; }
     .featured-grid { grid-template-columns: repeat(2, 1fr); }
     .empty-msg { font-size: 13px; color: #94A3B8; text-align: center; padding: 12px 0; }
+
+    /* ── Cover Flow 3D ────────────────────────────────────── */
+    .coverflow-container {
+      position: relative; display: flex; align-items: center;
+      justify-content: center; padding: 16px 0 24px;
+      perspective: 1200px;
+    }
+    .coverflow-stage {
+      position: relative; width: 100%; height: 310px;
+      transform-style: preserve-3d;
+    }
+    .cf-card {
+      position: absolute; left: 50%; top: 50%;
+      width: 230px; height: 290px;
+      transform-origin: center center;
+      transition: all .45s cubic-bezier(.25,.8,.25,1);
+      cursor: pointer; user-select: none;
+    }
+    .cf-card-inner {
+      width: 100%; height: 100%;
+      background: white; border-radius: 20px;
+      box-shadow: 0 4px 24px rgba(0,0,0,.10);
+      border: 2.5px solid transparent;
+      display: flex; flex-direction: column; overflow: hidden;
+      transition: border-color .3s ease;
+    }
+    .cf-card-hero {
+      position: relative; height: 110px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 17px 17px 0 0;
+    }
+    .cf-personaje { font-size: 58px; line-height: 1; filter: drop-shadow(0 4px 10px rgba(0,0,0,.18)); transition: transform .3s cubic-bezier(.34,1.56,.64,1); }
+    .cf-center .cf-personaje { transform: scale(1.12) translateY(-4px); }
+    .cf-icono-sm { position: absolute; bottom: 6px; left: 10px; font-size: 18px; opacity: .6; }
+    .cf-lock { position: absolute; top: 8px; right: 10px; font-size: 18px; }
+    .cf-card-body { padding: 10px 14px 8px; flex: 1; }
+    .cf-tipo  { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; margin-bottom: 2px; }
+    .cf-nombre { font-size: 14px; font-weight: 800; color: #1E293B; margin-bottom: 2px; line-height: 1.3; }
+    .cf-nivel  { font-size: 11px; font-weight: 600; color: #64748B; margin-bottom: 8px; }
+    .cf-prog-bar  { height: 5px; background: #F1F0F9; border-radius: 100px; overflow: hidden; margin-bottom: 4px; }
+    .cf-prog-fill { height: 100%; border-radius: 100px; }
+    .cf-prog-txt  { font-size: 10px; color: #94A3B8; font-weight: 600; }
+    .cf-play-row  { padding: 8px 14px 14px; }
+    .cf-play-btn  {
+      width: 100%; padding: 9px 0; border: none; border-radius: 12px;
+      color: white; font-size: 13px; font-weight: 800; cursor: pointer;
+      transition: opacity .2s, transform .15s;
+    }
+    .cf-play-btn:hover { opacity: .88; transform: translateY(-1px); }
+
+    /* ── positions ── */
+    .cf-center {
+      transform: translateX(-50%) translateY(-50%) rotateY(0deg) scale(1);
+      z-index: 10; filter: none;
+    }
+    .cf-left {
+      transform: translateX(calc(-50% - 195px)) translateY(-46%) rotateY(38deg) scale(.76);
+      z-index: 5; filter: brightness(.82);
+    }
+    .cf-right {
+      transform: translateX(calc(-50% + 195px)) translateY(-46%) rotateY(-38deg) scale(.76);
+      z-index: 5; filter: brightness(.82);
+    }
+    .cf-far-left {
+      transform: translateX(calc(-50% - 330px)) translateY(-42%) rotateY(52deg) scale(.56);
+      z-index: 2; filter: brightness(.55);
+    }
+    .cf-far-right {
+      transform: translateX(calc(-50% + 330px)) translateY(-42%) rotateY(-52deg) scale(.56);
+      z-index: 2; filter: brightness(.55);
+    }
+    .cf-hidden {
+      transform: translateX(-50%) translateY(-50%) scale(0);
+      z-index: 0; opacity: 0; pointer-events: none;
+    }
+
+    /* ── arrows ── */
+    .cf-arrow {
+      position: absolute; top: 50%; z-index: 20;
+      width: 40px; height: 40px; border-radius: 50%;
+      border: 1.5px solid #E2E8F0; background: white;
+      box-shadow: 0 2px 10px rgba(0,0,0,.10);
+      font-size: 22px; line-height: 1; color: #334155;
+      cursor: pointer; transform: translateY(-50%);
+      transition: background .2s, box-shadow .2s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .cf-arrow:hover { background: #F5F3FF; box-shadow: 0 4px 16px rgba(124,58,237,.18); color: #7C3AED; }
+    .cf-arrow-left  { left: 0; }
+    .cf-arrow-right { right: 0; }
+
+    /* ── dots ── */
+    .cf-dots {
+      display: flex; justify-content: center; gap: 6px;
+      padding-bottom: 4px; flex-wrap: wrap;
+    }
+    .cf-dot {
+      width: 8px; height: 8px; border-radius: 50%; border: none;
+      cursor: pointer; transition: all .25s ease; padding: 0;
+      opacity: .45;
+    }
+    .cf-dot.cf-dot-active { width: 22px; border-radius: 4px; opacity: 1; }
+    /* ── fin Cover Flow ─────────────────────────────────────── */
     .games-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
     .game-card { background: white; border-radius: 16px; overflow: hidden; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,.06); transition: all .22s cubic-bezier(.34,1.56,.64,1); border: 1.5px solid transparent; display: flex; flex-direction: column; }
     .game-card:hover { transform: translateY(-4px) scale(1.02); border-color: var(--accent); box-shadow: 0 8px 28px rgba(0,0,0,.1); }
@@ -823,6 +959,45 @@ export class NinoJuegosComponent implements OnInit {
   nivelNombre   = 'Principiante';
   activeTab     = 'inicio';
   loadingStats  = false;
+
+  // ── Cover Flow ───────────────────────────────────────────
+  activeJuegoIndex = 0;
+
+  getCarouselPosition(index: number): string {
+    const total = this.juegos.length;
+    let rel = index - this.activeJuegoIndex;
+    if (rel >  total / 2) rel -= total;
+    if (rel < -total / 2) rel += total;
+    const map: Record<number, string> = {
+      [-2]: 'cf-far-left',
+      [-1]: 'cf-left',
+      [0]:  'cf-center',
+      [1]:  'cf-right',
+      [2]:  'cf-far-right',
+    };
+    return map[rel] ?? 'cf-hidden';
+  }
+
+  prevJuego(): void {
+    this.activeJuegoIndex = (this.activeJuegoIndex - 1 + this.juegos.length) % this.juegos.length;
+  }
+
+  nextJuego(): void {
+    this.activeJuegoIndex = (this.activeJuegoIndex + 1) % this.juegos.length;
+  }
+
+  setJuegoActivo(index: number): void {
+    this.activeJuegoIndex = index;
+  }
+
+  onCarouselCardClick(index: number, juego: Juego): void {
+    if (index !== this.activeJuegoIndex) {
+      this.setJuegoActivo(index);
+    } else {
+      this.irAJuego(juego);
+    }
+  }
+  // ── fin Cover Flow ───────────────────────────────────────
 
   // Tareas
   tareas:        AsignacionPerfil[] = [];
