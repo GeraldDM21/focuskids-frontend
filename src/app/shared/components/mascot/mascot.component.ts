@@ -12,7 +12,7 @@ export interface MascotConfig {
 
 export const MASCOTAS: Record<string, MascotConfig> = {
   espejo:   { emoji: '🦊', name: 'Foxy',  color: '#F97316', imageSrc: '/mascotas/foxy-portrait.png' },
-  historia: { emoji: '🐰', name: 'Benny', color: '#EC4899' },
+  historia: { emoji: '🐰', name: 'Benny', color: '#EC4899', imageSrc: '/mascotas/benny-portrait.png' },
   numeros:  { emoji: '🦉', name: 'Ollie', color: '#8B5CF6', imageSrc: '/mascotas/ollie-portrait.png' },
   laberinto:{ emoji: '🐱', name: 'Michi', color: '#06B6D4' },
   sopa:     { emoji: '🐼', name: 'Pandi', color: '#10B981' },
@@ -21,7 +21,7 @@ export const MASCOTAS: Record<string, MascotConfig> = {
   reaccion: { emoji: '🐸', name: 'Froggy', color: '#22C55E' },
   juego7:   { emoji: '🦁', name: 'Leo',   color: '#F59E0B' },
   juego8:   { emoji: '🐨', name: 'Koby',  color: '#6366F1' },
-  juego9:   { emoji: '🦄', name: 'Uni',   color: '#D946EF' },
+  juego9:   { emoji: '🦄', name: 'Uni',   color: '#D946EF', imageSrc: '/mascotas/uni-portrait.png' },
   juego10:  { emoji: '🐶', name: 'Buddy', color: '#3B82F6' },
   juego11:  { emoji: '🐻', name: 'Bruno', color: '#78716C' },
   juego12:  { emoji: '🐭', name: 'Milo',  color: '#A855F7' },
