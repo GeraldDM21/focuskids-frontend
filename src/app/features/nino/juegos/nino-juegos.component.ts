@@ -6,8 +6,9 @@ import { catchError } from 'rxjs/operators';
 import { ChildProfileService } from '../../padre/perfiles/child-profile.service';
 import { DocenteService, AsignacionPerfil } from '../../docente/docente.service';
 import { SesionJuego, Metrica } from '../../padre/padre.service';
+import { MisionService, MisionReclamada } from '../../../core/services/mision.service';
 
-interface Juego       { nombre: string; tipo: string; icono: string; personaje: string; color: string; nivelTxt: string; progreso: number; ruta: string; mascotaImg?: string; }
+interface Juego       { nombre: string; tipo: string; icono: string; personaje: string; color: string; nivelTxt: string; progreso: number; ruta: string; mascotaImg: string; tip: string; portraitScale?: number; }
 interface ProgresoItem{ nombre: string; valor: number; color: string; icono: string; }
 interface Logro       { icono: string; nombre: string; desc: string; puntos: number; }
 interface LogroFull   { icono: string; nombre: string; desc: string; puntos: number; ganado: boolean; cat: string; }
@@ -130,6 +131,79 @@ interface Avatar      { key: string; emoji: string; }
               </button>
             }
           </div>
+
+          <!-- ── Mascota activa dando indicaciones ── -->
+          <div class="cf-coach-section" [style.--coach-color]="juegos[activeJuegoIndex].color">
+            <div class="cf-coach-avatar">
+              @if (!mascotaImgErrors.has(juegos[activeJuegoIndex].nombre)) {
+                <img class="cf-coach-portrait"
+                     [src]="juegos[activeJuegoIndex].mascotaImg"
+                     [alt]="juegos[activeJuegoIndex].nombre"
+                     [style.transform]="'scale(' + (juegos[activeJuegoIndex].portraitScale ?? 1) + ')'"
+                     (error)="onMascotaImgError(juegos[activeJuegoIndex].nombre)">
+              } @else {
+                <span class="cf-coach-emoji">{{ juegos[activeJuegoIndex].personaje }}</span>
+              }
+            </div>
+            <div class="cf-coach-bubble">
+              <p class="cf-coach-text">{{ juegos[activeJuegoIndex].tip }}</p>
+              <span class="cf-coach-tag" [style.color]="juegos[activeJuegoIndex].color">
+                {{ juegos[activeJuegoIndex].icono }} {{ juegos[activeJuegoIndex].nombre }}
+              </span>
+            </div>
+          </div>
+
+          <!-- ── Misión del día ── -->
+          <div class="mision-card" [class.mision-done]="misionCompletada">
+
+            @if (!misionCompletada) {
+              <!-- Estado normal -->
+              <div class="mision-icon-wrap">
+                <span class="mision-icono">{{ misionDelDia.icono }}</span>
+              </div>
+              <div class="mision-body">
+                <div class="mision-top-row">
+                  <span class="mision-titulo">{{ misionDelDia.titulo }}</span>
+                  <span class="mision-recompensa">{{ misionDelDia.recompensa }}</span>
+                </div>
+                <p class="mision-desc" [innerHTML]="misionDelDia.desc + ' para desbloquear tu recompensa.'"></p>
+                <div class="mision-prog-wrap">
+                  <div class="mision-prog-bar">
+                    <div class="mision-prog-fill"
+                         [style.width.%]="(misionProgreso / misionMeta) * 100"></div>
+                  </div>
+                  <span class="mision-prog-txt">{{ misionProgreso }}/{{ misionMeta }}</span>
+                </div>
+              </div>
+
+            } @else {
+              <!-- Estado completado -->
+              <div class="mision-icon-wrap mision-icon-done">
+                <span class="mision-icono">🎁</span>
+              </div>
+              <div class="mision-body">
+                <div class="mision-top-row">
+                  <span class="mision-titulo mision-titulo-done">¡Misión completada! 🎉</span>
+                  <span class="mision-badge-done">✅ {{ misionProgreso }}/{{ misionMeta }}</span>
+                </div>
+                @if (!premioReclamado) {
+                  <p class="mision-desc mision-desc-done">
+                    ¡Increíble, {{ profileName }}! Completaste el reto de hoy.
+                    Tu <strong>{{ misionDelDia.recompensa }}</strong> está listo.
+                  </p>
+                  <button class="mision-btn-premio" (click)="reclamarPremio()">
+                    {{ misionDelDia.recompensa }} ¡Reclamar!
+                  </button>
+                } @else {
+                  <p class="mision-desc mision-desc-done">
+                    ¡Premio reclamado! 🌟 Revisa tus logros para ver tu recompensa.
+                  </p>
+                }
+              </div>
+            }
+
+          </div>
+
         </section>
         <aside class="right-panel">
           <div class="panel-card">
@@ -354,6 +428,39 @@ interface Avatar      { key: string; emoji: string; }
           }
         </div>
 
+        <!-- ── Historial de Misiones ── -->
+        <div class="misiones-historial-section">
+          <div class="mh-header">
+            <span class="mh-titulo">🎯 Misiones completadas</span>
+            <span class="mh-count">{{ misionesHistorial.length }} en total</span>
+          </div>
+
+          @if (misionesHistorial.length === 0) {
+            <div class="mh-empty">
+              <span class="mh-empty-ico">🚀</span>
+              <p>¡Completa tu primera misión del día y aparecerá aquí!</p>
+            </div>
+          }
+
+          <div class="mh-list">
+            @for (m of misionesHistorial; track m.id) {
+              <div class="mh-row">
+                <div class="mh-ico-wrap">
+                  <span class="mh-ico">{{ MISIONES[m.misionIndex]?.icono ?? '🎯' }}</span>
+                </div>
+                <div class="mh-info">
+                  <div class="mh-nombre">{{ MISIONES[m.misionIndex]?.titulo ?? 'Misión completada' }}</div>
+                  <div class="mh-fecha">{{ m.fecha | date:'dd MMM yyyy' }}</div>
+                </div>
+                <div class="mh-premio">
+                  <span class="mh-recompensa">{{ m.recompensa }}</span>
+                  <span class="mh-check">✅</span>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
       </div>
     }
 
@@ -546,6 +653,28 @@ interface Avatar      { key: string; emoji: string; }
       position: relative; width: 100%; height: 310px;
       transform-style: preserve-3d;
     }
+    /* ── CF hover animations ── */
+    @keyframes cf-wiggle {
+      0%   { transform: rotate(0deg)  scale(1);    }
+      20%  { transform: rotate(-13deg) scale(1.13); }
+      40%  { transform: rotate(10deg)  scale(1.17); }
+      60%  { transform: rotate(-6deg)  scale(1.14); }
+      80%  { transform: rotate(3deg)   scale(1.1);  }
+      100% { transform: rotate(0deg)  scale(1.1);   }
+    }
+    @keyframes cf-shimmer {
+      0%   { transform: translateX(-130%) skewX(-15deg); }
+      100% { transform: translateX(270%)  skewX(-15deg); }
+    }
+    @keyframes cf-coach-fade {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0);    }
+    }
+    @keyframes cf-coach-bounce {
+      from { transform: scale(.65) translateY(12px); opacity: 0; }
+      to   { transform: scale(1)   translateY(0);    opacity: 1; }
+    }
+
     .cf-card {
       position: absolute; left: 50%; top: 50%;
       width: 230px; height: 290px;
@@ -554,19 +683,47 @@ interface Avatar      { key: string; emoji: string; }
       cursor: pointer; user-select: none;
     }
     .cf-card-inner {
-      width: 100%; height: 100%;
+      position: relative; width: 100%; height: 100%;
       background: white; border-radius: 20px;
       box-shadow: 0 4px 24px rgba(0,0,0,.10);
       border: 2.5px solid transparent;
       display: flex; flex-direction: column; overflow: hidden;
-      transition: border-color .3s ease;
+      transition: border-color .3s ease, box-shadow .25s ease;
     }
+    /* barrido de luz en hover */
+    .cf-card-inner::after {
+      content: '';
+      position: absolute; inset: 0; pointer-events: none; z-index: 20;
+      background: linear-gradient(100deg, transparent 20%, rgba(255,255,255,.65) 50%, transparent 80%);
+      transform: translateX(-130%) skewX(-15deg);
+      border-radius: 18px;
+    }
+    .cf-card:hover .cf-card-inner::after {
+      animation: cf-shimmer .5s ease forwards;
+    }
+    .cf-card:hover .cf-card-inner {
+      box-shadow: 0 8px 32px rgba(0,0,0,.16);
+    }
+
     .cf-card-hero {
       position: relative; height: 110px; flex-shrink: 0;
       display: flex; align-items: center; justify-content: center;
       border-radius: 17px 17px 0 0;
     }
-    .cf-personaje { font-size: 58px; line-height: 1; filter: drop-shadow(0 4px 10px rgba(0,0,0,.18)); transition: transform .3s cubic-bezier(.34,1.56,.64,1); }
+    /* portrait image */
+    .cf-mascota-portrait {
+      width: 74px; height: 74px; object-fit: contain;
+      filter: drop-shadow(0 4px 10px rgba(0,0,0,.18));
+      display: inline-block;
+      transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+    }
+    .cf-center .cf-mascota-portrait { transform: scale(1.14) translateY(-4px); }
+    .cf-card:hover .cf-mascota-portrait,
+    .cf-card:hover .cf-personaje {
+      animation: cf-wiggle .52s cubic-bezier(.36,.07,.19,.97) both;
+    }
+
+    .cf-personaje { font-size: 58px; line-height: 1; filter: drop-shadow(0 4px 10px rgba(0,0,0,.18)); display: inline-block; transition: transform .3s cubic-bezier(.34,1.56,.64,1); }
     .cf-center .cf-personaje { transform: scale(1.12) translateY(-4px); }
     .cf-icono-sm { position: absolute; bottom: 6px; left: 10px; font-size: 18px; opacity: .6; }
     .cf-lock { position: absolute; top: 8px; right: 10px; font-size: 18px; }
@@ -637,6 +794,47 @@ interface Avatar      { key: string; emoji: string; }
       opacity: .45;
     }
     .cf-dot.cf-dot-active { width: 22px; border-radius: 4px; opacity: 1; }
+
+    /* ── sección coach ── */
+    .cf-coach-section {
+      display: flex; align-items: center; gap: 16px;
+      background: white; border-radius: 20px;
+      padding: 14px 18px; margin-top: 12px;
+      box-shadow: 0 2px 14px rgba(0,0,0,.07);
+      border: 1.5px solid rgba(0,0,0,.05);
+      animation: cf-coach-fade .35s ease both;
+    }
+    .cf-coach-avatar {
+      flex-shrink: 0; width: 120px; height: 120px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .cf-coach-portrait {
+      width: 120px; height: 120px; object-fit: contain;
+      filter: drop-shadow(0 6px 16px rgba(0,0,0,.20));
+      animation: cf-coach-bounce .5s cubic-bezier(.34,1.56,.64,1) .1s both;
+    }
+    .cf-coach-emoji {
+      font-size: 88px; line-height: 1;
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,.15));
+      animation: cf-coach-bounce .5s cubic-bezier(.34,1.56,.64,1) .1s both;
+    }
+    .cf-coach-bubble {
+      flex: 1; position: relative;
+      background: #F8F7FF; border-radius: 16px; padding: 12px 16px;
+    }
+    .cf-coach-bubble::before {
+      content: ''; position: absolute; left: -10px; top: 50%;
+      transform: translateY(-50%);
+      border: 7px solid transparent; border-right-color: #F8F7FF;
+    }
+    .cf-coach-text {
+      font-size: 14px; font-weight: 700; color: #334155;
+      margin: 0 0 6px; line-height: 1.45;
+    }
+    .cf-coach-tag {
+      font-size: 11px; font-weight: 800;
+      text-transform: uppercase; letter-spacing: .5px;
+    }
     /* ── fin Cover Flow ─────────────────────────────────────── */
 
     /* ══ BIBLIOTECA ══════════════════════════════════════════ */
@@ -803,6 +1001,124 @@ interface Avatar      { key: string; emoji: string; }
       display: flex; flex-direction: column; align-items: center; gap: 10px;
     }
     .bib-empty-ico { font-size: 36px; opacity: .4; }
+    /* ══ MISIÓN DEL DÍA ══════════════════════════════════════ */
+    .mision-card {
+      display: flex; align-items: center; gap: 18px;
+      background: linear-gradient(135deg, #EDE9FE 0%, #F5F3FF 60%, #FAFAFF 100%);
+      border-radius: 20px; padding: 18px 22px; margin-top: 14px;
+      border: 1.5px solid rgba(124,58,237,.14);
+      box-shadow: 0 3px 18px rgba(124,58,237,.08);
+    }
+    .mision-icon-wrap {
+      width: 68px; height: 68px; border-radius: 18px; flex-shrink: 0;
+      background: white; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 16px rgba(124,58,237,.14);
+    }
+    .mision-icono { font-size: 38px; line-height: 1; }
+    .mision-body  { flex: 1; min-width: 0; }
+    .mision-top-row {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 6px; flex-wrap: wrap; gap: 6px;
+    }
+    .mision-titulo    { font-size: 15px; font-weight: 900; color: #5B21B6; }
+    .mision-recompensa {
+      font-size: 12px; font-weight: 700; color: #7C3AED;
+      background: rgba(124,58,237,.12); padding: 3px 12px;
+      border-radius: 100px; white-space: nowrap;
+    }
+    .mision-desc {
+      font-size: 13px; color: #475569; font-weight: 600;
+      margin: 0 0 10px; line-height: 1.5;
+    }
+    .mision-desc strong { color: #5B21B6; }
+    .mision-prog-wrap  { display: flex; align-items: center; gap: 10px; }
+    .mision-prog-bar   {
+      flex: 1; height: 9px; background: rgba(124,58,237,.15);
+      border-radius: 100px; overflow: hidden;
+    }
+    .mision-prog-fill  {
+      height: 100%;
+      background: linear-gradient(90deg, #7C3AED, #A78BFA);
+      border-radius: 100px; transition: width 1s ease;
+      min-width: 0;
+    }
+    .mision-prog-txt   { font-size: 13px; font-weight: 800; color: #7C3AED; flex-shrink: 0; }
+
+    /* estado completado */
+    @keyframes mision-glow {
+      0%, 100% { box-shadow: 0 3px 18px rgba(5,150,105,.12); }
+      50%       { box-shadow: 0 6px 30px rgba(5,150,105,.28); }
+    }
+    .mision-done {
+      background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 60%, #F0FDF4 100%);
+      border-color: rgba(5,150,105,.2);
+      animation: mision-glow 2s ease infinite;
+    }
+    .mision-icon-done { box-shadow: 0 4px 16px rgba(5,150,105,.2); }
+    .mision-titulo-done { color: #065F46; }
+    .mision-badge-done {
+      font-size: 12px; font-weight: 700; color: #059669;
+      background: rgba(5,150,105,.12); padding: 3px 12px; border-radius: 100px;
+    }
+    .mision-desc-done { color: #065F46; }
+    .mision-btn-premio {
+      margin-top: 10px; padding: 9px 22px; border: none;
+      border-radius: 12px; cursor: pointer; font-size: 13px; font-weight: 800;
+      background: linear-gradient(90deg, #059669, #10B981);
+      color: white; box-shadow: 0 4px 14px rgba(5,150,105,.3);
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .mision-btn-premio:hover { transform: translateY(-2px); box-shadow: 0 6px 22px rgba(5,150,105,.4); }
+    /* ══ fin MISIÓN DEL DÍA ══════════════════════════════════ */
+
+    /* ══ HISTORIAL DE MISIONES (tab Logros) ══════════════════ */
+    .misiones-historial-section {
+      margin-top: 32px;
+      background: white;
+      border-radius: 20px;
+      padding: 24px 28px;
+      box-shadow: 0 2px 16px rgba(0,0,0,.06);
+      border: 1.5px solid #EDE9FE;
+    }
+    .mh-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+    .mh-titulo { font-size: 17px; font-weight: 800; color: #1E293B; }
+    .mh-count  { font-size: 13px; font-weight: 600; color: #7C3AED; background: #EDE9FE; padding: 3px 12px; border-radius: 999px; }
+    .mh-empty  { text-align: center; padding: 32px 0; color: #94A3B8; }
+    .mh-empty-ico { font-size: 40px; display: block; margin-bottom: 10px; }
+    .mh-empty p   { font-size: 14px; }
+    .mh-list { display: flex; flex-direction: column; gap: 10px; }
+    .mh-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 16px;
+      background: #FAFAFA;
+      border-radius: 14px;
+      border: 1px solid #F1F5F9;
+      transition: background .15s;
+    }
+    .mh-row:hover { background: #F5F3FF; }
+    .mh-ico-wrap {
+      width: 44px; height: 44px;
+      background: linear-gradient(135deg,#EDE9FE,#DDD6FE);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .mh-ico    { font-size: 22px; }
+    .mh-info   { flex: 1; min-width: 0; }
+    .mh-nombre { font-size: 14px; font-weight: 700; color: #1E293B; }
+    .mh-fecha  { font-size: 12px; color: #94A3B8; margin-top: 2px; }
+    .mh-premio { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .mh-recompensa { font-size: 13px; font-weight: 700; color: #059669; }
+    .mh-check      { font-size: 16px; }
+    /* ══ fin HISTORIAL DE MISIONES ═══════════════════════════ */
+
     /* ══ fin BIBLIOTECA ══════════════════════════════════════ */
     .games-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
     .game-card { background: white; border-radius: 16px; overflow: hidden; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,.06); transition: all .22s cubic-bezier(.34,1.56,.64,1); border: 1.5px solid transparent; display: flex; flex-direction: column; }
@@ -1130,6 +1446,54 @@ export class NinoJuegosComponent implements OnInit {
   activeTab     = 'inicio';
   loadingStats  = false;
 
+  // ── Misión del día ───────────────────────────────────────
+  readonly MISIONES = [
+    { icono:'🚀', titulo:'¡Misión de Atención!',  categoria:'Atención',   meta:2, desc:'Completa <strong>2 juegos</strong> de la categoría <strong>Atención</strong>.',           recompensa:'🎁 Cofre sorpresa'    },
+    { icono:'🔢', titulo:'¡Reto de Cálculo!',      categoria:'Cálculo',    meta:2, desc:'Completa <strong>2 juegos</strong> de la categoría <strong>Cálculo</strong>.',             recompensa:'⭐ Estrella dorada'   },
+    { icono:'🧠', titulo:'¡Desafío de Memoria!',   categoria:'Memoria',    meta:2, desc:'Completa <strong>2 juegos</strong> de la categoría <strong>Memoria</strong>.',             recompensa:'🏆 Trofeo mental'     },
+    { icono:'📖', titulo:'¡Día de Lectura!',        categoria:'Lectura',    meta:1, desc:'Completa <strong>1 juego</strong> de la categoría <strong>Lectura</strong>.',             recompensa:'📚 Insignia lectora'  },
+    { icono:'📝', titulo:'¡Reto de Lenguaje!',      categoria:'Lenguaje',   meta:1, desc:'Completa <strong>1 juego</strong> de la categoría <strong>Lenguaje</strong>.',            recompensa:'✏️ Pluma de oro'     },
+    { icono:'⚡', titulo:'¡Maratón del día!',       categoria:'Atención',   meta:3, desc:'Completa <strong>3 juegos</strong> de <strong>cualquier categoría</strong> hoy.',         recompensa:'💎 Gema especial'     },
+    { icono:'🧩', titulo:'¡Reto de Percepción!',   categoria:'Percepción', meta:1, desc:'Completa <strong>1 juego</strong> de la categoría <strong>Percepción</strong>.',           recompensa:'🔮 Cristal mágico'    },
+  ];
+
+  get misionDelDia() {
+    const inicio   = new Date(new Date().getFullYear(), 0, 0).getTime();
+    const diaAnio  = Math.floor((Date.now() - inicio) / 86_400_000);
+    return this.MISIONES[diaAnio % this.MISIONES.length];
+  }
+
+  get misionMeta():      number { return this.misionDelDia.meta; }
+  get misionCategoria(): string { return this.misionDelDia.categoria; }
+
+  misionProgreso    = 0;
+  premioReclamado   = false;
+  misionesHistorial: MisionReclamada[] = [];
+
+  get misionCompletada(): boolean { return this.misionProgreso >= this.misionMeta; }
+
+  reclamarPremio(): void {
+    if (this.premioReclamado || !this.perfilId) return;
+    const mision = this.misionDelDia;
+    const idx = this.MISIONES.indexOf(mision);
+    this.misionSvc.reclamar(this.perfilId, idx, mision.recompensa).subscribe({
+      next: (rec) => {
+        this.premioReclamado = true;
+        this.misionesHistorial = [rec, ...this.misionesHistorial];
+        setTimeout(() => this.activeTab = 'logros', 1800);
+      },
+      error: () => {
+        // best-effort: marca como reclamado localmente de todas formas
+        this.premioReclamado = true;
+        setTimeout(() => this.activeTab = 'logros', 1800);
+      }
+    });
+  }
+
+  // ── Portraits (fallback a emoji si la imagen no existe) ──
+  mascotaImgErrors = new Set<string>();
+  onMascotaImgError(nombre: string): void { this.mascotaImgErrors.add(nombre); }
+
   // ── Biblioteca ───────────────────────────────────────────
   filtroLib = 'Todos';
 
@@ -1231,18 +1595,18 @@ export class NinoJuegosComponent implements OnInit {
     { key:'bear',    emoji:'🐻' }, { key:'mouse',   emoji:'🐭' },
   ];
   readonly juegos: Juego[] = [
-    { nombre:'Espejo Mental',       tipo:'Atención',   icono:'🪞', personaje:'🦊', color:'#7C3AED', nivelTxt:'Nivel 3 · Avanzado',   progreso:75, ruta:'/nino/juego/espejo-mental' },
-    { nombre:'Historia Viva',       tipo:'Lectura',    icono:'📖', personaje:'🐰', color:'#D97706', nivelTxt:'Nivel 1 · Básico',      progreso:10, ruta:'/nino/juego/historia-viva' },
-    { nombre:'Foco Extremo',        tipo:'Atención',   icono:'🎯', personaje:'🦁', color:'#4F46E5', nivelTxt:'Nivel 4 · Experto',     progreso:90, ruta:'/nino/juego/foco-extremo' },
-    { nombre:'Reacción Controlada', tipo:'Atención',   icono:'⚡', personaje:'🐻', color:'#2563EB', nivelTxt:'Nivel 2 · Intermedio',  progreso:45, ruta:'/nino/juego/reaccion-controlada' },
-    { nombre:'Cascada Numérica',    tipo:'Cálculo',    icono:'🔢', personaje:'🦉', color:'#059669', nivelTxt:'Nivel 2 · Intermedio',  progreso:30, ruta:'/nino/juego/cascada-numerica' },
-    { nombre:'Laberinto Cognitivo', tipo:'Memoria',    icono:'🌀', personaje:'🐱', color:'#7C3AED', nivelTxt:'Nivel 1 · Básico',      progreso:15, ruta:'/nino/juego/laberinto' },
-    { nombre:'Maratón Mental',      tipo:'Cálculo',    icono:'🏃', personaje:'🐨', color:'#059669', nivelTxt:'Nivel 1 · Básico',      progreso:10, ruta:'/nino/juego/maraton-mental' },
-    { nombre:'Ritmo y Patrón',      tipo:'Memoria',    icono:'🎵', personaje:'🐵', color:'#9333EA', nivelTxt:'Nivel 1 · Básico',      progreso:0,  ruta:'/nino/juego/ritmo-patron' },
-    { nombre:'Palabras Ocultas',    tipo:'Lenguaje',   icono:'📝', personaje:'🐼', color:'#EA580C', nivelTxt:'Nivel 1 · Básico',      progreso:0,  ruta:'/nino/juego/palabras-ocultas' },
-    { nombre:'Piezas en Tiempo',    tipo:'Percepción', icono:'🧩', personaje:'🐯', color:'#0891B2', nivelTxt:'Nivel 1 · Básico',      progreso:0,  ruta:'/nino/juego/piezas-tiempo' },
-    { nombre:'Mapa Aventura',       tipo:'Geografía',  icono:'🗺️', personaje:'🐶', color:'#65A30D', nivelTxt:'Nivel 1 · Básico',      progreso:0,  ruta:'/nino/juego/mapa-aventura' },
-    { nombre:'Lab de Ciencias',     tipo:'Lógica',     icono:'🔬', personaje:'🦄', color:'#DB2777', nivelTxt:'Nivel 1 · Básico',      progreso:0,  ruta:'/nino/juego/lab-ciencias' },
+    { nombre:'Espejo Mental',       tipo:'Atención',   icono:'🪞', personaje:'🦊', color:'#7C3AED', nivelTxt:'Nivel 3 · Avanzado',   progreso:75, ruta:'/nino/juego/espejo-mental',       mascotaImg:'/mascotas/foxy-portrait.png',  tip:'¡Memoriza los colores en orden y repítelos igual que yo!', portraitScale:1.45 },
+    { nombre:'Historia Viva',       tipo:'Lectura',    icono:'📖', personaje:'🐰', color:'#D97706', nivelTxt:'Nivel 1 · Básico',      progreso:10, ruta:'/nino/juego/historia-viva',       mascotaImg:'/mascotas/benny-portrait.png', tip:'¡Lee el cuento con calma y responde mis preguntas!',       portraitScale:1.4  },
+    { nombre:'Foco Extremo',        tipo:'Atención',   icono:'🎯', personaje:'🦁', color:'#4F46E5', nivelTxt:'Nivel 4 · Experto',     progreso:90, ruta:'/nino/juego/foco-extremo',        mascotaImg:'/mascotas/leo-portrait.png',   tip:'¡Concéntrate en el objetivo y reacciona a tiempo!' },
+    { nombre:'Reacción Controlada', tipo:'Atención',   icono:'⚡', personaje:'🐻', color:'#2563EB', nivelTxt:'Nivel 2 · Intermedio',  progreso:45, ruta:'/nino/juego/reaccion-controlada', mascotaImg:'/mascotas/bruno-portrait.png', tip:'¡Espera el momento exacto y toca en el instante preciso!' },
+    { nombre:'Cascada Numérica',    tipo:'Cálculo',    icono:'🔢', personaje:'🦉', color:'#059669', nivelTxt:'Nivel 2 · Intermedio',  progreso:30, ruta:'/nino/juego/cascada-numerica',    mascotaImg:'/mascotas/ollie-portrait.png', tip:'¡Mira la operación y atrapa el número correcto!' },
+    { nombre:'Laberinto Cognitivo', tipo:'Memoria',    icono:'🌀', personaje:'🐱', color:'#7C3AED', nivelTxt:'Nivel 1 · Básico',      progreso:15, ruta:'/nino/juego/laberinto',           mascotaImg:'/mascotas/michi-portrait.png', tip:'¡Usa tu memoria para encontrar la salida del laberinto!' },
+    { nombre:'Maratón Mental',      tipo:'Cálculo',    icono:'🏃', personaje:'🐨', color:'#059669', nivelTxt:'Nivel 1 · Básico',      progreso:10, ruta:'/nino/juego/maraton-mental',      mascotaImg:'/mascotas/koby-portrait.png',  tip:'¡Responde rápido y sigue avanzando sin parar!' },
+    { nombre:'Ritmo y Patrón',      tipo:'Memoria',    icono:'🎵', personaje:'🐵', color:'#9333EA', nivelTxt:'Nivel 1 · Básico',      progreso:0,  ruta:'/nino/juego/ritmo-patron',        mascotaImg:'/mascotas/bongo-portrait.png', tip:'¡Escucha el ritmo y repite el patrón exacto!' },
+    { nombre:'Palabras Ocultas',    tipo:'Lenguaje',   icono:'📝', personaje:'🐼', color:'#EA580C', nivelTxt:'Nivel 1 · Básico',      progreso:0,  ruta:'/nino/juego/palabras-ocultas',    mascotaImg:'/mascotas/pandi-portrait.png', tip:'¡Busca las palabras escondidas entre las letras!' },
+    { nombre:'Piezas en Tiempo',    tipo:'Percepción', icono:'🧩', personaje:'🐯', color:'#0891B2', nivelTxt:'Nivel 1 · Básico',      progreso:0,  ruta:'/nino/juego/piezas-tiempo',       mascotaImg:'/mascotas/tigre-portrait.png', tip:'¡Coloca cada pieza en su lugar antes de que se acabe el tiempo!' },
+    { nombre:'Mapa Aventura',       tipo:'Geografía',  icono:'🗺️', personaje:'🐶', color:'#65A30D', nivelTxt:'Nivel 1 · Básico',      progreso:0,  ruta:'/nino/juego/mapa-aventura',       mascotaImg:'/mascotas/buddy-portrait.png', tip:'¡Explora el mapa y encuentra el camino correcto!' },
+    { nombre:'Lab de Ciencias',     tipo:'Lógica',     icono:'🔬', personaje:'🦄', color:'#DB2777', nivelTxt:'Nivel 1 · Básico',      progreso:0,  ruta:'/nino/juego/lab-ciencias',        mascotaImg:'/mascotas/uni-portrait.png',   tip:'¡Experimenta con las pociones y descubre la ciencia mágica!' },
   ];
   progresos: ProgresoItem[] = [];
   logrosRecientes: Logro[] = [];
@@ -1289,6 +1653,7 @@ export class NinoJuegosComponent implements OnInit {
     private profileService: ChildProfileService,
     private router: Router,
     private docSvc: DocenteService,
+    private misionSvc: MisionService,
   ) {}
 
   ngOnInit(): void {
@@ -1305,6 +1670,14 @@ export class NinoJuegosComponent implements OnInit {
 
   private loadDatos(perfilId: number): void {
     this.loadingStats = true;
+    // Load mission claimed state + historial (best-effort, don't block main data)
+    this.misionSvc.getEstado(perfilId).pipe(catchError(() => of({ reclamado: false }))).subscribe(estado => {
+      if (estado.reclamado) this.premioReclamado = true;
+    });
+    this.misionSvc.getHistorial(perfilId).pipe(catchError(() => of([]))).subscribe(h => {
+      this.misionesHistorial = h as MisionReclamada[];
+    });
+
     forkJoin({
       sesiones: this.docSvc.getSesiones(perfilId).pipe(catchError(() => of([]))),
       metricas: this.docSvc.getMetricas(perfilId).pipe(catchError(() => of([]))),
@@ -1342,6 +1715,20 @@ export class NinoJuegosComponent implements OnInit {
           precision: metMap.has(s.id) ? Math.round(metMap.get(s.id)!) : 0,
           pts:       s.puntaje ?? 0,
         }));
+
+      // ── Misión del día: sesiones de Atención completadas hoy ───────────
+      const hoy = new Date().toDateString();
+      const nombresAtencion = this.juegos
+        .filter(j => j.tipo === this.misionCategoria)
+        .map(j => j.nombre.toLowerCase());
+      this.misionProgreso = Math.min(
+        this.misionMeta,
+        sess.filter(s =>
+          new Date(s.inicio).toDateString() === hoy &&
+          s.completada &&
+          nombresAtencion.some(n => s.juego.nombre.toLowerCase().includes(n))
+        ).length
+      );
 
       // ── Progreso por categoría ──────────────────────────────────────────
       const catData: Record<string, { total: number; prec: number[] }> = {};
