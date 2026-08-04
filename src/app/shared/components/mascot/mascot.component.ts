@@ -4,15 +4,16 @@ import { CommonModule } from '@angular/common';
 export type MascotMood = 'idle' | 'thinking' | 'celebrate' | 'encourage' | 'excited' | 'warning';
 
 export interface MascotConfig {
-  emoji:  string;
-  name:   string;
-  color:  string;   // CSS color for ring/bubble accent
+  emoji:    string;
+  name:     string;
+  color:    string;   // CSS color for ring/bubble accent
+  imageSrc?: string;  // optional image to replace emoji
 }
 
 export const MASCOTAS: Record<string, MascotConfig> = {
-  espejo:   { emoji: '🦊', name: 'Foxy',  color: '#F97316' },
-  historia: { emoji: '🐰', name: 'Benny', color: '#EC4899' },
-  numeros:  { emoji: '🦉', name: 'Ollie', color: '#8B5CF6' },
+  espejo:   { emoji: '🦊', name: 'Foxy',  color: '#F97316', imageSrc: '/mascotas/foxy-portrait.png' },
+  historia: { emoji: '🐰', name: 'Benny', color: '#EC4899', imageSrc: '/mascotas/benny-portrait.png' },
+  numeros:  { emoji: '🦉', name: 'Ollie', color: '#8B5CF6', imageSrc: '/mascotas/ollie-portrait.png' },
   laberinto:{ emoji: '🐱', name: 'Michi', color: '#06B6D4' },
   sopa:     { emoji: '🐼', name: 'Pandi', color: '#10B981' },
   piezas:   { emoji: '🐯', name: 'Tigre', color: '#EF4444' },
@@ -20,7 +21,7 @@ export const MASCOTAS: Record<string, MascotConfig> = {
   reaccion: { emoji: '🐸', name: 'Froggy', color: '#22C55E' },
   juego7:   { emoji: '🦁', name: 'Leo',   color: '#F59E0B' },
   juego8:   { emoji: '🐨', name: 'Koby',  color: '#6366F1' },
-  juego9:   { emoji: '🦄', name: 'Uni',   color: '#D946EF' },
+  juego9:   { emoji: '🦄', name: 'Uni',   color: '#D946EF', imageSrc: '/mascotas/uni-portrait.png' },
   juego10:  { emoji: '🐶', name: 'Buddy', color: '#3B82F6' },
   juego11:  { emoji: '🐻', name: 'Bruno', color: '#78716C' },
   juego12:  { emoji: '🐭', name: 'Milo',  color: '#A855F7' },
@@ -50,7 +51,8 @@ export const MASCOTAS: Record<string, MascotConfig> = {
            [class.pulse]="mood  === 'excited'"
            [style.--accent]="config.color">
         <div class="avatar-ring"></div>
-        <div class="avatar-emoji">{{ config.emoji }}</div>
+        <img *ngIf="config.imageSrc" class="avatar-img" [src]="config.imageSrc" [alt]="config.name">
+        <div *ngIf="!config.imageSrc" class="avatar-emoji">{{ config.emoji }}</div>
         <div class="deco" *ngIf="mood === 'celebrate'">🎉</div>
       </div>
 
@@ -101,6 +103,7 @@ export const MASCOTAS: Record<string, MascotConfig> = {
       box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent, #10B981) 20%, transparent);
     }
     .avatar-emoji { font-size: 34px; line-height: 1; position: relative; z-index: 1; }
+    .avatar-img   { width: 48px; height: 48px; object-fit: contain; position: relative; z-index: 1; border-radius: 50%; }
     .deco { position: absolute; top: -6px; right: -8px; font-size: 18px; z-index: 2; }
 
     /* Nombre */

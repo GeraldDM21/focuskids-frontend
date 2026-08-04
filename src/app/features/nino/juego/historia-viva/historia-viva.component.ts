@@ -233,6 +233,14 @@ export class HistoriaVivaComponent implements OnInit, OnDestroy {
       this.volumenActual = (state.profileVolumen ?? 75) as NivelVolumen;
       this.feedbackService.setVolumen(this.volumenActual);
     });
+
+    // Benny lee las instrucciones al entrar a la pantalla de inicio
+    setTimeout(() => {
+      this.hablar(
+        '¡Hola! Soy Benny. Para jugar Historia Viva: lee el cuento con calma, escúchalo con el audio, y responde mis preguntas. ¡Yo te ayudo!',
+        0.9, 1.15
+      );
+    }, 700);
     // Cargar niveles y preseleccionar el recomendado por IA (CA-03)
     this.sesionService.obtenerNiveles(this.JUEGO_ID).subscribe({
       next: niveles => {
