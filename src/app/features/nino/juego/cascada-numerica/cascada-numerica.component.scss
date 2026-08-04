@@ -46,26 +46,12 @@
   );
 }
 
-/* Panel izquierdo: título + botón */
-.inicio-panel {
-  position: absolute;
-  z-index: 3;
-  left: 3%;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 42%;
-  max-width: 460px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: 28px 32px;
-  animation: slideUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
+/* Botón volver: fijo en la esquina superior izquierda */
 .btn-volver {
-  align-self: flex-start;
-  margin-bottom: 20px;
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  z-index: 4;
   padding: 10px 16px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 14px;
@@ -83,6 +69,23 @@
 .btn-volver:hover {
   transform: translateY(-2px);
   background: rgba(255, 255, 255, 0.12);
+}
+
+/* Panel central-izquierdo: título + botón */
+.inicio-panel {
+  position: absolute;
+  z-index: 3;
+  left: 14%;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40%;
+  max-width: 460px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 28px 32px;
+  animation: slideUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .titulo-juego {
@@ -307,6 +310,11 @@
 
   .inicio-velo {
     background: rgba(8, 14, 30, 0.65);
+  }
+
+  .btn-volver {
+    top: 16px;
+    left: 16px;
   }
 
   .inicio-panel {

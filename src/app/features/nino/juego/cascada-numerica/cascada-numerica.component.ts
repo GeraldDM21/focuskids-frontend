@@ -124,6 +124,28 @@ export class CascadaNumericaComponent implements OnInit, OnDestroy {
             }
           });
       });
+
+    // Ollie lee las instrucciones al entrar a la pantalla de inicio
+    setTimeout(() => this.hablarInstrucciones(), 600);
+  }
+
+  private hablarInstrucciones(): void {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    const texto =
+      '¡Hola! Soy Ollie. Para jugar Cascada Numérica: ' +
+      'mira la operación matemática, ' +
+      'observa los tres números que caen, ' +
+      'toca el resultado correcto a tiempo. ' +
+      '¡Tú puedes lograrlo!';
+    const msg = new SpeechSynthesisUtterance(texto);
+    msg.lang = 'es-ES';
+    msg.rate = 0.9;
+    msg.pitch = 1.1;
+    const voices = window.speechSynthesis.getVoices();
+    const esp = voices.find(v => v.lang.toLowerCase().startsWith('es'));
+    if (esp) msg.voice = esp;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(msg);
   }
 
   iniciarJuego(): void {
