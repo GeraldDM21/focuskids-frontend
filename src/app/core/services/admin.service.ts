@@ -2,13 +2,29 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 
+export type UsuarioRol = 'NINO' | 'PADRE' | 'DOCENTE' | 'ADMINISTRADOR';
+
 export interface Usuario {
   id: number;
   nombre: string;
   email: string;
-  rol: string;
+  rol: UsuarioRol;
   activo: boolean;
   fechaCreacion: string;
+}
+
+export interface UsuarioPage {
+  content: Usuario[];
+  totalPages: number;
+  totalElements: number;
+  number: number;
+  size: number;
+}
+
+export interface UsuarioEditRequest {
+  nombre?: string | null;
+  rol?: UsuarioRol | null;
+  activo?: boolean | null;
 }
 
 export interface PerfilNinoAdmin {
@@ -58,8 +74,25 @@ export class AdminService {
     return this.http.get<Usuario[]>(`${this.url}/usuarios`);
   }
 
+  /** CA-01: búsqueda paginada */
+  buscarUsuarios(q: string, rol: string, page: number) {
+    let params = new HttpParams()
+      .set('q', q).set('rol', rol).set('page', page.toString());
+    return this.http.get<UsuarioPage>(`${this.url}/usuarios/buscar`, { params });
+  }
+
   toggleActivo(id: number) {
     return this.http.put<Usuario>(`${this.url}/usuarios/${id}/toggle-activo`, {});
+  }
+
+  /** CA-02: editar nombre, rol y/o estado */
+  editarUsuario(id: number, req: UsuarioEditRequest) {
+    return this.http.put<Usuario>(`${this.url}/usuarios/${id}`, req);
+  }
+
+  /** CA-04: eliminar usuario */
+  eliminarUsuario(id: number) {
+    return this.http.delete<void>(`${this.url}/usuarios/${id}`);
   }
 
   listarNinos() {
