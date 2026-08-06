@@ -1,6 +1,7 @@
 import {
   Component,
   OnDestroy,
+  OnInit,
   ChangeDetectorRef,
   ChangeDetectionStrategy
 } from '@angular/core';
@@ -38,7 +39,7 @@ import { SesionJuegoService } from '../../../../core/services/sesion-juego.servi
   styleUrl: './cascada-numerica.component.scss'
 })
 
-export class CascadaNumericaComponent implements OnDestroy {
+export class CascadaNumericaComponent implements OnInit, OnDestroy {
   readonly MAX_OPERACIONES = 20;
   readonly DURACION_MAXIMA_MS = 5 * 60 * 1000;
   readonly VELOCIDAD_INICIAL_MS = 4000;
@@ -84,6 +85,9 @@ export class CascadaNumericaComponent implements OnDestroy {
 
   sesionBackendId: number | null = null;
 
+  private readonly JUEGO_ID = 3;
+  private nivelRecomendadoNumero: number | null = null;
+
   guardandoOperacion = false;
   finalizandoBackend = false;
 
@@ -105,6 +109,44 @@ export class CascadaNumericaComponent implements OnDestroy {
     private readonly childProfileService: ChildProfileService,
     private readonly sesionJuegoService: SesionJuegoService,
   ) {}
+
+  ngOnInit(): void {
+    // Precargar nivel recomendado por IA (CA-03)
+    this.childProfileService.activeProfile$
+      .pipe(take(1))
+      .subscribe(state => {
+        if (!state?.profileId) return;
+        this.sesionJuegoService.obtenerRecomendacion(state.profileId, this.JUEGO_ID)
+          .subscribe(rec => {
+            if (rec?.nivelRecomendado?.nivel) {
+              const mapa: Record<string, number> = { FACIL: 1, MEDIO: 2, DIFICIL: 3, EXPERTO: 4 };
+              this.nivelRecomendadoNumero = mapa[rec.nivelRecomendado.nivel] ?? null;
+            }
+          });
+      });
+
+    // Ollie lee las instrucciones al entrar a la pantalla de inicio
+    setTimeout(() => this.hablarInstrucciones(), 600);
+  }
+
+  private hablarInstrucciones(): void {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    const texto =
+      '¡Hola! Soy Ollie. Para jugar Cascada Numérica: ' +
+      'mira la operación matemática, ' +
+      'observa los tres números que caen, ' +
+      'toca el resultado correcto a tiempo. ' +
+      '¡Tú puedes lograrlo!';
+    const msg = new SpeechSynthesisUtterance(texto);
+    msg.lang = 'es-ES';
+    msg.rate = 0.9;
+    msg.pitch = 1.1;
+    const voices = window.speechSynthesis.getVoices();
+    const esp = voices.find(v => v.lang.toLowerCase().startsWith('es'));
+    if (esp) msg.voice = esp;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(msg);
+  }
 
   iniciarJuego(): void {
     this.initAudio();
@@ -131,6 +173,11 @@ export class CascadaNumericaComponent implements OnDestroy {
 
                 this.nivelActual =
                   respuesta.nivelInicial;
+
+                // Sobreescribir con nivel recomendado por IA si existe (CA-03)
+                if (this.nivelRecomendadoNumero !== null) {
+                  this.nivelActual = this.nivelRecomendadoNumero;
+                }
 
                 this.velocidadCaidaMs =
                   respuesta.velocidadCaidaMs;
@@ -205,6 +252,10 @@ export class CascadaNumericaComponent implements OnDestroy {
     this.respuestaBloqueada = true;
   }
 
+
+  salirJuego(): void {
+    this.finalizarJuego();
+  }
 
   volverAJuegos(): void {
     this.limpiarTemporizadores();

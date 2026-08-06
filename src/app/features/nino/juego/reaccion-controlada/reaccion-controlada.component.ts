@@ -85,8 +85,26 @@ export class ReaccionControladaComponent implements OnInit, OnDestroy {
     this.childProfileService.activeProfile$.subscribe(state => {
       this.profileId = state.profileId;
     });
+    // Cargar niveles y preseleccionar el recomendado por IA (CA-03)
     this.sesionJuegoService.obtenerNiveles(this.JUEGO_ID).subscribe({
-      next: niveles => { this.nivelFacilId = niveles[0]?.id ?? null; },
+      next: niveles => {
+        this.nivelFacilId = niveles[0]?.id ?? null;
+        if (this.profileId) {
+          this.sesionJuegoService.obtenerRecomendacion(this.profileId, this.JUEGO_ID)
+            .subscribe(rec => {
+              const match = rec?.nivelRecomendado?.id
+                ? niveles.find(n => n.id === rec.nivelRecomendado.id)
+                : null;
+              if (match) {
+                this.nivelFacilId = match.id;
+                if (rec!.nivelRecomendado.nivel) {
+                  const mapa: Record<string, number> = { FACIL: 1, MEDIO: 2, DIFICIL: 3, EXPERTO: 4 };
+                  this.nivelActual = mapa[rec!.nivelRecomendado.nivel] ?? this.nivelActual;
+                }
+              }
+            });
+        }
+      },
       error: () => { /* continúa sin backend */ }
     });
   }

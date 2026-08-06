@@ -3,114 +3,51 @@
   @if (estado === 'inicio') {
     <section class="pantalla-inicio">
 
+      <img class="bg-escena" src="mascotas/ollie-escena.png" alt="Escena de Ollie">
+
+      <!-- Velo que oscurece el lado izquierdo para el panel -->
+      <div class="inicio-velo"></div>
+
+      <!-- Ollie habla desde la escena -->
+      <div class="ollie-habla">
+        <div class="habla-bubble">
+          <p class="habla-saludo">¡Hola! Soy <strong>Ollie</strong> 🦉</p>
+          <p class="habla-intro">Para jugar Cascada Numérica:</p>
+          <div class="habla-pasos">
+            <div class="habla-paso"><span class="h-ico">🧮</span><span>Mira la operación matemática</span></div>
+            <div class="habla-paso"><span class="h-ico">🔢</span><span>Observa los tres números que caen</span></div>
+            <div class="habla-paso"><span class="h-ico">👆</span><span>¡Toca el resultado correcto a tiempo!</span></div>
+            <div class="habla-paso"><span class="h-ico">🚀</span><span>La velocidad cambia según tu desempeño</span></div>
+          </div>
+          <p class="habla-animo">¡Tú puedes lograrlo! ✨</p>
+        </div>
+        <div class="habla-tail"></div>
+      </div>
+
+      <!-- Botón volver fijo arriba-izquierda -->
       <button
         type="button"
         class="btn-volver"
         (click)="volverAJuegos()"
-        aria-label="Volver al panel de juegos"
       >
         ← Volver
       </button>
 
-      <div class="decoracion decoracion-uno">✦</div>
-      <div class="decoracion decoracion-dos">⭐</div>
-      <div class="decoracion decoracion-tres">＋</div>
-
-      <div class="inicio-contenido">
-
-        <div class="mascota-presentacion">
-          <div class="mascota-circulos">
-            <div class="circulo circulo-1"></div>
-            <div class="circulo circulo-2"></div>
-            <div class="circulo circulo-3"></div>
-
-            <div class="foxy-principal">
-              🦉
-            </div>
-          </div>
-
-          <div class="burbuja-presentacion">
-            <strong>¡Hola! Soy Ollie 🦉</strong>
-
-            <span>
-              ¡Tu guía de cálculo! ¿Listo para atrapar
-              los números correctos?
-            </span>
-          </div>
-        </div>
-
-        <div class="titulo-juego">
-          <h1>
-            <span>Cascada</span> Numérica
-          </h1>
-
-          <p>
-            Resuelve la operación y atrapa el número correcto
-            antes de que llegue al suelo.
-          </p>
-        </div>
-
-        <div class="instrucciones-grid">
-
-          <article class="instruccion instruccion-verde">
-            <span class="instruccion-numero">1</span>
-
-            <div class="instruccion-icono">
-              🧮
-            </div>
-
-            <p>
-              Mira la operación matemática.
-            </p>
-          </article>
-
-          <article class="instruccion instruccion-azul">
-            <span class="instruccion-numero">2</span>
-
-            <div class="instruccion-icono">
-              🔢
-            </div>
-
-            <p>
-              Observa los tres números que caen.
-            </p>
-          </article>
-
-          <article class="instruccion instruccion-morada">
-            <span class="instruccion-numero">3</span>
-
-            <div class="instruccion-icono">
-              👆
-            </div>
-
-            <p>
-              Toca el resultado correcto a tiempo.
-            </p>
-          </article>
-
-          <article class="instruccion instruccion-naranja">
-            <span class="instruccion-numero">4</span>
-
-            <div class="instruccion-icono">
-              🚀
-            </div>
-
-            <p>
-              La velocidad cambia según tu desempeño.
-            </p>
-          </article>
-
-        </div>
+      <!-- Panel central-izquierdo: título y botón -->
+      <div class="inicio-panel">
+        <h1 class="titulo-juego">
+          <span class="titulo-grad">Cascada </span><span class="titulo-blanco">Numérica</span>
+        </h1>
+        <p class="subtitulo-juego">¡Resuelve y atrapa el número correcto antes de que caiga!</p>
 
         <div class="acciones-inicio">
-
           <button
             type="button"
             class="btn-empezar"
             (click)="iniciarJuego()"
           >
-            <span>🎮</span>
-            ¡Empezar!
+            🎮 ¡Empezar!
+            <span class="btn-shine"></span>
           </button>
 
           <button
@@ -118,18 +55,12 @@
             class="btn-sonido"
             [class.sonido-desactivado]="!sonidoActivo"
             (click)="alternarSonido()"
-            [attr.aria-label]="
-              sonidoActivo
-                ? 'Desactivar sonido'
-                : 'Activar sonido'
-            "
           >
             {{ sonidoActivo ? '🔊' : '🔇' }}
           </button>
-
         </div>
-
       </div>
+
     </section>
   }
 
@@ -234,6 +165,15 @@
           ❌ {{ errores }}
           ⏳ {{ omisiones }}
         </div>
+
+        <button
+          type="button"
+          class="btn-salir-juego"
+          (click)="salirJuego()"
+          title="Terminar y ver resultados"
+        >
+          🏁 Salir
+        </button>
       </header>
 
       <div class="mascota-area">
@@ -288,65 +228,100 @@
     <section class="pantalla-resultados">
 
       <div class="resultados-card">
-        <div class="fox-avatar">
-          🦊
+
+        <!-- Mascota Ollie -->
+        <div class="resultado-mascota">
+          <div class="resultado-ring"></div>
+          <img
+            class="ollie-resultado"
+            src="/mascotas/ollie-portrait.png"
+            alt="Ollie"
+          />
+          @if (aciertos >= operacionesCompletadas * 0.7) {
+            <div class="resultado-trofeo">🏆</div>
+          } @else if (aciertos >= operacionesCompletadas * 0.4) {
+            <div class="resultado-trofeo">🥈</div>
+          } @else {
+            <div class="resultado-trofeo">⭐</div>
+          }
         </div>
 
-        <h2>
-          ¡Sesión terminada!
+        <h2 class="resultado-titulo">
+          @if (aciertos >= operacionesCompletadas * 0.7) {
+            ¡Excelente cálculo!
+          } @else if (aciertos >= operacionesCompletadas * 0.4) {
+            ¡Buen trabajo!
+          } @else {
+            ¡Sigue practicando!
+          }
         </h2>
 
-        <div class="resultado-grid">
-
-          <div>
-            <strong>
-              {{ aciertos }}
-            </strong>
-
-            <span>
-              Aciertos
-            </span>
+        <!-- Porcentaje de aciertos -->
+        <div class="resultado-score">
+          <div class="score-circle">
+            <svg viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="50" class="ring-bg"/>
+              <circle cx="60" cy="60" r="50" class="ring-fill"
+                [style.stroke-dashoffset]="314 - (314 * aciertos / (operacionesCompletadas || 1))"/>
+            </svg>
+            <div class="score-texto">
+              <span class="score-num">{{ operacionesCompletadas > 0 ? ((aciertos / operacionesCompletadas) * 100 | number:'1.0-0') : 0 }}%</span>
+              <span class="score-lbl">aciertos</span>
+            </div>
           </div>
-
-          <div>
-            <strong>
-              {{ errores }}
-            </strong>
-
-            <span>
-              Errores
-            </span>
-          </div>
-
-          <div>
-            <strong>
-              {{ omisiones }}
-            </strong>
-
-            <span>
-              Omisiones
-            </span>
-          </div>
-
-          <div>
-            <strong>
-              {{ operacionesCompletadas }}
-            </strong>
-
-            <span>
-              Operaciones
-            </span>
-          </div>
-
         </div>
 
-        <button
-          type="button"
-          class="btn-empezar"
-          (click)="iniciarJuego()"
-        >
-          🔄 Jugar otra vez
-        </button>
+        <div class="resultado-grid">
+          <div class="resultado-stat stat-verde">
+            <span class="stat-icon">✅</span>
+            <strong>{{ aciertos }}</strong>
+            <span>Aciertos</span>
+          </div>
+          <div class="resultado-stat stat-rojo">
+            <span class="stat-icon">❌</span>
+            <strong>{{ errores }}</strong>
+            <span>Errores</span>
+          </div>
+          <div class="resultado-stat stat-amarillo">
+            <span class="stat-icon">⏳</span>
+            <strong>{{ omisiones }}</strong>
+            <span>Omisiones</span>
+          </div>
+          <div class="resultado-stat stat-morado">
+            <span class="stat-icon">🧮</span>
+            <strong>{{ operacionesCompletadas }}</strong>
+            <span>Operaciones</span>
+          </div>
+        </div>
+
+        @if (resultadoBackend) {
+          <div class="resultado-extra">
+            <span>⚡ Combo máximo: <strong>{{ resultadoBackend.maxCombo }}</strong></span>
+            <span>📈 Nivel final: <strong>{{ resultadoBackend.nivelFinal }}</strong></span>
+          </div>
+        }
+
+        @if (errorBackend) {
+          <div class="error-backend">{{ errorBackend }}</div>
+        }
+
+        <div class="resultado-acciones">
+          <button
+            type="button"
+            class="btn-empezar"
+            (click)="iniciarJuego()"
+          >
+            🔄 Jugar otra vez
+          </button>
+          <button
+            type="button"
+            class="btn-volver-lobby"
+            (click)="volverAJuegos()"
+          >
+            ← Volver
+          </button>
+        </div>
+
       </div>
 
     </section>

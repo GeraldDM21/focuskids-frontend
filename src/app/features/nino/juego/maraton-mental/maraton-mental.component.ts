@@ -125,6 +125,8 @@ export class MaratonMentalComponent implements OnInit, OnDestroy {
   private roundCountdownInterval: ReturnType<typeof setInterval> | null = null;
   private avanceTimeout: ReturnType<typeof setTimeout> | null = null;
   private audioCtx: AudioContext | null = null;
+  private readonly JUEGO_ID = 11;  // Maratón Mental (DataSeeder ID)
+
   private readonly destruir$ = new Subject<void>();
 
   constructor(
@@ -146,6 +148,14 @@ export class MaratonMentalComponent implements OnInit, OnDestroy {
       this.perfilNombre = state.profileName || 'Jugador';
       this.volumenActual = (state.profileVolumen ?? 75) as NivelVolumen;
       this.feedbackService.setVolumen(this.volumenActual);
+      // Preseleccionar nivel recomendado por IA (CA-03)
+      this.sesionJuegoService.obtenerRecomendacion(state.profileId, this.JUEGO_ID)
+        .pipe(takeUntil(this.destruir$))
+        .subscribe(rec => {
+          if (rec?.nivelRecomendado?.nivel) {
+            this.nivelActual = rec.nivelRecomendado.nivel as NivelMaraton;
+          }
+        });
       this.detectarCambios();
     });
   }
@@ -275,6 +285,7 @@ export class MaratonMentalComponent implements OnInit, OnDestroy {
     }
 
     this.inicioEstimuloMs = Date.now();
+    this.sesionJuegoService.marcarElementoAparece();
     if (this.calibracionTimeout) clearTimeout(this.calibracionTimeout);
     this.calibracionTimeout = this.setTimeoutCd(() => this.onTimeoutCalibracion(), this.config.tiempoRondaMs);
   }
@@ -299,6 +310,7 @@ export class MaratonMentalComponent implements OnInit, OnDestroy {
     if (this.calibracionTimeout) clearTimeout(this.calibracionTimeout);
 
     const tiempoMs = fueTimeout ? null : Date.now() - this.inicioEstimuloMs;
+    if (tiempoMs !== null) this.sesionJuegoService.trackRespuestaMs(tiempoMs);
     this.intentosTotales++;
     if (correcta) this.aciertosTotales++;
 
@@ -384,6 +396,7 @@ export class MaratonMentalComponent implements OnInit, OnDestroy {
     this.tareaBTiempoRonda = null;
 
     this.inicioRondaDualMs = Date.now();
+    this.sesionJuegoService.marcarElementoAparece();
     this.tiempoRondaTotalMs = this.config.tiempoRondaMs;
     this.tiempoRestanteMs = this.config.tiempoRondaMs;
 
@@ -401,6 +414,7 @@ export class MaratonMentalComponent implements OnInit, OnDestroy {
     this.tareaARespondidaRonda = true;
     this.tareaACorrectaRonda = valor === this.estimuloConteoDual.cantidad;
     this.tareaATiempoRonda = Date.now() - this.inicioRondaDualMs;
+    this.sesionJuegoService.trackRespuestaMs(this.tareaATiempoRonda);
     this.intentosTotales++;
     if (this.tareaACorrectaRonda) this.aciertosTotales++;
 
@@ -421,6 +435,7 @@ export class MaratonMentalComponent implements OnInit, OnDestroy {
     this.tareaBRespondidaRonda = true;
     this.tareaBCorrectaRonda = opcion.id === this.estimuloColorDual.objetivo.id;
     this.tareaBTiempoRonda = Date.now() - this.inicioRondaDualMs;
+    this.sesionJuegoService.trackRespuestaMs(this.tareaBTiempoRonda);
     this.intentosTotales++;
     if (this.tareaBCorrectaRonda) this.aciertosTotales++;
 

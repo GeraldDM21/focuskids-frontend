@@ -447,6 +447,7 @@ export class LaberintoComponent implements OnInit, OnDestroy {
   errorBackend: string | null = null;
 
   private readonly JUEGO_ID = 4;
+  private nivelRecomendadoNumero: number | null = null;
   private celdaObstaculoReciente: Posicion | null = null;
   private tiempoInicioJugando = 0;
   private tiempoInicioSesion = 0;
@@ -497,6 +498,16 @@ export class LaberintoComponent implements OnInit, OnDestroy {
       this.profileId = state.profileId;
       this.volumenActual = (state.profileVolumen ?? 75) as NivelVolumen;
       this.feedbackService.setVolumen(this.volumenActual);
+      // Precargar nivel recomendado por IA (CA-03)
+      if (state.profileId) {
+        this.sesionJuegoService.obtenerRecomendacion(state.profileId, this.JUEGO_ID)
+          .subscribe(rec => {
+            if (rec?.nivelRecomendado?.nivel) {
+              const mapa: Record<string, number> = { FACIL: 1, MEDIO: 2, DIFICIL: 3, EXPERTO: 4 };
+              this.nivelRecomendadoNumero = mapa[rec.nivelRecomendado.nivel] ?? null;
+            }
+          });
+      }
     });
   }
 
@@ -518,7 +529,7 @@ export class LaberintoComponent implements OnInit, OnDestroy {
 
   iniciarJuego(): void {
     this.rondaActual = 1;
-    this.nivelActual = 1;
+    this.nivelActual = this.nivelRecomendadoNumero ?? 1;
     this.nivelMaximoAlcanzado = 1;
     this.pasosUsadosTotal = 0;
     this.pasosOptimosTotal = 0;
