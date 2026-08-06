@@ -2,13 +2,14 @@ import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
+import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { AdminService, Usuario, PerfilNinoAdmin } from '../../../core/services/admin.service';
 
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatIconModule],
+  imports: [CommonModule, FormsModule, MatIconModule, RouterModule],
   template: `
     <div class="admin-page">
 
@@ -42,8 +43,8 @@ import { AdminService, Usuario, PerfilNinoAdmin } from '../../../core/services/a
             <mat-icon>notifications</mat-icon> Alertas
             <span class="sb-badge" *ngIf="alertCount > 0">{{ alertCount }}</span>
           </a>
-          <a class="sb-item">
-            <mat-icon>settings</mat-icon> Configuración
+          <a class="sb-item" (click)="router.navigate(['/admin/config'])">
+            <mat-icon>settings</mat-icon> Config. Juegos
           </a>
           <a class="sb-item">
             <mat-icon>summarize</mat-icon> Reportes
@@ -501,7 +502,7 @@ export class AdminDashboardComponent implements OnInit {
     return n ? n.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() : 'A';
   }
 
-  constructor(public auth: AuthService, private adminService: AdminService) {}
+  constructor(public auth: AuthService, private adminService: AdminService, public router: Router) {}
 
   ngOnInit() {
     // Carga usuarios y niños en paralelo
