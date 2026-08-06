@@ -50,12 +50,14 @@ const TIPOS_ACCION = [
 
       <div class="filtro-group">
         <label class="filtro-label">Desde</label>
-        <input class="filtro-input" type="date" [(ngModel)]="filtroFechaDesde" (change)="buscar()"/>
+        <input class="filtro-input" type="text" placeholder="DD/MM/AAAA" maxlength="10"
+               [(ngModel)]="filtroFechaDesde" (input)="onFechaInput()"/>
       </div>
 
       <div class="filtro-group">
         <label class="filtro-label">Hasta</label>
-        <input class="filtro-input" type="date" [(ngModel)]="filtroFechaHasta" (change)="buscar()"/>
+        <input class="filtro-input" type="text" placeholder="DD/MM/AAAA" maxlength="10"
+               [(ngModel)]="filtroFechaHasta" (input)="onFechaInput()"/>
       </div>
 
       <div class="filtro-group">
@@ -324,12 +326,14 @@ export class AdminLogsComponent implements OnInit {
     this.loading = true;
     this.cdr.detectChanges();
 
+    const desdeIso = this.parseFecha(this.filtroFechaDesde);
+    const hastaIso = this.parseFecha(this.filtroFechaHasta);
     const filtros: LogFiltros = {
       page:       this.paginaActual,
       accion:     this.filtroAccion     || undefined,
       usuarioId:  this.filtroUsuarioId  ?? undefined,
-      fechaDesde: this.filtroFechaDesde ? this.filtroFechaDesde + 'T00:00:00' : undefined,
-      fechaHasta: this.filtroFechaHasta ? this.filtroFechaHasta + 'T23:59:59' : undefined,
+      fechaDesde: desdeIso ? desdeIso + 'T00:00:00' : undefined,
+      fechaHasta: hastaIso ? hastaIso + 'T23:59:59' : undefined,
     };
 
     this.adminService.obtenerLogsFiltrados(filtros)
@@ -366,11 +370,13 @@ export class AdminLogsComponent implements OnInit {
     this.exportando = true;
     this.cdr.detectChanges();
 
+    const desdeIsoExp = this.parseFecha(this.filtroFechaDesde);
+    const hastaIsoExp = this.parseFecha(this.filtroFechaHasta);
     const filtros = {
       accion:     this.filtroAccion     || undefined,
       usuarioId:  this.filtroUsuarioId  ?? undefined,
-      fechaDesde: this.filtroFechaDesde ? this.filtroFechaDesde + 'T00:00:00' : undefined,
-      fechaHasta: this.filtroFechaHasta ? this.filtroFechaHasta + 'T23:59:59' : undefined,
+      fechaDesde: desdeIsoExp ? desdeIsoExp + 'T00:00:00' : undefined,
+      fechaHasta: hastaIsoExp ? hastaIsoExp + 'T23:59:59' : undefined,
     };
 
     this.adminService.exportarLogsCsv(filtros).subscribe({
@@ -389,6 +395,19 @@ export class AdminLogsComponent implements OnInit {
   }
 
   // ── Helpers ──────────────────────────────────────────────────────────────────
+
+  /** Convierte DD/MM/AAAA → YYYY-MM-DD. Devuelve '' si el formato es inválido. */
+  private parseFecha(s: string): string {
+    if (!s || !/^\d{2}\/\d{2}\/\d{4}$/.test(s)) return '';
+    const [dd, mm, yyyy] = s.split('/');
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  /** Dispara la búsqueda sólo cuando ambas fechas están vacías o tienen formato completo. */
+  onFechaInput(): void {
+    const ok = (v: string) => !v || /^\d{2}\/\d{2}\/\d{4}$/.test(v);
+    if (ok(this.filtroFechaDesde) && ok(this.filtroFechaHasta)) this.buscar();
+  }
 
   formatFecha(fecha: string): string {
     if (!fecha) return '—';

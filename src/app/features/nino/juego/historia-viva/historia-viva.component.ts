@@ -1,6 +1,9 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { environment } from '../../../../../environments/environment';
 import { GameFeedbackComponent } from '../../../../shared/game-feedback/game-feedback.component';
 import { VolumeControlComponent } from '../../../../shared/game-feedback/volume-control.component';
 import { GameFeedbackService, NivelVolumen } from '../../../../shared/game-feedback/game-feedback.service';
@@ -12,11 +15,13 @@ type Estado = 'inicio' | 'lectura' | 'pregunta' | 'resultados';
 type Mood   = 'idle' | 'thinking' | 'celebrate' | 'encourage';
 
 interface Pregunta {
-  texto:    string;
-  opciones: string[];
-  correcta: number;     // índice de la opción correcta
-  pista:    string;
-  tipo:     string;     // causal | emotiva | referencial | predictiva | filosófica
+  texto:           string;
+  opciones?:       string[];
+  correcta?:       number;       // índice de la opción correcta (opción múltiple)
+  pista:           string;
+  tipo:            string;       // causal | emotiva | referencial | predictiva | filosófica | síntesis
+  tipoPregunta?:   'multiple' | 'abierta';  // default: 'multiple'
+  guiaRespuesta?:  string;       // guía interna para que el LLM evalúe respuestas abiertas
 }
 
 interface Historia {
@@ -102,7 +107,7 @@ const HISTORIAS: Historia[] = [
     ]
   },
 
-  // ── Nivel 3 ──────────────────────────────────────────────────────────────────
+  // ── Nivel 3 ─────────────────────────────────────────────────────────────────
   {
     id: 3, nivel: 3,
     titulo: 'El árbol de los sueños',
@@ -138,6 +143,41 @@ const HISTORIAS: Historia[] = [
       }
     ]
   }
+  ,
+
+  // ── Nivel 4 (respuestas abiertas, evaluadas por LLM) ────────────────────────
+  {
+    id: 4, nivel: 4,
+    titulo: 'El puente invisible',
+    texto:
+      'En la cima de una montaña vivían dos pueblos separados por un abismo profundo. Durante siglos no se hablaron, pues cada uno creía que el otro era diferente y peligroso. Los mayores contaban historias de enemigos, y los niños las repetían sin cuestionarlas.\n\n' +
+      'Un día, una niña llamada Noa descubrió que al asomarse al abismo podía escuchar voces del otro lado. Al principio se asustó, pero pronto notó que las voces reían, cantaban y se quejaban exactamente igual que las de su pueblo.\n\n' +
+      'Noa comenzó a gritar palabras al vacío. "¡Hola!" Desde el otro lado respondieron: "¡Hola!" Le contó que tenía miedo de la oscuridad, y le respondieron que ellos también. Le dijo que le gustaba el pan recién hecho, y del otro lado llegó el olor del mismo pan.\n\n' +
+      'Así, sin verse ni tocarse, construyeron algo más sólido que la piedra: el entendimiento. Y cuando los adultos de ambos pueblos lo descubrieron, algunos tuvieron miedo, pero otros preguntaron: "¿Podemos nosotros también asomarnos?"',
+    preguntas: [
+      {
+        texto: '¿Por qué los habitantes de los dos pueblos tenían miedo el uno del otro, si nunca se habían visto ni conocido?',
+        pista: 'Piensa en quién les contó las historias sobre el otro pueblo y por qué esas historias fueron aceptadas sin cuestionarlas.',
+        tipo: 'causal',
+        tipoPregunta: 'abierta',
+        guiaRespuesta: 'La respuesta debe reconocer que el miedo venía de historias heredadas de los mayores, no de experiencia propia. El estudiante debería mencionar la transmisión de prejuicios de generación en generación.',
+      },
+      {
+        texto: '¿Qué descubrió Noa cuando escuchó las voces del otro lado? ¿Qué dice ese descubrimiento sobre las diferencias entre personas?',
+        pista: 'Fíjate en lo que Noa notó: las voces reían, cantaban y se quejaban igual que las de su pueblo.',
+        tipo: 'filosófica',
+        tipoPregunta: 'abierta',
+        guiaRespuesta: 'La respuesta debe identificar que Noa descubrió que las personas del otro pueblo eran fundamentalmente similares. Una buena respuesta reflexiona sobre cómo el miedo a "los diferentes" a menudo es injustificado, porque en el fondo compartimos más de lo que nos diferencia.',
+      },
+      {
+        texto: '¿Qué significa que Noa y los niños del otro lado construyeron "algo más sólido que la piedra"? ¿Por qué el autor usa esa comparación?',
+        pista: 'Lee la última parte del cuento. Piensa: ¿qué construyeron sin piedras ni madera? ¿Por qué el autor dice que es más sólido?',
+        tipo: 'síntesis',
+        tipoPregunta: 'abierta',
+        guiaRespuesta: 'La respuesta debe identificar que "algo más sólido que la piedra" se refiere al entendimiento o a la conexión emocional y humana. Una buena respuesta explica que el autor compara la comprensión con la piedra para mostrar que los lazos humanos genuinos son más duraderos y fuertes que cualquier estructura física.',
+      }
+    ]
+  }
 ];
 
 const TIPO_LABELS: Record<string, string> = {
@@ -161,7 +201,7 @@ const TIPO_TIPS: Record<string, string> = {
 @Component({
   selector: 'app-historia-viva',
   standalone: true,
-  imports: [CommonModule, GameFeedbackComponent, VolumeControlComponent, MascotComponent],
+  imports: [CommonModule, FormsModule, GameFeedbackComponent, VolumeControlComponent, MascotComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './historia-viva.component.html',
   styleUrl: './historia-viva.component.scss'
@@ -183,6 +223,12 @@ export class HistoriaVivaComponent implements OnInit, OnDestroy {
   opcionesErradas:        number[]      = [];
   mostrandoPista          = false;
   mostrandoTexto          = false;
+
+  // ── Nivel 4: preguntas abiertas ─────────────────────────────────────────────
+  respuestaAbierta       = '';
+  evaluandoRespuesta     = false;
+  evaluacionesAbiertas:  { score: number; feedback: string }[] = [];
+  feedbackActual:        string | null = null;
 
   // ── Métricas (CA-04) ────────────────────────────────────────────────────────
   tiempoInicioLectura  = 0;
@@ -225,6 +271,7 @@ export class HistoriaVivaComponent implements OnInit, OnDestroy {
     private feedbackService: GameFeedbackService,
     private childProfileService: ChildProfileService,
     private sesionService: SesionJuegoService,
+    private http: HttpClient,
   ) {}
 
   ngOnInit(): void {
@@ -322,8 +369,19 @@ export class HistoriaVivaComponent implements OnInit, OnDestroy {
     return TIPO_LABELS[this.preguntaActual?.tipo ?? ''] ?? '';
   }
 
+  /**
+   * Comprensión real = correctas / (correctas + intentos_erróneos) × 100
+   * Para nivel 4 (preguntas abiertas evaluadas por LLM) usa el promedio de
+   * las puntuaciones devueltas por el backend.
+   */
   get puntuacion(): number {
-    const total = this.historiaActual?.preguntas.length ?? 1;
+    if (this.historiaActual?.nivel === 4) {
+      if (this.evaluacionesAbiertas.length === 0) return 0;
+      const sum = this.evaluacionesAbiertas.reduce((a, b) => a + b.score, 0);
+      return Math.round(sum / this.evaluacionesAbiertas.length);
+    }
+    const total = this.preguntasCorrectas + this.intentosTotales;
+    if (total === 0) return 0;
     return Math.round((this.preguntasCorrectas / total) * 100);
   }
 
@@ -368,9 +426,11 @@ export class HistoriaVivaComponent implements OnInit, OnDestroy {
     this.tiempoInicioLectura = Date.now();
     this.usoAudio          = 0;
     this.releidasCount     = 0;
-    this.preguntasCorrectas = 0;
-    this.intentosTotales   = 0;
-    this.tiposErradas      = [];
+    this.preguntasCorrectas   = 0;
+    this.intentosTotales      = 0;
+    this.tiposErradas         = [];
+    this.evaluacionesAbiertas = [];
+    this.feedbackActual       = null;
     this.leyendoAudio      = false;
     this.setMascota('thinking', '¡Tómate el tiempo que necesites para leer! 📖');
     this.cdr.detectChanges();
@@ -472,7 +532,7 @@ export class HistoriaVivaComponent implements OnInit, OnDestroy {
   private terminarJuego(): void {
     // Ajuste adaptativo de nivel (CA-03)
     const rate = this.puntuacion;
-    if (rate >= 70 && this.nivelActual < 3) this.nivelActual++;
+    if (rate >= 70 && this.nivelActual < 4) this.nivelActual++;
     else if (rate < 40 && this.nivelActual > 1) this.nivelActual--;
 
     this.confettiPieces = this.generarConfeti();
@@ -584,13 +644,57 @@ export class HistoriaVivaComponent implements OnInit, OnDestroy {
   }
 
   private resetPregunta(): void {
-    this.respuestaSeleccionada  = null;
-    this.respondioCorrectamente = null;
-    this.opcionesErradas        = [];
-    this.mostrandoPista         = false;
-    this.mostrandoTexto         = false;
+    this.respuestaSeleccionada   = null;
+    this.respondioCorrectamente  = null;
+    this.opcionesErradas         = [];
+    this.mostrandoPista          = false;
+    this.mostrandoTexto          = false;
     this.mostrarCorrectaTemporal = false;
-    this.skipResolver           = null;
+    this.skipResolver            = null;
+    // Nivel 4
+    this.respuestaAbierta        = '';
+    this.evaluandoRespuesta      = false;
+    this.feedbackActual          = null;
+  }
+
+  // ── Nivel 4: evaluación de respuesta abierta por LLM ──────────────────────
+
+  enviarRespuestaAbierta(): void {
+    const texto = this.respuestaAbierta.trim();
+    if (!texto || this.evaluandoRespuesta) return;
+    this.evaluandoRespuesta = true;
+    this.cdr.detectChanges();
+
+    const p = this.preguntaActual!;
+    this.http.post<{ puntuacion: number; feedback: string }>(
+      `${environment.apiUrl}/historia-viva/evaluar-respuesta`,
+      {
+        historiaTitulo:  this.historiaActual!.titulo,
+        historiaTexto:   this.historiaActual!.texto,
+        preguntaTexto:   p.texto,
+        guiaRespuesta:   p.guiaRespuesta ?? '',
+        respuestaAlumno: texto,
+      }
+    ).subscribe({
+      next: res => {
+        this.evaluacionesAbiertas.push({ score: res.puntuacion, feedback: res.feedback });
+        this.feedbackActual     = res.feedback;
+        this.evaluandoRespuesta = false;
+        const mood = res.puntuacion >= 60 ? 'celebrate' : 'encourage';
+        this.setMascota(mood, res.feedback);
+        this.cdr.detectChanges();
+        // Avanzar a la siguiente pregunta tras 3.5 s
+        setTimeout(() => { this.siguientePregunta(); this.cdr.detectChanges(); }, 3500);
+      },
+      error: () => {
+        // Fallback: crédito parcial sin conexión
+        this.evaluacionesAbiertas.push({ score: 50, feedback: '¡Buen intento! Seguimos.' });
+        this.feedbackActual     = '¡Buen intento! Seguimos.';
+        this.evaluandoRespuesta = false;
+        this.cdr.detectChanges();
+        setTimeout(() => { this.siguientePregunta(); this.cdr.detectChanges(); }, 2000);
+      }
+    });
   }
 
   private generarConfeti() {
