@@ -13,9 +13,11 @@ import { SesionJuegoService } from '../../../../core/services/sesion-juego.servi
 import { Celda, Direccion, EstadoJuego, Laberinto, Mood, Posicion } from './laberinto.types';
 import {
   agregarObstaculoDinamico,
+  calcularCaminoOptimo,
   esCallejonSinSalida,
   generarLaberinto,
   intentarMover,
+  ObstaculoDinamico,
   tamanoParaNivel,
   tieneObstaculosDinamicos,
 } from './laberinto.utils';
@@ -75,7 +77,7 @@ const MASCOTA_MSGS: Record<Mood, string[]> = {
               <div class="instr-card instr-amarillo">
                 <span class="instr-num">4</span>
                 <div class="instr-emoji">🧱</div>
-                <div class="instr-text">Desde el nivel 3 aparecen paredes nuevas mientras juegas</div>
+                <div class="instr-text">Desde el nivel 3, si entras a un camino sin salida puede cerrarse una pared ahí — ¡cuidado, podrías quedar atrapado! Si pasa, reintentas con un mapa nuevo</div>
               </div>
             </div>
 
@@ -417,7 +419,6 @@ export class LaberintoComponent implements OnInit, OnDestroy {
 
   readonly MAX_RONDAS = 6;
   private readonly UMBRAL_EFICIENCIA_SUBIDA = 1.30; // CA-06
-  private readonly MOVS_ENTRE_OBSTACULOS = 3; // CA-04: cada cuántos pasos puede aparecer una pared nueva
 
   estado: EstadoJuego = 'inicio';
   laberinto: Laberinto | null = null;
@@ -439,6 +440,8 @@ export class LaberintoComponent implements OnInit, OnDestroy {
   callejonesSinSalidaTotal = 0;
   planificoEnPrimerMovimiento: boolean | null = null;
   private nivelMaximoAlcanzado = 1;
+  /** Cuántas veces se quedó sin ninguna ruta a la meta y tuvo que reintentar el mapa (nuevo mecanismo de CA-04). */
+  vecesAtrapadoTotal = 0;
 
   mascotMsg = '¡Listo para planificar! 🧩';
   mascotMood: Mood = 'idle';
@@ -449,6 +452,7 @@ export class LaberintoComponent implements OnInit, OnDestroy {
   private readonly JUEGO_ID = 4;
   private nivelRecomendadoNumero: number | null = null;
   private celdaObstaculoReciente: Posicion | null = null;
+  private celdaObstaculoRecienteDestino: Posicion | null = null;
   private tiempoInicioJugando = 0;
   private tiempoInicioSesion = 0;
   private tiempoInicioMovimiento = 0;
@@ -535,6 +539,7 @@ export class LaberintoComponent implements OnInit, OnDestroy {
     this.pasosOptimosTotal = 0;
     this.callejonesSinSalidaTotal = 0;
     this.planificoEnPrimerMovimiento = null;
+    this.vecesAtrapadoTotal = 0;
     this.pasoGlobalCounter = 0;
     this.errorBackend = null;
     this.tiempoInicioSesion = Date.now();
@@ -570,14 +575,27 @@ export class LaberintoComponent implements OnInit, OnDestroy {
     this.pasosRondaActual = 0;
     this.callejonesRondaActual = 0;
     this.celdaObstaculoReciente = null;
+    this.celdaObstaculoRecienteDestino = null;
 
     this.setMascota('idle');
     this.iniciarDespliegue();
   }
 
+  /**
+   * CA-01: tiempo para memorizar el laberinto antes de poder moverse. Antes
+   * era fijo en 3s sin importar el tamaño del mapa (5×5 en nivel 1 hasta
+   * 9×9 en nivel 5): en los laberintos grandes no alcanzaba para memorizar
+   * la ruta real, lo que forzaba a "adivinar" y terminaba marcando muchos
+   * callejones sin salida que se sentían como errores injustos. Ahora crece
+   * con el tamaño: 3s en el tamaño mínimo, +1s por cada fila/columna extra.
+   */
+  private calcularSegundosDespliegue(): number {
+    return 3 + Math.max(0, this.tamanoActual - 5);
+  }
+
   private iniciarDespliegue(): void {
     this.estado = 'despliegue';
-    this.despliegueSegundosRestantes = 3; // CA-01: 3 segundos completos antes de poder moverse
+    this.despliegueSegundosRestantes = this.calcularSegundosDespliegue(); // CA-01
     this.cdr.detectChanges();
 
     this.despliegueInterval = setInterval(() => {
@@ -669,25 +687,58 @@ export class LaberintoComponent implements OnInit, OnDestroy {
 
     this.registrarPasoBackend(direccion, nuevaPos, esCallejon);
 
-    // CA-04: cada cierto número de pasos puede aparecer una pared nueva (nunca sobre el camino disponible)
-    if (this.obstaculosActivos && this.pasosRondaActual % this.MOVS_ENTRE_OBSTACULOS === 0) {
-      const agregado = agregarObstaculoDinamico(this.laberinto.celdas, this.posicionJugador, this.laberinto.meta);
-      if (agregado) this.mostrarObstaculoReciente();
+    // CA-04 (rediseño): la pared nueva ya no aparece cada N pasos al azar en
+    // cualquier parte del mapa — aparece como consecuencia directa de un
+    // error (entrar a un callejón sin salida), cerca de donde ocurrió. Ya no
+    // está garantizado que el laberinto siga siendo resoluble: si el niño se
+    // tarda en salir del callejón, su propia entrada se puede cerrar.
+    let obstaculo: ObstaculoDinamico | null = null;
+    if (this.obstaculosActivos && esCallejon) {
+      obstaculo = agregarObstaculoDinamico(this.laberinto.celdas, nuevaPos, this.laberinto.meta);
+      if (obstaculo) this.mostrarObstaculoReciente(obstaculo);
     }
 
     const llegoALaMeta = nuevaPos.fila === this.laberinto.meta.fila && nuevaPos.col === this.laberinto.meta.col;
     if (llegoALaMeta) {
       this.manejarRondaCompletada();
-    } else {
-      this.cdr.detectChanges();
+      return;
     }
+
+    // Si el obstáculo que acaba de aparecer dejó al niño sin ninguna ruta
+    // posible hacia la meta, se pierde este laberinto: se avisa y se
+    // reintenta con un mapa nuevo del mismo nivel, en vez de dejarlo
+    // bloqueado para siempre.
+    if (obstaculo && calcularCaminoOptimo(this.laberinto.celdas, this.posicionJugador, this.laberinto.meta).length === 0) {
+      this.manejarAtrapado();
+      return;
+    }
+
+    this.cdr.detectChanges();
   }
 
-  private mostrarObstaculoReciente(): void {
-    // Solo un efecto visual breve; no se identifica la celda exacta para no dar pistas de más.
-    this.celdaObstaculoReciente = { ...this.posicionJugador };
+  /** Se quedó sin ninguna ruta posible a la meta: pierde este mapa y reintenta con uno nuevo del mismo nivel. */
+  private manejarAtrapado(): void {
+    this.vecesAtrapadoTotal++;
+    this.estado = 'feedback';
+    this.mascotMood = 'encourage';
+    this.mascotMsg = '¡Uy, te quedaste sin salida! 🧱 Vamos con un mapa nuevo';
+    this.feedback.showIncorrect('¡Sin salida! Nuevo intento 🔄');
+    this.cdr.detectChanges();
+
+    this.timers.push(setTimeout(() => {
+      this.comenzarRonda(); // mismo nivel y ronda, laberinto nuevo
+    }, 1600));
+  }
+
+  private mostrarObstaculoReciente(obstaculo: { origen: Posicion; destino: Posicion }): void {
+    // Resalta las dos celdas del pasaje que realmente se acaba de cerrar (antes
+    // siempre se resaltaba la celda del jugador, sin importar dónde había
+    // aparecido el obstáculo de verdad — por eso se sentía sin sentido).
+    this.celdaObstaculoReciente = { ...obstaculo.origen };
+    this.celdaObstaculoRecienteDestino = { ...obstaculo.destino };
     this.timers.push(setTimeout(() => {
       this.celdaObstaculoReciente = null;
+      this.celdaObstaculoRecienteDestino = null;
       this.cdr.detectChanges();
     }, 800));
   }
@@ -791,7 +842,11 @@ export class LaberintoComponent implements OnInit, OnDestroy {
   }
 
   esObstaculoReciente(celda: Celda): boolean {
-    return !!this.celdaObstaculoReciente && celda.fila === this.celdaObstaculoReciente.fila && celda.col === this.celdaObstaculoReciente.col;
+    const esOrigen = !!this.celdaObstaculoReciente
+      && celda.fila === this.celdaObstaculoReciente.fila && celda.col === this.celdaObstaculoReciente.col;
+    const esDestino = !!this.celdaObstaculoRecienteDestino
+      && celda.fila === this.celdaObstaculoRecienteDestino.fila && celda.col === this.celdaObstaculoRecienteDestino.col;
+    return esOrigen || esDestino;
   }
 
   private setMascota(mood: Mood): void {
