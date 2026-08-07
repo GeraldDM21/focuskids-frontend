@@ -38,7 +38,7 @@ export const routes: Routes = [
   },
   {
     path: 'nino',
-    canActivate: [authGuard, roleGuard(['NINO'])],
+    canActivate: [authGuard, roleGuard(['NINO', 'PADRE', 'DOCENTE'])],
     loadChildren: () => import('./features/nino/nino.routes').then(m => m.ninoRoutes)
   },
 
