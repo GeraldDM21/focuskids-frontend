@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './guards/auth.guard';
 import { roleGuard } from './guards/role.guard';
+import { alreadyAuthGuard } from './guards/already-auth.guard';
 import { ShellComponent } from './shared/shell/shell.component';
 
 export const routes: Routes = [
@@ -12,9 +13,10 @@ export const routes: Routes = [
     pathMatch: 'full'
   },
 
-  // Rutas públicas
+  // Rutas públicas (si ya está logueado redirige al dashboard)
   {
     path: 'auth',
+    canActivate: [alreadyAuthGuard],
     loadChildren: () => import('./features/auth/auth.routes').then(m => m.authRoutes)
   },
   {
@@ -36,7 +38,7 @@ export const routes: Routes = [
   },
   {
     path: 'nino',
-    canActivate: [authGuard],
+    canActivate: [authGuard, roleGuard(['NINO'])],
     loadChildren: () => import('./features/nino/nino.routes').then(m => m.ninoRoutes)
   },
 

@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 
 export const ninoRoutes: Routes = [
+  { path: '', redirectTo: 'juegos', pathMatch: 'full' },
   {
     path: 'juegos',
     loadComponent: () =>
