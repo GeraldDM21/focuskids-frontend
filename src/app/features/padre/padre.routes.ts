@@ -23,5 +23,10 @@ export const padreRoutes: Routes = [
   {
     path: 'perfiles/selector',
     loadComponent: () => import('./perfiles/profile-selector.component').then(m => m.ProfileSelectorComponent)
+  },
+  // Spring 5: dashboard de progreso del niño
+  {
+    path: 'progreso',
+    loadComponent: () => import('../shared/progreso/progreso-dashboard.component').then(m => m.ProgresoDashboardComponent)
   }
 ];

@@ -56,6 +56,7 @@ const JUEGO_ICO: Record<string, string> = {
       <button class="nav-item" [class.active]="tab==='reportes'"    (click)="tab='reportes'">    <span>📊</span> Reportes</button>
       <button class="nav-item" [class.active]="tab==='asignaciones'"(click)="tab='asignaciones'"><span>📋</span> Asignaciones</button>
       <button class="nav-item" [class.active]="tab==='logros'"      (click)="tab='logros'">      <span>🏆</span> Logros</button>
+      <button class="nav-item" (click)="irAProgreso()"> <span>🧠</span> Progreso niños</button>
       <p class="nav-sec">HERRAMIENTAS</p>
       <button class="nav-item" [class.active]="tab==='calendario'"  (click)="tab='calendario'">  <span>📅</span> Calendario</button>
       <button class="nav-item" [class.active]="tab==='config'"      (click)="tab='config'">      <span>⚙️</span> Configuración</button>
@@ -720,6 +721,8 @@ export class DocenteDashboardComponent implements OnInit {
     private cdr:     ChangeDetectorRef,
     private docSvc:  DocenteService,
   ) {}
+
+  irAProgreso(): void { this.router.navigate(['/docente/progreso']); }
 
   ngOnInit(): void {
     const user = this.auth.user();
