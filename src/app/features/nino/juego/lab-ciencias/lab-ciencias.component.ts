@@ -189,7 +189,7 @@ export class LabCienciasComponent
   mascotMood: MascotMood = 'idle';
 
   mascotMsg =
-    '¡Hola! Soy Buddy 🐶. Vamos a descubrir reglas mezclando ingredientes.';
+    '¡Hola! Soy Uni 🦄. Vamos a descubrir reglas mezclando ingredientes.';
 
   readonly niveles: {
     id: NivelLab;
@@ -246,6 +246,8 @@ export class LabCienciasComponent
   private audioCtx: AudioContext | null =
     null;
 
+  private readonly JUEGO_ID = 10;  // Lab de Ciencias (DataSeeder ID)
+
   private readonly destruir$ =
     new Subject<void>();
 
@@ -269,20 +271,64 @@ export class LabCienciasComponent
 
   ngOnInit(): void {
     this.profileService.activeProfile$
-      .pipe(
-        takeUntil(this.destruir$)
-      )
+      .pipe(takeUntil(this.destruir$))
       .subscribe(state => {
         if (!state.profileId) {
-          this.router.navigate([
-            '/padre/perfiles/selector'
-          ]);
-
+          this.router.navigate(['/padre/perfiles/selector']);
           return;
         }
 
         this.perfilId = state.profileId;
+        // Preseleccionar nivel recomendado por IA (CA-03)
+        this.sesionJuegoService.obtenerRecomendacion(state.profileId, this.JUEGO_ID)
+          .pipe(takeUntil(this.destruir$))
+          .subscribe(rec => {
+            if (rec?.nivelRecomendado?.nivel) {
+              this.nivelActual = rec.nivelRecomendado.nivel as NivelLab;
+              this.cdr.detectChanges();
+            }
+          });
       });
+
+    // Uni lee las instrucciones al entrar a la pantalla de inicio
+    setTimeout(() => this.hablarInstrucciones(), 700);
+  }
+
+  private hablarInstrucciones(): void {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    if (!this.sonidoActivo) return;
+
+    const texto =
+      '¡Hola! Soy Uni. Para jugar Lab de Ciencias: ' +
+      'lee el objetivo del experimento, ' +
+      'selecciona los ingredientes correctos, ' +
+      'observa la reacción, ' +
+      'y deduce la regla científica. ' +
+      '¡La ciencia es magia que sí puedes entender!';
+
+    const msg = new SpeechSynthesisUtterance(texto);
+    msg.lang  = 'es-ES';
+    msg.rate  = 0.9;
+    msg.pitch = 1.2;
+
+    const voices = window.speechSynthesis.getVoices();
+    // Preferir voz femenina en español
+    const espFem = voices.find(v =>
+      v.lang.toLowerCase().startsWith('es') &&
+      (v.name.toLowerCase().includes('female') ||
+       v.name.toLowerCase().includes('mujer') ||
+       v.name.toLowerCase().includes('paulina') ||
+       v.name.toLowerCase().includes('mónica') ||
+       v.name.toLowerCase().includes('monica') ||
+       v.name.toLowerCase().includes('sabina') ||
+       v.name.toLowerCase().includes('elena') ||
+       v.name.toLowerCase().includes('laura'))
+    );
+    const esp = espFem ?? voices.find(v => v.lang.toLowerCase().startsWith('es'));
+    if (esp) msg.voice = esp;
+
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(msg);
   }
 
   ngOnDestroy(): void {
@@ -1009,20 +1055,14 @@ export class LabCienciasComponent
 
   volverInicio(): void {
     this.limpiarTemporizadores();
-
     window.speechSynthesis?.cancel();
-
-    this.estado = 'inicio';
-
-    this.sesionId = null;
-
-    this.errorApi = '';
+    this.router.navigate(['/nino/juegos']);
   }
 
   volverLobby(): void {
-    this.router.navigate([
-      '/nino/juegos'
-    ]);
+    this.limpiarTemporizadores();
+    window.speechSynthesis?.cancel();
+    this.router.navigate(['/nino/juegos']);
   }
 
   nivelLabel(

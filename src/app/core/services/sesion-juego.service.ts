@@ -1,9 +1,20 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, throwError, timer } from 'rxjs';
-import { catchError, retry } from 'rxjs/operators';
+import { Observable, of, throwError, timer } from 'rxjs';
+import { catchError, map, retry } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { Juego, NivelDificultad, SesionJuego } from '../models/juego.model';
+
+export interface IaRecomendacion {
+  id: number;
+  nivelRecomendado: NivelDificultad;
+  nivelAnterior: NivelDificultad | null;
+  tendencia: 'MEJORA' | 'ESTANCAMIENTO' | 'REGRESION' | 'SOBRESCRITO';
+  confianza: number;
+  motivo: string;
+  fechaRecomendacion: string;
+  sesionesOrigen: string;  // JSON array string
+}
 
 // ── Interfaces públicas ───────────────────────────────────────────────────────
 
@@ -224,6 +235,23 @@ export class SesionJuegoService implements OnDestroy {
 
   registrarEvento(sesionId: number, evento: SessionClickEvent): Observable<SessionClickEvent> {
     return this.http.post<SessionClickEvent>(`${this.sesionesUrl}/${sesionId}/eventos`, evento);
+  }
+
+  // ══ Recomendación de nivel IA ═════════════════════════════════════════════
+
+  /**
+   * Devuelve la recomendación de nivel vigente para un niño + juego.
+   * Si el backend devuelve 204 (no hay recomendación aún), emite null.
+   */
+  obtenerRecomendacion(perfilId: number, juegoId: number): Observable<IaRecomendacion | null> {
+    return this.http
+      .get<IaRecomendacion>(`${environment.apiUrl}/ia/recomendacion/${perfilId}/${juegoId}`, {
+        observe: 'response',
+      })
+      .pipe(
+        map(resp => (resp.status === 204 ? null : resp.body)),
+        catchError(() => of(null)),
+      );
   }
 
   // ══ Heartbeat CA-04 ══════════════════════════════════════════════════════

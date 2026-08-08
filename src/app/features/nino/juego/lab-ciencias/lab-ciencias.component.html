@@ -4,133 +4,65 @@
   <div class="orb orb-3"></div>
 
   @if (estado === 'inicio') {
-    <section class="pantalla inicio">
-      <div class="inicio-content">
+    <section class="pantalla-inicio">
 
-        <div class="mascota-inicio">
-          <div class="sparkles">
-            ✨ 🔬 ✨
-          </div>
+      <img class="bg-escena" src="/mascotas/uni-escena.png" alt="Escena de Uni">
 
-          <div class="mascota-ring">
-            🐶
-          </div>
+      <div class="inicio-velo"></div>
 
-          <div class="burbuja">
-            ¡Soy Buddy! Observa, mezcla y
-            descubre la regla de cada experimento.
+      <!-- Uni habla desde la escena -->
+      <div class="uni-habla">
+        <div class="habla-bubble">
+          <p class="habla-saludo">¡Hola! Soy <strong>Uni</strong> 🦄</p>
+          <p class="habla-intro">Para jugar Lab de Ciencias:</p>
+          <div class="habla-pasos">
+            <div class="habla-paso"><span class="h-ico">🎯</span><span>Lee el objetivo del experimento</span></div>
+            <div class="habla-paso"><span class="h-ico">🧪</span><span>Selecciona los ingredientes</span></div>
+            <div class="habla-paso"><span class="h-ico">👀</span><span>Observa la reacción</span></div>
+            <div class="habla-paso"><span class="h-ico">🧠</span><span>¡Deduce la regla científica!</span></div>
           </div>
+          <p class="habla-animo">¡La ciencia es magia que sí puedes entender! ✨</p>
         </div>
+        <div class="habla-tail"></div>
+      </div>
 
-        <div>
-          <h1>
-            <span>Lab de</span>
-            <strong>Ciencias</strong>
-          </h1>
+      <!-- Botón volver -->
+      <button type="button" class="btn-volver" (click)="volverLobby()">← Volver</button>
 
-          <p class="subtitulo">
-            Razonamiento deductivo y
-            pensamiento científico
-          </p>
-        </div>
+      <!-- Panel izquierdo: título + nivel + botón -->
+      <div class="inicio-panel">
+        <h1 class="titulo-juego">
+          <span class="titulo-grad">Lab de </span><span class="titulo-blanco">Ciencias</span>
+        </h1>
+        <p class="subtitulo-juego">¡Mezcla ingredientes y descubre las reglas de la ciencia!</p>
 
-        <div class="instrucciones-grid">
-          <article>
-            <b>1</b>
-            <span>🎯</span>
-            <p>Lee el objetivo</p>
-          </article>
-
-          <article>
-            <b>2</b>
-            <span>🧪</span>
-            <p>Elige dos ingredientes</p>
-          </article>
-
-          <article>
-            <b>3</b>
-            <span>👀</span>
-            <p>Observa la reacción</p>
-          </article>
-
-          <article>
-            <b>4</b>
-            <span>🧠</span>
-            <p>Deduce la regla</p>
-          </article>
-        </div>
-
-        <div class="nivel-seccion">
-          <h2>Elige tu dificultad</h2>
-
-          <div class="niveles-row">
-            @for (
-              nivel of niveles;
-              track nivel.id
-              ) {
-              <button
-                type="button"
-                class="nivel-btn"
-                [class.activo]="
-                  nivelActual === nivel.id
-                "
-                (click)="
-                  seleccionarNivel(nivel.id)
-                "
-              >
-                <span>{{ nivel.emoji }}</span>
-
-                <b>{{ nivel.label }}</b>
-
-                <small>
-                  {{ nivel.desc }}
-                </small>
-              </button>
-            }
-          </div>
+        <div class="niveles-row">
+          @for (nivel of niveles; track nivel.id) {
+            <button type="button" class="nivel-btn" [class.activo]="nivelActual === nivel.id"
+                    (click)="seleccionarNivel(nivel.id)">
+              <span>{{ nivel.emoji }}</span>
+              <b>{{ nivel.label }}</b>
+              <small>{{ nivel.desc }}</small>
+            </button>
+          }
         </div>
 
         @if (errorApi) {
-          <div class="error-api">
-            ⚠️ {{ errorApi }}
-          </div>
+          <div class="error-api">⚠️ {{ errorApi }}</div>
         }
 
-        <div class="inicio-botones">
-          <button
-            type="button"
-            class="btn-principal"
-            (click)="iniciarJuego()"
-          >
-            Entrar al laboratorio 🚀
+        <div class="acciones-inicio">
+          <button type="button" class="btn-empezar" (click)="iniciarJuego()">
+            🔬 ¡Entrar al Lab!
+            <span class="btn-shine"></span>
           </button>
-
-          <button
-            type="button"
-            class="btn-icon"
-            (click)="toggleSonido()"
-            [attr.aria-label]="
-              sonidoActivo
-                ? 'Desactivar sonido'
-                : 'Activar sonido'
-            "
-          >
-            {{
-              sonidoActivo
-                ? '🔊'
-                : '🔇'
-            }}
+          <button type="button" class="btn-sonido" [class.sonido-desactivado]="!sonidoActivo"
+                  (click)="toggleSonido()">
+            {{ sonidoActivo ? '🔊' : '🔇' }}
           </button>
         </div>
-
-        <button
-          type="button"
-          class="btn-link"
-          (click)="volverLobby()"
-        >
-          ← Volver a juegos
-        </button>
       </div>
+
     </section>
   }
 
@@ -139,7 +71,7 @@
       <div class="carga-card">
 
         <div class="perro-carga">
-          🐶
+          🦄
         </div>
 
         <div class="tubo-carga">
@@ -209,11 +141,10 @@
         </div>
 
         <div class="stats-mini">
+          ✅ {{ hipotesisCorrectas }}
+          ❌ {{ hipotesisIncorrectas }}
           🧪 {{ intentosTotales }}
-
-          <span>
-            ⭐ {{ puntaje }}
-          </span>
+          <span>⭐ {{ puntaje }}</span>
         </div>
 
         <button
@@ -460,7 +391,7 @@
       }
 
       <app-mascot
-        game="juego10"
+        game="juego9"
         [mood]="mascotMood"
         [message]="mascotMsg"
       ></app-mascot>
@@ -509,7 +440,7 @@
         </h1>
 
         <p>
-          Buddy está orgulloso de
+          Uni está orgullosa de
           tu pensamiento científico.
         </p>
 
@@ -630,9 +561,9 @@
       </article>
 
       <app-mascot
-        game="juego10"
+        game="juego9"
         mood="celebrate"
-        message="¡Excelente trabajo, científico! 🐶"
+        message="¡Excelente trabajo, científico! 🦄"
       ></app-mascot>
     </section>
   }

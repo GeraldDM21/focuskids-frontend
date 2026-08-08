@@ -233,8 +233,34 @@ export class HistoriaVivaComponent implements OnInit, OnDestroy {
       this.volumenActual = (state.profileVolumen ?? 75) as NivelVolumen;
       this.feedbackService.setVolumen(this.volumenActual);
     });
+
+    // Benny lee las instrucciones al entrar a la pantalla de inicio
+    setTimeout(() => {
+      this.hablar(
+        '¡Hola! Soy Benny. Para jugar Historia Viva: lee el cuento con calma, escúchalo con el audio, y responde mis preguntas. ¡Yo te ayudo!',
+        0.9, 1.15
+      );
+    }, 700);
+    // Cargar niveles y preseleccionar el recomendado por IA (CA-03)
     this.sesionService.obtenerNiveles(this.JUEGO_ID).subscribe({
-      next: niveles => { this.nivelFacilId = niveles[0]?.id ?? null; },
+      next: niveles => {
+        this.nivelFacilId = niveles[0]?.id ?? null;
+        if (this.profileId) {
+          this.sesionService.obtenerRecomendacion(this.profileId, this.JUEGO_ID)
+            .subscribe(rec => {
+              const match = rec?.nivelRecomendado?.id
+                ? niveles.find(n => n.id === rec.nivelRecomendado.id)
+                : null;
+              if (match) {
+                this.nivelFacilId = match.id;
+                if (rec!.nivelRecomendado.nivel) {
+                  const mapa: Record<string, number> = { FACIL: 1, MEDIO: 2, DIFICIL: 3, EXPERTO: 3 };
+                  this.nivelActual = mapa[rec!.nivelRecomendado.nivel] ?? this.nivelActual;
+                }
+              }
+            });
+        }
+      },
       error: () => {}
     });
   }
