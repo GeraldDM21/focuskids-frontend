@@ -67,7 +67,7 @@ export class AuthService {
       case 'PADRE':         this.router.navigate(['/padre/dashboard']); break;
       case 'DOCENTE':       this.router.navigate(['/docente/dashboard']); break;
       case 'ADMINISTRADOR': this.router.navigate(['/admin']); break;
-      case 'NINO':          this.router.navigate(['/juegos']); break;
+      case 'NINO':          this.router.navigate(['/nino/juegos']); break;
       default:              this.router.navigate(['/auth/login']);
     }
   }

@@ -267,7 +267,7 @@ const JUEGO_ICO: Record<string, string> = {
                 </div>
                 <div class="form-field">
                   <label>Fecha límite *</label>
-                  <input type="date" [(ngModel)]="formAsig.fechaLimite" />
+                  <input type="text" placeholder="DD/MM/AAAA" maxlength="10" [(ngModel)]="formAsig.fechaLimite" />
                 </div>
                 <div class="form-field span2">
                   <label>Descripción</label>
@@ -790,10 +790,18 @@ export class DocenteDashboardComponent implements OnInit {
     });
   }
 
+  /** Convierte DD/MM/AAAA → YYYY-MM-DD para el backend (ISO 8601). */
+  private parseFechaISO(s: string): string {
+    if (!s || !/^\d{2}\/\d{2}\/\d{4}$/.test(s)) return s;
+    const [dd, mm, yyyy] = s.split('/');
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
   crearAsig(): void {
     if (!this.formAsig.titulo || !this.formAsig.fechaLimite) return;
     this.savingAsig = true;
-    this.docSvc.crearAsignacion(this.docenteUid, this.formAsig).subscribe({
+    const asigPayload = { ...this.formAsig, fechaLimite: this.parseFechaISO(this.formAsig.fechaLimite) };
+    this.docSvc.crearAsignacion(this.docenteUid, asigPayload).subscribe({
       next: () => {
         this.cancelarAsig();
         this.loadAsignaciones(this.docenteUid);
