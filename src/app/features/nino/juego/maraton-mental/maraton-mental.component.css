@@ -10,25 +10,111 @@
   box-sizing: border-box;
 }
 
-/* ── Inicio ─────────────────────────────────────────────────────────── */
-.mm-inicio { max-width: 720px; width: 100%; text-align: center; }
-.mm-inicio-emoji { font-size: 64px; margin-bottom: 8px; }
-.mm-inicio h1 { font-size: 30px; font-weight: 900; margin: 0 0 12px; }
-.mm-inicio p { color: rgba(255,255,255,.75); font-size: 15px; line-height: 1.5; margin: 0 auto 28px; max-width: 520px; }
+/* ── Inicio (cinematográfico, mismo patrón que Espejo Mental) ─────────── */
+/* position:fixed para salirse del padding/flex de .mm-root y cubrir todo
+   el viewport sin dejar franjas ni scroll extra. */
+.mm-pantalla-inicio {
+  position: fixed; inset: 0; overflow-y: auto;
+  display: flex; align-items: center; justify-content: center;
+}
 
-.mm-niveles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 14px; margin-bottom: 24px; }
+.mm-bg-escena {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; object-position: left center; z-index: 0;
+  /* Valores probados renderizando la transformación real sobre la imagen
+     (mismo método usado para Michi en Laberinto Cognitivo): a Koby lo deja
+     de cuerpo completo, recostado a la izquierda. */
+  transform-origin: 85% 50%;
+  animation: mmBgZoom 24s ease-in-out infinite alternate;
+}
+@keyframes mmBgZoom { from { transform: scale(1.30) translate(0,0); } to { transform: scale(1.34) translate(-.5%, .3%); } }
+
+.mm-inicio-velo {
+  position: absolute; inset: 0; z-index: 1;
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    transparent 26%,
+    rgba(15,23,42,.65) 40%,
+    rgba(15,23,42,.9) 54%,
+    rgba(15,23,42,.96) 100%
+  );
+}
+
+.mm-btn-volver-inicio {
+  position: absolute; top: 24px; left: 24px; z-index: 4;
+  padding: 10px 16px; border: 1px solid rgba(255,255,255,.2); border-radius: 14px;
+  background: rgba(8,14,30,.7); color: #dce7f8; font-size: 14px; font-weight: 700;
+  cursor: pointer; backdrop-filter: blur(10px); transition: transform .2s ease, background .2s ease;
+}
+.mm-btn-volver-inicio:hover { transform: translateY(-2px); background: rgba(255,255,255,.12); }
+
+/* Burbuja de Koby con instrucciones */
+.mm-koby-habla {
+  /* Abajo a la izquierda (no sobre la cara de Koby, que queda arriba-centro
+     de la escena) — la burbuja "habla hacia arriba" con la colita apuntando
+     hacia él. */
+  position: absolute; left: 4%; bottom: 6%; z-index: 3;
+  width: 300px; display: flex; flex-direction: column-reverse; align-items: flex-end;
+  animation: mmPopIn .5s .3s both cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes mmPopIn { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: scale(1); } }
+.mm-habla-bubble {
+  background: rgba(255,255,255,0.97); border: 3px solid #38bdf8; border-radius: 22px;
+  padding: 18px 20px 14px; color: #0f172a; box-shadow: 0 8px 40px rgba(56,189,248,.4);
+}
+.mm-habla-saludo { font-size: 17px; font-weight: 800; margin: 0 0 6px; }
+.mm-habla-intro { font-size: 13px; font-weight: 700; color: #0369a1; margin: 0 0 10px; text-transform: uppercase; letter-spacing: .5px; }
+.mm-habla-pasos { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+.mm-habla-paso { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 700; color: #0f172a; }
+.mm-h-ico { font-size: 20px; flex-shrink: 0; }
+.mm-habla-animo { font-size: 14px; font-weight: 700; color: #0284c7; margin: 0; text-align: right; }
+.mm-habla-tail {
+  width: 0; height: 0; border-left: 16px solid transparent; border-right: 16px solid transparent;
+  border-bottom: 22px solid #38bdf8; margin: 0 28px 0 0; position: relative;
+}
+.mm-habla-tail::after {
+  content: ''; position: absolute; bottom: -25px; left: -12px;
+  width: 0; height: 0; border-left: 12px solid transparent; border-right: 12px solid transparent;
+  border-bottom: 18px solid rgba(255,255,255,.97);
+}
+
+.mm-inicio-panel {
+  position: absolute; z-index: 2; left: 50%; top: 50%; transform: translateY(-50%);
+  width: 48%; max-width: 520px; max-height: 90vh; overflow-y: auto;
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  padding: 28px 32px; background: rgba(15,23,42,.5); backdrop-filter: blur(4px);
+  border-radius: 28px; animation: mmSlideUp .5s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes mmSlideUp { from { opacity: 0; transform: translateY(-50%) translateY(20px); } to { opacity: 1; transform: translateY(-50%) translateY(0); } }
+
+.mm-titulo-juego { font-size: 38px; font-weight: 900; margin: 0 0 8px; line-height: 1.1; }
+.mm-titulo-grad { background: linear-gradient(135deg,#38bdf8,#0ea5e9); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+.mm-titulo-blanco { color: white; }
+.mm-subtitulo-juego { font-size: 14px; color: #94a3b8; margin-bottom: 22px; }
+
+.mm-btn-empezar { width: 100%; margin-top: 4px; margin-bottom: 16px; font-size: 17px; }
+
+.mm-volumen-footer { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.mm-btn-voz {
+  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2);
+  border-radius: 50%; width: 42px; height: 42px; font-size: 20px; cursor: pointer; transition: all .2s;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.mm-btn-voz:hover { background: rgba(255,255,255,.2); transform: scale(1.1); }
+
+.mm-niveles { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px,1fr)); gap: 10px; margin-bottom: 18px; width: 100%; }
 .mm-nivel-card {
-  background: rgba(255,255,255,.06); border: 1.5px solid rgba(255,255,255,.14); border-radius: 18px;
-  padding: 18px 12px; cursor: pointer; color: white; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  background: rgba(255,255,255,.06); border: 1.5px solid rgba(255,255,255,.14); border-radius: 16px;
+  padding: 14px 10px; cursor: pointer; color: white; display: flex; flex-direction: column; align-items: center; gap: 5px;
   transition: all .18s;
 }
 .mm-nivel-card:hover { background: rgba(255,255,255,.1); transform: translateY(-2px); }
 .mm-nivel-activo { border-color: #34d399; box-shadow: 0 0 0 2px rgba(52,211,153,.4), 0 8px 24px rgba(52,211,153,.25); background: rgba(52,211,153,.12); }
-.mm-nivel-emoji { font-size: 28px; }
-.mm-nivel-label { font-weight: 800; font-size: 15px; }
-.mm-nivel-desc { font-size: 11px; color: rgba(255,255,255,.6); text-align: center; }
+.mm-nivel-emoji { font-size: 24px; }
+.mm-nivel-label { font-weight: 800; font-size: 14px; }
+.mm-nivel-desc { font-size: 10px; color: rgba(255,255,255,.6); text-align: center; }
 
-.mm-inicio-acciones { display: flex; flex-direction: column; gap: 10px; align-items: center; }
 .mm-btn-primario, .mm-btn-secundario {
   border: none; border-radius: 14px; padding: 14px 32px; font-size: 15px; font-weight: 700; cursor: pointer; transition: all .2s;
 }
@@ -37,7 +123,7 @@
 .mm-btn-secundario { background: rgba(255,255,255,.08); color: rgba(255,255,255,.8); border: 1px solid rgba(255,255,255,.2); }
 .mm-btn-secundario:hover { background: rgba(255,255,255,.14); }
 
-.mm-error { color: #fca5a5; background: rgba(239,68,68,.12); border: 1px solid rgba(239,68,68,.35); border-radius: 12px; padding: 10px 16px; margin-bottom: 16px; }
+.mm-error { color: #fca5a5; background: rgba(239,68,68,.12); border: 1px solid rgba(239,68,68,.35); border-radius: 12px; padding: 10px 16px; margin-bottom: 16px; width: 100%; box-sizing: border-box; }
 
 /* ── Cargando ───────────────────────────────────────────────────────── */
 .mm-cargando { display: flex; flex-direction: column; align-items: center; gap: 16px; margin-top: 120px; }

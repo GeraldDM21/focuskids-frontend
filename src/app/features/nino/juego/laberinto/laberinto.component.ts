@@ -41,55 +41,44 @@ const MASCOTA_MSGS: Record<Mood, string[]> = {
       <!-- ══ INICIO ══════════════════════════════════════════ -->
       @if (estado === 'inicio') {
         <div class="pantalla-inicio">
-          <div class="orb orb-1"></div>
-          <div class="orb orb-2"></div>
+          <img class="bg-escena" src="/mascotas/michi-escena.png" alt="Escena de Michi en el laberinto">
+          <div class="inicio-velo"></div>
 
-          <div class="inicio-content">
-            <div class="hero-mascota">
-              <div class="fox-ring"><div class="fox-avatar">🐱</div></div>
-              <div class="fox-bubble-inicio">
-                ¡Hola! Soy <strong>Michi</strong> 🐱<br>
-                ¡Vamos a planificar el camino antes de movernos! 🧩
+          <button class="btn-volver-inicio" (click)="volver()">← Volver</button>
+
+          <!-- Michi explica las instrucciones desde su burbuja -->
+          <div class="michi-habla">
+            <div class="habla-bubble">
+              <p class="habla-saludo">¡Hola! Soy <strong>Michi</strong> 🐱</p>
+              <p class="habla-intro">Para jugar Laberinto Cognitivo:</p>
+              <div class="habla-pasos">
+                <div class="habla-paso"><span class="h-ico">👀</span><span>Memoriza el laberinto 3 segundos</span></div>
+                <div class="habla-paso"><span class="h-ico">⌨️</span><span>Muévete con flechas o el dedo</span></div>
+                <div class="habla-paso"><span class="h-ico">🎯</span><span>Menos pasos de más = mayor dificultad</span></div>
+                <div class="habla-paso"><span class="h-ico">🧱</span><span>Desde nivel 3: ¡cuidado con quedar atrapado!</span></div>
               </div>
+              <p class="habla-animo">¡Yo te ayudo! ✨</p>
             </div>
+            <div class="habla-tail"></div>
+          </div>
 
+          <!-- Panel derecho — solo título y botón -->
+          <div class="inicio-panel">
             <h1 class="titulo-juego">
               <span class="titulo-grad">Laberinto</span><span class="titulo-blanco"> Cognitivo</span>
             </h1>
             <p class="subtitulo-juego">Memoriza el camino, planifica tu ruta y llega a la meta</p>
 
-            <div class="instrucciones-grid">
-              <div class="instr-card instr-cyan">
-                <span class="instr-num">1</span>
-                <div class="instr-emoji">👀</div>
-                <div class="instr-text">Mira el laberinto completo 3 segundos antes de moverte</div>
-              </div>
-              <div class="instr-card instr-azul">
-                <span class="instr-num">2</span>
-                <div class="instr-emoji">⌨️</div>
-                <div class="instr-text">Muévete con las flechas o deslizando el dedo</div>
-              </div>
-              <div class="instr-card instr-verde">
-                <span class="instr-num">3</span>
-                <div class="instr-emoji">🎯</div>
-                <div class="instr-text">Entre menos pasos de más uses, más sube la dificultad</div>
-              </div>
-              <div class="instr-card instr-amarillo">
-                <span class="instr-num">4</span>
-                <div class="instr-emoji">🧱</div>
-                <div class="instr-text">Desde el nivel 3, si entras a un camino sin salida puede cerrarse una pared ahí — ¡cuidado, podrías quedar atrapado! Si pasa, reintentas con un mapa nuevo</div>
-              </div>
-            </div>
-
-            <div class="inicio-footer">
-              <button class="btn-empezar" (click)="iniciarJuego()">
-                <span>🧩</span> ¡Empezar!
-                <span class="btn-shine"></span>
-              </button>
-            </div>
+            <button class="btn-empezar" (click)="iniciarJuego()">
+              🧩 ¡Empezar!
+              <span class="btn-shine"></span>
+            </button>
 
             <div class="volumen-footer">
               <app-volume-control [volumen]="volumenActual" (volumenChange)="onVolumenChange($event)"></app-volume-control>
+              <button class="btn-voz" (click)="toggleVoz()" [title]="voiceEnabled ? 'Silenciar a Michi' : 'Activar voz de Michi'">
+                {{ voiceEnabled ? '🔊' : '🔇' }}
+              </button>
             </div>
           </div>
         </div>
@@ -127,6 +116,9 @@ const MASCOTA_MSGS: Record<Mood, string[]> = {
                 <span class="badge-ico">🚧</span>
                 <span class="badge-num">{{ callejonesRondaActual }}</span>
               </div>
+              <button class="btn-voz-hdr" (click)="toggleVoz()" [title]="voiceEnabled ? 'Silenciar a Michi' : 'Activar voz de Michi'">
+                {{ voiceEnabled ? '🔊' : '🔇' }}
+              </button>
             </div>
           </div>
 
@@ -235,64 +227,99 @@ const MASCOTA_MSGS: Record<Mood, string[]> = {
 
     /* ══ INICIO ══ */
     .pantalla-inicio { min-height: 100vh; width: 100%; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
-    .orb { position: absolute; border-radius: 50%; filter: blur(70px); pointer-events: none; }
-    .orb-1 { width: 340px; height: 340px; background: rgba(6,182,212,.22); top: -80px; left: -60px; animation: orbFloat 9s ease-in-out infinite; }
-    .orb-2 { width: 260px; height: 260px; background: rgba(20,184,166,.18); bottom: -60px; right: -40px; animation: orbFloat 7s ease-in-out infinite 2s; }
-    @keyframes orbFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-22px)} }
 
-    .inicio-content { position: relative; z-index: 1; text-align: center; padding: 24px 24px 40px; max-width: 540px; width: 100%; animation: slideUp .5s cubic-bezier(.34,1.56,.64,1); }
-
-    .hero-mascota { display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; }
-    .fox-ring {
-      width: 140px; height: 140px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      background: radial-gradient(circle, rgba(6,182,212,.2), rgba(6,182,212,.05));
-      border: 2px solid rgba(6,182,212,.4);
-      box-shadow: 0 0 40px rgba(6,182,212,.3);
-      animation: ringPulse 2.8s ease-in-out infinite;
+    .bg-escena {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; object-position: left center; z-index: 0;
+      /* La escena, al cubrir por ancho, no se recortaba horizontalmente con
+         object-position (Michi quedaba flotando cerca del centro). Este
+         zoom+paneo con transform-origin a la derecha de Michi lo empuja hacia
+         el borde izquierdo. Valores ajustados (probados renderizando la
+         transformación real sobre la imagen) para que el tamaño de Michi y
+         del fondo se mantengan igual que antes — solo cambia la posición. */
+      transform-origin: 90% 52%;
+      animation: bgZoomMichi 24s ease-in-out infinite alternate;
     }
-    @keyframes ringPulse { 0%,100%{opacity:.7;transform:scale(1)} 50%{opacity:1;transform:scale(1.04)} }
-    .fox-avatar { font-size: 84px; line-height: 1; animation: flotar 3s ease-in-out infinite; filter: drop-shadow(0 0 24px rgba(6,182,212,.8)); }
-
-    .fox-bubble-inicio {
-      position: relative; margin-top: 14px; max-width: 320px;
-      background: white; color: #0f172a; border-radius: 20px; padding: 14px 20px;
-      font-size: 14px; font-weight: 600; line-height: 1.6;
-      box-shadow: 0 8px 32px rgba(0,0,0,.35);
-      animation: popIn .4s .4s both cubic-bezier(.34,1.56,.64,1);
+    @keyframes bgZoomMichi { from { transform: scale(1.30) translate(0,0); } to { transform: scale(1.34) translate(-.5%, .3%); } }
+    .inicio-velo {
+      position: absolute; inset: 0; z-index: 1;
+      background: linear-gradient(
+        to right,
+        transparent 0%,
+        transparent 26%,
+        rgba(9,26,31,.65) 40%,
+        rgba(9,26,31,.9) 54%,
+        rgba(9,26,31,.96) 100%
+      );
     }
-    .fox-bubble-inicio::before { content:''; position:absolute; top:-10px; left:50%; transform:translateX(-50%); border:10px solid transparent; border-bottom-color:white; }
 
-    .titulo-juego { font-size: 40px; font-weight: 900; margin: 18px 0 6px; line-height: 1.1; }
+    /* Botón volver fijo arriba-izquierda (mismo patrón que Espejo Mental) */
+    .btn-volver-inicio {
+      position: absolute; top: 24px; left: 24px; z-index: 4;
+      padding: 10px 16px; border: 1px solid rgba(255,255,255,.2); border-radius: 14px;
+      background: rgba(8,14,30,.7); color: #dce7f8; font-size: 14px; font-weight: 700;
+      cursor: pointer; backdrop-filter: blur(10px); transition: transform .2s ease, background .2s ease;
+    }
+    .btn-volver-inicio:hover { transform: translateY(-2px); background: rgba(255,255,255,.12); }
+
+    .inicio-panel {
+      position: absolute; z-index: 2; left: 50%; top: 50%; transform: translateY(-50%);
+      width: 48%; max-width: 500px;
+      display: flex; flex-direction: column; align-items: center; text-align: center;
+      padding: 28px 32px; background: rgba(9,26,31,.45); backdrop-filter: blur(4px);
+      border-radius: 28px; animation: slideUp .5s cubic-bezier(.34,1.56,.64,1);
+    }
+
+    /* Burbuja de Michi con instrucciones */
+    .michi-habla {
+      position: absolute; left: 19%; top: 4%; transform: translateX(-50%); z-index: 3;
+      width: 300px; animation: popIn .5s .3s both cubic-bezier(.34,1.56,.64,1);
+    }
+    .habla-bubble {
+      background: rgba(255,255,255,0.97); border: 3px solid #22d3ee; border-radius: 22px;
+      padding: 18px 20px 14px; color: #0f172a; box-shadow: 0 8px 40px rgba(8,145,178,.4);
+    }
+    .habla-saludo { font-size: 17px; font-weight: 800; margin: 0 0 6px; }
+    .habla-intro { font-size: 13px; font-weight: 700; color: #0e7490; margin: 0 0 10px; text-transform: uppercase; letter-spacing: .5px; }
+    .habla-pasos { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+    .habla-paso { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 700; color: #0f172a; }
+    .h-ico { font-size: 20px; flex-shrink: 0; }
+    .habla-animo { font-size: 14px; font-weight: 700; color: #0891b2; margin: 0; text-align: right; }
+    .habla-tail {
+      width: 0; height: 0; border-left: 16px solid transparent; border-right: 16px solid transparent;
+      border-top: 22px solid #22d3ee; margin: 0 auto; position: relative;
+    }
+    .habla-tail::after {
+      content: ''; position: absolute; top: -25px; left: -12px;
+      width: 0; height: 0; border-left: 12px solid transparent; border-right: 12px solid transparent;
+      border-top: 18px solid rgba(255,255,255,.97);
+    }
+
+    .titulo-juego { font-size: 40px; font-weight: 900; margin: 0 0 8px; line-height: 1.1; }
     .titulo-grad { background: linear-gradient(135deg,#22d3ee,#0891b2); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
     .titulo-blanco { color: white; }
-    .subtitulo-juego { font-size: 14px; color: #94a3b8; margin-bottom: 20px; }
+    .subtitulo-juego { font-size: 14px; color: #94a3b8; margin-bottom: 24px; }
 
-    .instrucciones-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; text-align: left; }
-    .instr-card { border: 1.5px solid rgba(255,255,255,.1); border-radius: 14px; padding: 14px 12px; position: relative; }
-    .instr-num { position:absolute; top:8px; right:10px; font-size:10px; font-weight:800; color:rgba(255,255,255,.25); }
-    .instr-emoji { font-size: 26px; margin-bottom: 6px; display: block; }
-    .instr-text { font-size: 12px; color: #cbd5e1; line-height: 1.4; }
-    .instr-cyan     { border-color:rgba(34,211,238,.5); background:rgba(34,211,238,.08); }
-    .instr-azul     { border-color:rgba(96,165,250,.5); background:rgba(96,165,250,.08); }
-    .instr-verde    { border-color:rgba(74,222,128,.5); background:rgba(74,222,128,.08); }
-    .instr-amarillo { border-color:rgba(251,191,36,.5); background:rgba(251,191,36,.08); }
-
-    .inicio-footer { display:flex; align-items:center; justify-content:center; gap:14px; margin-bottom: 8px; }
     .btn-empezar {
-      display: inline-flex; align-items: center; gap: 10px;
+      display: inline-flex; align-items: center; gap: 10px; justify-content: center; width: 100%;
       background: linear-gradient(135deg,#0891b2,#0e7490); color: white;
       border: none; border-radius: 20px; padding: 16px 44px;
       font-size: 18px; font-weight: 800; cursor: pointer; transition: all .2s;
       box-shadow: 0 8px 32px rgba(8,145,178,.5); position: relative; overflow: hidden;
-      animation: pulseBtn 2s infinite;
+      animation: pulseBtn 2s infinite; margin-bottom: 18px;
     }
     .btn-empezar:hover { transform: translateY(-4px) scale(1.05); animation: none; }
     .btn-shine { position:absolute; top:0; left:-80%; width:50%; height:100%; background:linear-gradient(90deg,transparent,rgba(255,255,255,.25),transparent); animation: shine 2.5s ease-in-out infinite 1s; }
     @keyframes shine { 0%{left:-80%} 100%{left:120%} }
     @keyframes pulseBtn { 0%,100%{box-shadow:0 8px 32px rgba(8,145,178,.5),0 0 0 0 rgba(8,145,178,.4)} 50%{box-shadow:0 8px 32px rgba(8,145,178,.5),0 0 0 14px rgba(8,145,178,0)} }
 
-    .volumen-footer { display: flex; justify-content: center; }
+    .volumen-footer { display: flex; align-items: center; justify-content: center; gap: 10px; }
+    .btn-voz {
+      background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2);
+      border-radius: 50%; width: 42px; height: 42px; font-size: 20px; cursor: pointer; transition: all .2s;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .btn-voz:hover { background: rgba(255,255,255,.2); transform: scale(1.1); }
 
     /* ══ JUEGO ══ */
     .pantalla-juego { width: 100%; max-width: 560px; padding: 20px 20px 32px; position: relative; }
@@ -320,6 +347,13 @@ const MASCOTA_MSGS: Record<Mood, string[]> = {
     .badge-rojo  { background: rgba(239,68,68,.14); border-color: rgba(239,68,68,.35); }
     .badge-ico { font-size: 15px; }
     .badge-num { font-size: 13px; font-weight: 900; color: white; }
+    .btn-voz-hdr {
+      background: rgba(255,255,255,.08); border: 1.5px solid rgba(255,255,255,.18);
+      border-radius: 50%; width: 34px; height: 34px;
+      font-size: 15px; cursor: pointer; transition: all .2s; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .btn-voz-hdr:hover { background: rgba(255,255,255,.18); transform: scale(1.1); }
 
     .despliegue-banner, .jugando-banner {
       text-align: center; margin-bottom: 14px; padding: 10px 14px; border-radius: 14px;
@@ -449,6 +483,10 @@ export class LaberintoComponent implements OnInit, OnDestroy {
   volumenActual: NivelVolumen = 75;
   errorBackend: string | null = null;
 
+  /** Voz de Michi (TTS), mismo mecanismo que Espejo Mental/Historia Viva: independiente del control de sonido/volumen. */
+  voiceEnabled = true;
+  private michiVoice: SpeechSynthesisVoice | null = null;
+
   private readonly JUEGO_ID = 4;
   private nivelRecomendadoNumero: number | null = null;
   private celdaObstaculoReciente: Posicion | null = null;
@@ -513,10 +551,63 @@ export class LaberintoComponent implements OnInit, OnDestroy {
           });
       }
     });
+
+    this.cargarVozMichi();
+    this.hablar('¡Hola! Soy Michi. Vamos a planificar el camino antes de movernos.');
   }
 
   ngOnDestroy(): void {
     this.limpiarTimers();
+    window.speechSynthesis?.cancel();
+  }
+
+  // ── Voz de Michi (TTS) — mismo mecanismo usado en Espejo Mental/Historia Viva ──
+
+  toggleVoz(): void {
+    this.voiceEnabled = !this.voiceEnabled;
+    if (!this.voiceEnabled) window.speechSynthesis?.cancel();
+  }
+
+  private cargarVozMichi(): void {
+    const seleccionar = () => {
+      const voces = window.speechSynthesis?.getVoices() ?? [];
+      // Prioridad: voces en español disponibles en Windows/Mac/Android (mismo orden que Espejo Mental)
+      const candidatas = [
+        voces.find(v => v.name.includes('Sabina')),
+        voces.find(v => v.name.includes('Paulina')),
+        voces.find(v => v.name.includes('Monica')),
+        voces.find(v => v.name.includes('Helena')),
+        voces.find(v => v.name.includes('Laura')),
+        voces.find(v => v.name.includes('Elvira')),
+        voces.find(v => v.lang === 'es-MX'),
+        voces.find(v => v.lang === 'es-ES'),
+        voces.find(v => v.lang.startsWith('es')),
+      ];
+      this.michiVoice = candidatas.find(v => !!v) ?? null;
+    };
+    if (window.speechSynthesis?.getVoices().length) {
+      seleccionar();
+    } else {
+      window.speechSynthesis?.addEventListener('voiceschanged', seleccionar, { once: true });
+    }
+  }
+
+  private hablar(texto: string, rate = 0.92, pitch = 1.3): void {
+    if (!this.voiceEnabled || !window.speechSynthesis) return;
+    try {
+      window.speechSynthesis.cancel();
+      const utt = new SpeechSynthesisUtterance(texto);
+      if (this.michiVoice) {
+        utt.voice = this.michiVoice;
+        utt.lang = this.michiVoice.lang;
+      } else {
+        utt.lang = 'es-ES';
+      }
+      utt.volume = 0.9;
+      utt.rate = rate;
+      utt.pitch = pitch;
+      window.speechSynthesis.speak(utt);
+    } catch { /* TTS no disponible en este navegador: no bloquea el juego */ }
   }
 
   // ── Volumen (consistente con el resto de juegos) ────────────────────────
@@ -722,6 +813,7 @@ export class LaberintoComponent implements OnInit, OnDestroy {
     this.estado = 'feedback';
     this.mascotMood = 'encourage';
     this.mascotMsg = '¡Uy, te quedaste sin salida! 🧱 Vamos con un mapa nuevo';
+    this.hablar(this.sinEmojis(this.mascotMsg));
     this.feedback.showIncorrect('¡Sin salida! Nuevo intento 🔄');
     this.cdr.detectChanges();
 
@@ -791,6 +883,7 @@ export class LaberintoComponent implements OnInit, OnDestroy {
 
   private finalizarSesion(): void {
     this.estado = 'resultados';
+    this.hablar(this.sinEmojis(this.tituloFinal + '. ' + this.mensajeFinal), 0.9, 1.2);
     this.cdr.detectChanges();
 
     if (this.sesionBackendId == null) return;
@@ -853,6 +946,12 @@ export class LaberintoComponent implements OnInit, OnDestroy {
     this.mascotMood = mood;
     const msgs = MASCOTA_MSGS[mood];
     this.mascotMsg = msgs[Math.floor(Math.random() * msgs.length)];
+    this.hablar(this.sinEmojis(this.mascotMsg));
+  }
+
+  /** Quita emojis antes de mandar el texto al sintetizador de voz (mismo criterio que Espejo Mental). */
+  private sinEmojis(texto: string): string {
+    return texto.replace(/[\u{1F300}-\u{1FFFF}]/gu, '').trim();
   }
 
   private limpiarTimers(): void {
