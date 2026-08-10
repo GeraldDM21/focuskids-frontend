@@ -7,6 +7,7 @@ import { catchError } from 'rxjs/operators';
 import { DocenteService, AlumnoDocente, Asignacion } from '../docente.service';
 import { SesionJuego, Metrica } from '../../padre/padre.service';
 import { FormsModule } from '@angular/forms';
+import { EvolucionChartComponent } from '../../../shared/components/evolucion-chart/evolucion-chart.component';
 
 interface Estudiante {
   id: number; nombre: string; avatar: string; edad: number;
@@ -39,7 +40,7 @@ const JUEGO_ICO: Record<string, string> = {
 @Component({
   selector: 'app-docente-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, EvolucionChartComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
 <div class="root">
@@ -130,6 +131,7 @@ const JUEGO_ICO: Record<string, string> = {
                   <th>PRECISIÓN</th>
                   <th>XP</th>
                   <th>ESTADO</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -148,6 +150,7 @@ const JUEGO_ICO: Record<string, string> = {
                     </td>
                     <td class="td-xp">⭐ {{ e.xp }}</td>
                     <td><span class="badge" [class]="badgeClass(e.estado)">{{ e.estado }}</span></td>
+                    <td><button class="btn-evolucion" (click)="verEvolucion(e)">📈 Ver evolución</button></td>
                   </tr>
                 }
               </tbody>
@@ -449,6 +452,21 @@ const JUEGO_ICO: Record<string, string> = {
 
     </div>
   </div>
+
+  <!-- ══ MODAL EVOLUCIÓN DE ALUMNO ══ -->
+  @if (alumnoEnEvolucion) {
+    <div class="overlay" (click)="cerrarEvolucion()">
+      <div class="modal modal-evolucion" (click)="$event.stopPropagation()">
+        <div class="modal-evo-header">
+          <h2 class="modal-title" style="margin:0">
+            📈 Evolución de {{ alumnoEnEvolucion.nombre }}
+          </h2>
+          <button class="modal-close" (click)="cerrarEvolucion()">×</button>
+        </div>
+        <app-evolucion-chart [perfilId]="alumnoEnEvolucion.id" />
+      </div>
+    </div>
+  }
 </div>
   `,
   styles: [`
@@ -672,6 +690,17 @@ const JUEGO_ICO: Record<string, string> = {
     .ca-est { font-size:10px; font-weight:800; padding:3px 10px; border-radius:20px; }
     .est-ok { background:#DCFCE7; color:#15803D; }
     .est-no { background:#FEE2E2; color:#B91C1C; }
+
+    /* ── Evolución (modal) ── */
+    .btn-evolucion { background:#F0FDF4; color:#15803D; border:1.5px solid #86EFAC; border-radius:10px; padding:6px 12px; font-size:11.5px; font-weight:700; cursor:pointer; white-space:nowrap; }
+    .btn-evolucion:hover { background:#DCFCE7; }
+    .overlay { position:fixed; inset:0; background:rgba(20,83,45,.45); display:flex; align-items:center; justify-content:center; z-index:1000; padding:20px; }
+    .modal { background:white; border-radius:24px; padding:28px 32px; box-shadow:0 20px 60px rgba(20,83,45,.2); }
+    .modal-evolucion { width:100%; max-width:760px; max-height:88vh; overflow-y:auto; }
+    .modal-evo-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+    .modal-title { font-size:19px; font-weight:900; color:#14532D; }
+    .modal-close { background:#F0FDF4; border:none; border-radius:10px; width:32px; height:32px; font-size:18px; color:#15803D; cursor:pointer; flex-shrink:0; }
+    .modal-close:hover { background:#DCFCE7; }
   `]
 })
 export class DocenteDashboardComponent implements OnInit {
@@ -686,6 +715,9 @@ export class DocenteDashboardComponent implements OnInit {
 
   estudiantes: Estudiante[] = [];
   alertas:     Alerta[]     = [];
+
+  // Modal de evolución (gráficas)
+  alumnoEnEvolucion: Estudiante | null = null;
 
   logrosClase: LogroClase[] = [];
 
@@ -905,4 +937,13 @@ export class DocenteDashboardComponent implements OnInit {
   cuentaEstado(estado: string): number { return this.estudiantes.filter(e => e.estado === estado).length; }
 
   eventosDelDia(dia: number): EventoCal[] { return this.eventos.filter(e => e.dia === dia); }
+
+  // ── Evolución (modal) ──
+  verEvolucion(e: Estudiante): void {
+    this.alumnoEnEvolucion = e;
+  }
+
+  cerrarEvolucion(): void {
+    this.alumnoEnEvolucion = null;
+  }
 }
