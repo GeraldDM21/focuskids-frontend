@@ -130,6 +130,7 @@ const JUEGO_ICO: Record<string, string> = {
                   <th>PRECISIÓN</th>
                   <th>XP</th>
                   <th>ESTADO</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -148,6 +149,7 @@ const JUEGO_ICO: Record<string, string> = {
                     </td>
                     <td class="td-xp">⭐ {{ e.xp }}</td>
                     <td><span class="badge" [class]="badgeClass(e.estado)">{{ e.estado }}</span></td>
+                    <td><button class="btn-ver-historial" (click)="verHistorialDetallado(e)">📅 Historial</button></td>
                   </tr>
                 }
               </tbody>
@@ -526,6 +528,8 @@ const JUEGO_ICO: Record<string, string> = {
     .badge-ex  { background:#DCFCE7; color:#15803D; }
     .badge-mb  { background:#FEF9C3; color:#A16207; }
     .badge-na  { background:#FEE2E2; color:#B91C1C; }
+    .btn-ver-historial { background:#F0FDF4; color:#15803D; border:none; border-radius:8px; padding:6px 10px; font-size:11px; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap; }
+    .btn-ver-historial:hover { background:#DCFCE7; }
     .right-col { display:flex; flex-direction:column; gap:12px; }
     .panel { background:white; border-radius:16px; padding:16px; box-shadow:0 2px 10px rgba(21,128,61,.07); }
     .top-row { display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid #F0FDF4; }
@@ -913,4 +917,8 @@ export class DocenteDashboardComponent implements OnInit {
   cuentaEstado(estado: string): number { return this.estudiantes.filter(e => e.estado === estado).length; }
 
   eventosDelDia(dia: number): EventoCal[] { return this.eventos.filter(e => e.dia === dia); }
+
+  verHistorialDetallado(e: Estudiante): void {
+    this.router.navigate(['/docente/historial', e.id], { queryParams: { nombre: e.nombre } });
+  }
 }

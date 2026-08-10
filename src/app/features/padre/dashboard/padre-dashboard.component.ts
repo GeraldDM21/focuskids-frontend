@@ -302,7 +302,10 @@ interface DiaActividad     { dia: string; valor: number; }
             <div class="actividad-wrap">
               <div class="act-header">
                 <h2 class="act-title">Historial de sesiones</h2>
-                <div class="act-count">{{ sesiones.length }} sesiones en total</div>
+                <div class="act-header-right">
+                  <div class="act-count">{{ sesiones.length }} sesiones en total</div>
+                  <button class="btn-historial" (click)="verHistorialDetallado()">📅 Ver historial detallado</button>
+                </div>
               </div>
               <div class="sesiones-list">
                 @for (s of sesionesOrdenadas; track s.id) {
@@ -680,9 +683,12 @@ interface DiaActividad     { dia: string; valor: number; }
 
     /* ── ACTIVIDAD ── */
     .actividad-wrap { display:flex; flex-direction:column; gap:12px; }
-    .act-header { display:flex; align-items:center; justify-content:space-between; }
+    .act-header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; }
+    .act-header-right { display:flex; align-items:center; gap:12px; }
     .act-title { font-size:16px; font-weight:800; color:#1E1B4B; }
     .act-count { font-size:12px; color:#94A3B8; font-weight:600; }
+    .btn-historial { background:#EDE9FE; color:#5B21B6; border:none; border-radius:10px; padding:8px 16px; font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap; }
+    .btn-historial:hover { background:#DDD6FE; }
     .sesiones-list { display:flex; flex-direction:column; gap:8px; }
     .sesion-row { background:white; border-radius:14px; padding:14px 16px; display:flex; align-items:center; gap:14px; box-shadow:0 1px 6px rgba(91,33,182,.05); border-left:4px solid #E4DEFF; transition:transform .15s; }
     .sesion-row:hover { transform:translateX(3px); }
@@ -1136,6 +1142,13 @@ export class PadreDashboardComponent implements OnInit {
   }
 
   jugarDesdeInicio(p: ChildProfile): void { this.jugar(p); }
+
+  verHistorialDetallado(): void {
+    if (!this.selectedPerfil) return;
+    this.router.navigate(['/padre/historial', this.selectedPerfil.id], {
+      queryParams: { nombre: this.selectedPerfil.nombre }
+    });
+  }
 
   cambiarResumenSemanal(): void {
     const uid = this.auth.user()?.usuarioId;
