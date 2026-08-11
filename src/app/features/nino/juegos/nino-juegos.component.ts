@@ -556,30 +556,6 @@ interface Avatar      { key: string; emoji: string; }
             </div>
             <p class="config-note">Para cambiar tu nombre o contraseña, pedile a tu tutor. 👨‍👩‍👧</p>
           </div>
-          <div class="config-card">
-            <h3 class="config-section-title">🔊 Sonido</h3>
-            <div class="config-toggle-row">
-              <div class="toggle-info"><div class="toggle-label">Música y efectos del juego</div><div class="toggle-desc">Sonidos durante las partidas</div></div>
-              <button class="toggle-btn" [class.toggle-on]="sonidoJuego" (click)="sonidoJuego=!sonidoJuego"><div class="toggle-knob"></div></button>
-            </div>
-            <div class="config-toggle-row">
-              <div class="toggle-info"><div class="toggle-label">Voz de la mascota</div><div class="toggle-desc">La mascota te da tips en voz alta</div></div>
-              <button class="toggle-btn" [class.toggle-on]="vozMascota" (click)="vozMascota=!vozMascota"><div class="toggle-knob"></div></button>
-            </div>
-          </div>
-          <div class="config-card">
-            <h3 class="config-section-title">🎮 Preferencias de juego</h3>
-            <div class="config-field">
-              <label class="config-label">Nivel inicial preferido</label>
-              <div class="nivel-selector">
-                @for (n of nivelesConfig; track n.val) {
-                  <button class="nivel-opt" [class.nivel-opt-sel]="nivelInicial===n.val" (click)="nivelInicial=n.val">
-                    <span>{{ n.ico }}</span> {{ n.lbl }}
-                  </button>
-                }
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     }
@@ -1415,19 +1391,6 @@ interface Avatar      { key: string; emoji: string; }
     .avatar-btn { width: 52px; height: 52px; border-radius: 12px; border: 2px solid #E2E8F0; background: #F8F7FF; font-size: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .2s; }
     .avatar-btn:hover { border-color: #A78BFA; transform: scale(1.1); }
     .avatar-sel { border-color: #7C3AED; background: #EDE9FE; box-shadow: 0 0 0 3px rgba(124,58,237,.2); }
-    .config-toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid #F1F0F9; }
-    .config-toggle-row:last-child { border-bottom: none; }
-    .toggle-info { flex: 1; }
-    .toggle-label { font-size: 14px; font-weight: 700; color: #334155; }
-    .toggle-desc  { font-size: 12px; color: #94A3B8; margin-top: 2px; }
-    .toggle-btn { width: 46px; height: 26px; border-radius: 100px; border: none; cursor: pointer; background: #E2E8F0; position: relative; transition: background .25s; flex-shrink: 0; }
-    .toggle-btn.toggle-on { background: #7C3AED; }
-    .toggle-knob { position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: white; transition: left .25s; box-shadow: 0 1px 4px rgba(0,0,0,.2); }
-    .toggle-btn.toggle-on .toggle-knob { left: 23px; }
-    .nivel-selector { display: flex; gap: 8px; flex-wrap: wrap; }
-    .nivel-opt { display: flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 12px; border: 2px solid #E2E8F0; background: white; font-size: 13px; font-weight: 700; cursor: pointer; color: #475569; transition: all .2s; }
-    .nivel-opt:hover { border-color: #A78BFA; color: #7C3AED; }
-    .nivel-opt-sel { border-color: #7C3AED; background: #EDE9FE; color: #7C3AED; }
   `]
 })
 export class NinoJuegosComponent implements OnInit {
@@ -1574,18 +1537,10 @@ export class NinoJuegosComponent implements OnInit {
   tiempoPromedio = 0;
   mejorRacha     = 0;
 
-  sonidoJuego      = true;
-  vozMascota       = true;
   avatarSeleccionado = 'fox';
-  nivelInicial     = 'FACIL';
   filtroCategoria  = 'Todos';
 
-  readonly categorias   = ['Todos', 'Constancia', 'Maestría', 'Velocidad', 'Social'];
-  readonly nivelesConfig = [
-    { val:'FACIL', lbl:'Fácil', ico:'🟢' },
-    { val:'MEDIO', lbl:'Medio', ico:'🟡' },
-    { val:'DIFICIL', lbl:'Difícil', ico:'🟠' },
-  ];
+  readonly categorias = ['Todos', 'Constancia', 'Maestría', 'Velocidad', 'Social'];
   readonly avatares: Avatar[] = [
     { key:'fox',     emoji:'🦊' }, { key:'frog',    emoji:'🐸' },
     { key:'lion',    emoji:'🦁' }, { key:'panda',   emoji:'🐼' },

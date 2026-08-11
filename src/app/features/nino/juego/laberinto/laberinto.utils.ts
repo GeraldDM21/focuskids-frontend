@@ -183,56 +183,78 @@ export function intentarMover(celdas: Celda[][], pos: Posicion, direccion: Direc
   return { fila, col };
 }
 
+export interface ObstaculoDinamico {
+  origen: Posicion;
+  destino: Posicion;
+}
+
 /**
- * CA-04: intenta cerrar un pasaje abierto elegido al azar, para simular una
- * "pared dinámica" que aparece durante la partida. Nunca cierra un pasaje que
- * forme parte del único camino óptimo restante desde la posición actual del
- * niño hasta la meta, ni uno junto a inicio/meta/posición actual — así el
- * laberinto queda garantizado como resoluble siempre. Devuelve true si logró
- * agregar un obstáculo.
+ * CA-04 (rediseño): cuando el niño se equivoca — entra a un callejón sin
+ * salida — puede aparecer una pared nueva cerca de la celda donde ocurrió el
+ * error. A diferencia de la versión anterior, esta función YA NO garantiza
+ * que el laberinto siga siendo resoluble: si el niño tarda en darse cuenta y
+ * salir, la propia entrada al callejón se puede cerrar y quedar atrapado de
+ * verdad. Es intencional — es quien llama a esta función (LaberintoComponent)
+ * quien detecta esa situación con calcularCaminoOptimo() y reinicia con un
+ * laberinto nuevo del mismo nivel (ver manejarAtrapado).
+ *
+ * Lo único que se protege siempre es la celda meta: nunca se le cierra un
+ * pasaje, para que el laberinto no quede matemáticamente imposible de ganar
+ * por pura mala suerte de generación, sin relación con dónde se equivocó el
+ * niño. El riesgo de quedar atrapado depende únicamente de la posición del
+ * error, no del azar en cualquier parte del mapa.
+ *
+ * Busca en un radio pequeño alrededor de la celda del error (empezando por
+ * ella misma, así la propia salida del callejón es la primera candidata) y
+ * solo amplía el radio si no encuentra ahí ningún pasaje abierto para cerrar.
+ * Devuelve la celda origen y destino del pasaje cerrado (para resaltarlas en
+ * pantalla), o null si no había ningún pasaje que cerrar.
  */
 export function agregarObstaculoDinamico(
   celdas: Celda[][],
-  posicionActual: Posicion,
+  posicionError: Posicion,
   meta: Posicion,
-  maxIntentos = 25
-): boolean {
+  maxIntentosPorRadio = 20
+): ObstaculoDinamico | null {
   const tamano = celdas.length;
   const direcciones: Direccion[] = ['ARRIBA', 'ABAJO', 'IZQUIERDA', 'DERECHA'];
 
-  const esProtegida = (p: Posicion): boolean =>
-    (p.fila === posicionActual.fila && p.col === posicionActual.col) ||
-    (p.fila === meta.fila && p.col === meta.col);
+  const esMeta = (p: Posicion): boolean => p.fila === meta.fila && p.col === meta.col;
 
-  for (let intento = 0; intento < maxIntentos; intento++) {
-    const fila = Math.floor(Math.random() * tamano);
-    const col = Math.floor(Math.random() * tamano);
-    const origen: Posicion = { fila, col };
-    if (esProtegida(origen)) continue;
+  const radioMaximo = 2 * (tamano - 1); // último recurso: cubre todo el tablero
 
-    const celda = celdas[fila][col];
-    const abiertas = direcciones.filter(d => !paredEnDireccion(celda, d));
-    if (abiertas.length === 0) continue;
+  for (let radio = 0; radio <= radioMaximo; radio++) {
+    const filaMin = Math.max(0, posicionError.fila - radio);
+    const filaMax = Math.min(tamano - 1, posicionError.fila + radio);
+    const colMin = Math.max(0, posicionError.col - radio);
+    const colMax = Math.min(tamano - 1, posicionError.col + radio);
 
-    const direccion = abiertas[Math.floor(Math.random() * abiertas.length)];
-    const { df, dc } = DELTAS[direccion];
-    const destino: Posicion = { fila: fila + df, col: col + dc };
-    if (!dentroDeRango(destino.fila, destino.col, tamano) || esProtegida(destino)) continue;
+    for (let intento = 0; intento < maxIntentosPorRadio; intento++) {
+      const fila = filaMin + Math.floor(Math.random() * (filaMax - filaMin + 1));
+      const col = colMin + Math.floor(Math.random() * (colMax - colMin + 1));
+      const origen: Posicion = { fila, col };
 
-    // Cierra el pasaje temporalmente
-    setPared(celda, direccion, true);
-    setPared(celdas[destino.fila][destino.col], OPUESTA[direccion], true);
+      const distancia = Math.abs(fila - posicionError.fila) + Math.abs(col - posicionError.col);
+      if (distancia > radio) continue; // dentro del cuadro que muestreamos pero fuera del rombo real
+      if (esMeta(origen)) continue;
 
-    const sigueResoluble = calcularCaminoOptimo(celdas, posicionActual, meta).length > 0;
+      const celda = celdas[fila][col];
+      const abiertas = direcciones.filter(d => !paredEnDireccion(celda, d));
+      if (abiertas.length === 0) continue;
 
-    if (sigueResoluble) return true;
+      const direccion = abiertas[Math.floor(Math.random() * abiertas.length)];
+      const { df, dc } = DELTAS[direccion];
+      const destino: Posicion = { fila: fila + df, col: col + dc };
+      if (!dentroDeRango(destino.fila, destino.col, tamano) || esMeta(destino)) continue;
 
-    // No era seguro: revertir y probar otra pared
-    setPared(celda, direccion, false);
-    setPared(celdas[destino.fila][destino.col], OPUESTA[direccion], false);
+      setPared(celda, direccion, true);
+      setPared(celdas[destino.fila][destino.col], OPUESTA[direccion], true);
+
+      return { origen, destino };
+    }
   }
 
-  return false;
+  return null;
 }
 
 /** Tamaño del mapa según el nivel (1..5). CA-02: nivel 1 = 5×5. */

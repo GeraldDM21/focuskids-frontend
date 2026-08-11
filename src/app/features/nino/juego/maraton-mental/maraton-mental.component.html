@@ -1,36 +1,61 @@
 <div class="mm-root">
 
   @if (estado === 'inicio') {
-    <div class="mm-inicio">
-      <div class="mm-inicio-header">
-        <div class="mm-inicio-emoji">🏃🧠</div>
-        <h1>Maratón Mental</h1>
-        <p>Vas a resolver <strong>dos retos al mismo tiempo</strong>: contar objetos y encontrar colores.
-          Primero practicamos cada uno por separado, ¡y luego los combinamos!</p>
+    <div class="mm-pantalla-inicio">
+      <img class="mm-bg-escena" src="/mascotas/koby-escena.png" alt="Escena de Koby en el espacio">
+      <div class="mm-inicio-velo"></div>
+
+      <button type="button" class="mm-btn-volver-inicio" (click)="volverLobby()">← Volver</button>
+
+      <!-- Koby explica las instrucciones desde su burbuja -->
+      <div class="mm-koby-habla">
+        <div class="mm-habla-bubble">
+          <p class="mm-habla-saludo">¡Hola! Soy <strong>Koby</strong> 🐨</p>
+          <p class="mm-habla-intro">Para jugar Maratón Mental:</p>
+          <div class="mm-habla-pasos">
+            <div class="mm-habla-paso"><span class="mm-h-ico">🔢</span><span>Cuenta objetos y encuentra colores</span></div>
+            <div class="mm-habla-paso"><span class="mm-h-ico">🧠</span><span>Primero practicas cada uno solito</span></div>
+            <div class="mm-habla-paso"><span class="mm-h-ico">⚡</span><span>¡Luego las combinamos a la vez!</span></div>
+          </div>
+          <p class="mm-habla-animo">¡A entrenar tu atención! ✨</p>
+        </div>
+        <div class="mm-habla-tail"></div>
       </div>
 
-      <div class="mm-niveles">
-        @for (n of niveles; track n.id) {
-          <button
-            type="button"
-            class="mm-nivel-card"
-            [class.mm-nivel-activo]="nivelActual === n.id"
-            (click)="seleccionarNivel(n.id)"
-          >
-            <span class="mm-nivel-emoji">{{ n.emoji }}</span>
-            <span class="mm-nivel-label">{{ n.label }}</span>
-            <span class="mm-nivel-desc">{{ n.desc }}</span>
-          </button>
+      <!-- Panel derecho — título, nivel y botón -->
+      <div class="mm-inicio-panel">
+        <h1 class="mm-titulo-juego">
+          <span class="mm-titulo-grad">Maratón</span><span class="mm-titulo-blanco"> Mental</span>
+        </h1>
+        <p class="mm-subtitulo-juego">Entrena tu atención dividida resolviendo dos retos a la vez</p>
+
+        <div class="mm-niveles">
+          @for (n of niveles; track n.id) {
+            <button
+              type="button"
+              class="mm-nivel-card"
+              [class.mm-nivel-activo]="nivelActual === n.id"
+              (click)="seleccionarNivel(n.id)"
+            >
+              <span class="mm-nivel-emoji">{{ n.emoji }}</span>
+              <span class="mm-nivel-label">{{ n.label }}</span>
+              <span class="mm-nivel-desc">{{ n.desc }}</span>
+            </button>
+          }
+        </div>
+
+        @if (errorApi) {
+          <p class="mm-error">{{ errorApi }}</p>
         }
-      </div>
 
-      @if (errorApi) {
-        <p class="mm-error">{{ errorApi }}</p>
-      }
+        <button type="button" class="mm-btn-primario mm-btn-empezar" (click)="iniciarJuego()">🚀 ¡Empezar!</button>
 
-      <div class="mm-inicio-acciones">
-        <button type="button" class="mm-btn-primario" (click)="iniciarJuego()">🚀 Empezar</button>
-        <button type="button" class="mm-btn-secundario" (click)="volverLobby()">← Volver a juegos</button>
+        <div class="mm-volumen-footer">
+          <app-volume-control [volumen]="volumenActual" (volumenChange)="onVolumenChange($event)"></app-volume-control>
+          <button type="button" class="mm-btn-voz" (click)="toggleVoz()" [title]="voiceEnabled ? 'Silenciar a Koby' : 'Activar voz de Koby'">
+            {{ voiceEnabled ? '🔊' : '🔇' }}
+          </button>
+        </div>
       </div>
     </div>
   }

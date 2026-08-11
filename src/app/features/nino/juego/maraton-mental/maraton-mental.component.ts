@@ -111,6 +111,10 @@ export class MaratonMentalComponent implements OnInit, OnDestroy {
   mascotMsg = '¡Hola! Soy Koby 🐨. Vamos a entrenar tu atención dividida.';
   private mascotTimer: ReturnType<typeof setTimeout> | null = null;
 
+  /** Voz de Koby (TTS), mismo mecanismo que Espejo Mental/Laberinto Cognitivo. */
+  voiceEnabled = true;
+  private kobyVoice: SpeechSynthesisVoice | null = null;
+
   // ── Volumen (CA-05 del módulo compartido de feedback) ────────────────
   volumenActual: NivelVolumen = 75;
 
@@ -158,6 +162,9 @@ export class MaratonMentalComponent implements OnInit, OnDestroy {
         });
       this.detectarCambios();
     });
+
+    this.cargarVozKoby();
+    this.hablar(this.sinEmojis(this.mascotMsg));
   }
 
   // Este proyecto corre Angular SIN zone.js (no está en package.json ni en los
@@ -362,7 +369,6 @@ export class MaratonMentalComponent implements OnInit, OnDestroy {
     this.estado = 'transicion_dual';
     this.setMascot('excited', '¡Muy bien! Ahora las DOS tareas al mismo tiempo 🧠⚡', 2600);
     this.playTransicion();
-    this.hablar('¡Ahora las dos tareas al mismo tiempo!');
     this.avanceTimeout = this.setTimeoutCd(() => this.iniciarFaseDual(), 2800);
   }
 
@@ -530,7 +536,7 @@ export class MaratonMentalComponent implements OnInit, OnDestroy {
           this.resultadoFinal = resultado;
           this.puntaje = resultado.puntaje;
           this.nivelSugerido = resultado.nivelSugerido;
-          this.hablar('¡Excelente trabajo entrenando tu atención!');
+          this.setMascot('celebrate', '¡Excelente trabajo entrenando tu atención!', 4000);
           this.detectarCambios();
         },
         error: error => {
@@ -559,6 +565,7 @@ export class MaratonMentalComponent implements OnInit, OnDestroy {
     if (this.mascotTimer) clearTimeout(this.mascotTimer);
     this.mascotMood = mood;
     this.mascotMsg = msg;
+    this.hablar(this.sinEmojis(msg));
     if (mood !== 'idle') {
       this.mascotTimer = this.setTimeoutCd(() => {
         this.mascotMood = 'idle';
@@ -567,21 +574,54 @@ export class MaratonMentalComponent implements OnInit, OnDestroy {
   }
 
   // ── Audio: Web Speech API (voz) + Web Audio API (efectos) ─────────────
-  private hablar(texto: string): void {
-    if (this.volumenActual === 0) return;
+
+  toggleVoz(): void {
+    this.voiceEnabled = !this.voiceEnabled;
+    if (!this.voiceEnabled) window.speechSynthesis?.cancel();
+  }
+
+  private cargarVozKoby(): void {
+    const seleccionar = () => {
+      const voces = window.speechSynthesis?.getVoices() ?? [];
+      // Prioridad: voces en español disponibles en Windows/Mac/Android (mismo orden que Espejo Mental/Laberinto)
+      const candidatas = [
+        voces.find(v => v.name.includes('Jorge')),
+        voces.find(v => v.name.includes('Diego')),
+        voces.find(v => v.name.includes('Juan')),
+        voces.find(v => v.lang === 'es-MX'),
+        voces.find(v => v.lang === 'es-ES'),
+        voces.find(v => v.lang.startsWith('es')),
+      ];
+      this.kobyVoice = candidatas.find(v => !!v) ?? null;
+    };
+    if (window.speechSynthesis?.getVoices().length) {
+      seleccionar();
+    } else {
+      window.speechSynthesis?.addEventListener('voiceschanged', seleccionar, { once: true });
+    }
+  }
+
+  /** Quita emojis antes de mandar el texto al sintetizador de voz (mismo criterio que Espejo Mental/Laberinto). */
+  private sinEmojis(texto: string): string {
+    return texto.replace(/[\u{1F300}-\u{1FFFF}]/gu, '').trim();
+  }
+
+  private hablar(texto: string, rate = 0.95, pitch = 1.1): void {
+    if (!this.voiceEnabled || this.volumenActual === 0 || !window.speechSynthesis) return;
     try {
-      if (!window.speechSynthesis) return;
       window.speechSynthesis.cancel();
       const utt = new SpeechSynthesisUtterance(texto);
-      utt.lang = 'es-ES';
-      utt.rate = 0.95;
-      utt.pitch = 1.1;
+      if (this.kobyVoice) {
+        utt.voice = this.kobyVoice;
+        utt.lang = this.kobyVoice.lang;
+      } else {
+        utt.lang = 'es-ES';
+      }
+      utt.rate = rate;
+      utt.pitch = pitch;
       utt.volume = this.volumenActual / 100;
-      const voces = window.speechSynthesis.getVoices();
-      const vozEs = voces.find(v => v.lang.startsWith('es'));
-      if (vozEs) utt.voice = vozEs;
       window.speechSynthesis.speak(utt);
-    } catch {}
+    } catch { /* TTS no disponible en este navegador: no bloquea el juego */ }
   }
 
   private getAudio(): AudioContext | null {
