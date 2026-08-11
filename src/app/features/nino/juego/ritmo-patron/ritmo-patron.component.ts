@@ -29,61 +29,40 @@ interface ConfettiPiece { id: number; left: number; color: string; delay: number
       <!-- INICIO -->
       @if (estado === 'inicio') {
         <div class="pantalla-inicio">
-          <div class="orb orb-1"></div>
-          <div class="orb orb-2"></div>
-          <div class="orb orb-3"></div>
+          <img class="bg-escena" src="mascotas/bongo-escena.png" alt="Escenario de ritmo de Bongo">
+          <div class="inicio-velo"></div>
 
-          <div class="inicio-content">
-            <div class="hero-mascota">
-              <div class="fox-sparkles">
-                <span class="sp sp-1">🎵</span>
-                <span class="sp sp-2">🎶</span>
-                <span class="sp sp-3">✨</span>
-                <span class="sp sp-4">🎵</span>
+          <button type="button" class="btn-volver-inicio" (click)="volver()">← Volver</button>
+
+          <!-- Bongo explica las instrucciones desde su burbuja -->
+          <div class="bongo-habla">
+            <div class="habla-bubble">
+              <p class="habla-saludo">¡Hola! Soy <strong>Bongo</strong> 🥁</p>
+              <p class="habla-intro">Para jugar Ritmo y Patrón:</p>
+              <div class="habla-pasos">
+                <div class="habla-paso"><span class="h-ico">👂</span><span>Escucha los instrumentos que suenan</span></div>
+                <div class="habla-paso"><span class="h-ico">👆</span><span>Tócalos en el mismo orden</span></div>
+                <div class="habla-paso"><span class="h-ico">🚀</span><span>¡Aciertas y el ritmo crece!</span></div>
               </div>
-              <div class="fox-ring">
-                <div class="fox-avatar">🐵</div>
-              </div>
-              <div class="fox-bubble-inicio">
-                ¡Hola! Soy <strong>Bongo</strong> 🥁<br>
-                ¡Tu guía de ritmo! ¿Listo para escuchar y repetir? 🎧
-              </div>
+              <p class="habla-animo">¡A escuchar y repetir! ✨</p>
             </div>
+            <div class="habla-tail"></div>
+          </div>
 
+          <!-- Panel derecho — título y botón -->
+          <div class="inicio-panel">
             <h1 class="titulo-juego">
               <span class="titulo-grad">Ritmo</span><span class="titulo-blanco"> y Patrón</span>
             </h1>
             <p class="subtitulo-juego">Escucha la secuencia de sonidos y repítela en orden</p>
 
-            <div class="instrucciones-grid">
-              <div class="instr-card instr-rojo">
-                <span class="instr-num">1</span>
-                <div class="instr-emoji">👂</div>
-                <div class="instr-text">Escucha los instrumentos que suenan</div>
-              </div>
-              <div class="instr-card instr-azul">
-                <span class="instr-num">2</span>
-                <div class="instr-emoji">👆</div>
-                <div class="instr-text">Tócalos en el mismo orden</div>
-              </div>
-              <div class="instr-card instr-verde">
-                <span class="instr-num">3</span>
-                <div class="instr-emoji">🚀</div>
-                <div class="instr-text">¡Aciertas y el ritmo crece!</div>
-              </div>
-              <div class="instr-card instr-amarillo">
-                <span class="instr-num">4</span>
-                <div class="instr-emoji">💪</div>
-                <div class="instr-text">2 errores seguidos bajan la dificultad</div>
-              </div>
-            </div>
+            <button class="btn-empezar" (click)="iniciarJuego()">
+              <span>🥁</span> ¡Empezar!
+              <span class="btn-shine"></span>
+            </button>
 
-            <div class="inicio-footer">
-              <button class="btn-empezar" (click)="iniciarJuego()">
-                <span>🥁</span> ¡Empezar!
-                <span class="btn-shine"></span>
-              </button>
-              <button class="btn-voz" (click)="toggleVoz()" [title]="voiceEnabled ? 'Silenciar voz' : 'Activar voz'">
+            <div class="volumen-footer">
+              <button class="btn-voz" (click)="toggleVoz()" [title]="voiceEnabled ? 'Silenciar a Bongo' : 'Activar voz de Bongo'">
                 {{ voiceEnabled ? '🔊' : '🔇' }}
               </button>
             </div>
@@ -257,108 +236,84 @@ interface ConfettiPiece { id: number; left: number; color: string; delay: number
     .confeti { position: absolute; top: -20px; border-radius: 3px; animation: caer linear forwards; }
     @keyframes caer { 0%{transform:translateY(-20px) rotate(0deg);opacity:1} 100%{transform:translateY(110vh) rotate(720deg);opacity:0} }
 
+    /* ══ INICIO — cinematográfico (mismo patrón que Espejo Mental / Laberinto / Maratón Mental / Piezas en Tiempo / Mapa Aventura) ══ */
     .pantalla-inicio {
       min-height: 100vh; width: 100%;
       display: flex; align-items: center; justify-content: center;
       position: relative; overflow: hidden;
     }
 
-    .orb { position: absolute; border-radius: 50%; filter: blur(70px); pointer-events: none; }
-    .orb-1 { width: 380px; height: 380px; background: rgba(124,58,237,.22); top: -100px; left: -80px; animation: orbFloat 9s ease-in-out infinite; }
-    .orb-2 { width: 300px; height: 300px; background: rgba(79,70,229,.18); bottom: -80px; right: -60px; animation: orbFloat 7s ease-in-out infinite 2s; }
-    .orb-3 { width: 200px; height: 200px; background: rgba(167,139,250,.12); top: 40%; right: 8%; animation: orbFloat 11s ease-in-out infinite 4s; }
-    @keyframes orbFloat { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-25px) scale(1.08)} }
-
-    .inicio-content {
-      position: relative; z-index: 1;
-      text-align: center; padding: 24px 24px 40px;
-      max-width: 540px; width: 100%;
-      animation: slideUp .5s cubic-bezier(.34,1.56,.64,1);
+    .bg-escena {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; object-position: center center; z-index: 0;
+      transform-origin: 115% 48%;
+      animation: bgZoomBongo 24s ease-in-out infinite alternate;
+    }
+    @keyframes bgZoomBongo {
+      from { transform: scale(1.30) translate(0,0); }
+      to   { transform: scale(1.34) translate(-.5%, .3%); }
     }
 
-    .hero-mascota {
-      display: flex; flex-direction: column; align-items: center;
-      margin-bottom: 20px; position: relative;
-    }
-    .fox-sparkles {
-      position: absolute; width: 220px; height: 220px;
-      top: -20px; left: 50%; transform: translateX(-50%);
-      pointer-events: none;
-    }
-    .sp { position: absolute; font-size: 22px; }
-    .sp-1 { top:  4%; left:  0%;  animation: sparkleFloat 2.2s ease-in-out infinite 0s; }
-    .sp-2 { top:  0%; right: 4%;  animation: sparkleFloat 1.8s ease-in-out infinite .5s; }
-    .sp-3 { bottom: 4%; left: 4%; animation: sparkleFloat 2.5s ease-in-out infinite 1s; }
-    .sp-4 { bottom: 0%; right: 0%;animation: sparkleFloat 2.0s ease-in-out infinite 1.5s; }
-    @keyframes sparkleFloat { 0%,100%{transform:translateY(0) rotate(0deg);opacity:.7} 50%{transform:translateY(-14px) rotate(20deg);opacity:1} }
-
-    .fox-ring {
-      width: 148px; height: 148px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      background: radial-gradient(circle, rgba(167,139,250,.18), rgba(124,58,237,.08));
-      border: 2px solid rgba(167,139,250,.35);
-      position: relative;
-      box-shadow: 0 0 40px rgba(124,58,237,.3), 0 0 80px rgba(124,58,237,.1);
-      animation: ringPulse 2.8s ease-in-out infinite;
-    }
-    .fox-ring::before {
-      content: ''; position: absolute; inset: -10px; border-radius: 50%;
-      border: 1.5px solid rgba(167,139,250,.2);
-      animation: ringPulse 2.8s ease-in-out infinite .5s;
-    }
-    .fox-ring::after {
-      content: ''; position: absolute; inset: -20px; border-radius: 50%;
-      border: 1px solid rgba(167,139,250,.1);
-      animation: ringPulse 2.8s ease-in-out infinite 1s;
-    }
-    @keyframes ringPulse { 0%,100%{opacity:.7;transform:scale(1)} 50%{opacity:1;transform:scale(1.04)} }
-
-    .fox-avatar {
-      font-size: 88px; line-height: 1;
-      animation: flotar 3s ease-in-out infinite;
-      filter: drop-shadow(0 0 24px rgba(167,139,250,.8));
+    .inicio-velo {
+      position: absolute; inset: 0; z-index: 1;
+      background: linear-gradient(
+        to right,
+        transparent 0%,
+        transparent 26%,
+        rgba(15,12,41,.65) 40%,
+        rgba(15,12,41,.9) 54%,
+        rgba(15,12,41,.96) 100%
+      );
     }
 
-    .fox-bubble-inicio {
-      position: relative; margin-top: 14px; max-width: 310px;
-      background: white; color: #1e293b;
-      border-radius: 20px; padding: 14px 20px;
-      font-size: 15px; font-weight: 600; line-height: 1.6;
-      box-shadow: 0 8px 32px rgba(0,0,0,.35);
-      animation: popIn .4s .4s both cubic-bezier(.34,1.56,.64,1);
+    .btn-volver-inicio {
+      position: absolute; top: 24px; left: 24px; z-index: 4;
+      padding: 10px 16px; border: 1px solid rgba(255,255,255,.2); border-radius: 14px;
+      background: rgba(8,14,30,.7); color: #dce7f8; font-size: 14px; font-weight: 700;
+      cursor: pointer; backdrop-filter: blur(10px); transition: transform .2s ease, background .2s ease;
     }
-    .fox-bubble-inicio::before {
-      content: ''; position: absolute;
-      top: -10px; left: 50%; transform: translateX(-50%);
-      border: 10px solid transparent;
-      border-bottom-color: white;
+    .btn-volver-inicio:hover { transform: translateY(-2px); background: rgba(255,255,255,.12); }
+
+    /* Burbuja de Bongo con instrucciones */
+    .bongo-habla {
+      position: absolute; left: 4%; bottom: 6%; z-index: 3;
+      width: 300px; display: flex; flex-direction: column-reverse; align-items: flex-end;
+      animation: popInBongo .5s .3s both cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes popInBongo { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: scale(1); } }
+    .habla-bubble {
+      background: rgba(255,255,255,0.97); border: 3px solid #a78bfa; border-radius: 22px;
+      padding: 18px 20px 14px; color: #1e1b4b; box-shadow: 0 8px 40px rgba(124,58,237,.4);
+    }
+    .habla-saludo { font-size: 17px; font-weight: 800; margin: 0 0 6px; }
+    .habla-intro  { font-size: 13px; font-weight: 700; color: #7c3aed; margin: 0 0 10px; text-transform: uppercase; letter-spacing: .5px; }
+    .habla-pasos  { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+    .habla-paso   { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 700; color: #1e1b4b; }
+    .h-ico        { font-size: 20px; flex-shrink: 0; }
+    .habla-animo  { font-size: 14px; font-weight: 700; color: #6d28d9; margin: 0; text-align: right; }
+    .habla-tail {
+      width: 0; height: 0; border-left: 16px solid transparent; border-right: 16px solid transparent;
+      border-bottom: 22px solid #a78bfa; margin: 0 28px 0 0; position: relative;
+    }
+    .habla-tail::after {
+      content: ''; position: absolute; bottom: -25px; left: -12px;
+      width: 0; height: 0; border-left: 12px solid transparent; border-right: 12px solid transparent;
+      border-bottom: 18px solid rgba(255,255,255,.97);
     }
 
-    .titulo-juego { font-size: 44px; font-weight: 900; margin: 20px 0 6px; line-height: 1.1; }
+    .inicio-panel {
+      position: absolute; z-index: 2; left: 50%; top: 50%; transform: translateY(-50%);
+      width: 48%; max-width: 480px; max-height: 90vh; overflow-y: auto;
+      display: flex; flex-direction: column; align-items: center; text-align: center;
+      padding: 28px 32px; background: rgba(15,12,41,.5); backdrop-filter: blur(4px);
+      border-radius: 28px; animation: slideUpBongo .5s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes slideUpBongo { from { opacity: 0; transform: translateY(-50%) translateY(20px); } to { opacity: 1; transform: translateY(-50%) translateY(0); } }
+
+    .titulo-juego { font-size: 40px; font-weight: 900; margin: 0 0 8px; line-height: 1.1; }
     .titulo-grad { background: linear-gradient(135deg,#a78bfa,#60a5fa); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
     .titulo-blanco { color: white; }
-    .subtitulo-juego { font-size: 15px; color: #94a3b8; margin-bottom: 24px; }
-
-    .instrucciones-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px; text-align: left; }
-    .instr-card {
-      border: 1.5px solid rgba(255,255,255,.1); border-radius: 16px;
-      padding: 16px 14px; position: relative; transition: transform .2s;
-    }
-    .instr-card:hover { transform: translateY(-3px); }
-    .instr-rojo    { border-color: rgba(220,38,38,.55);  background: rgba(220,38,38,.09);  }
-    .instr-azul    { border-color: rgba(96,165,250,.55); background: rgba(96,165,250,.09); }
-    .instr-verde   { border-color: rgba(74,222,128,.55); background: rgba(74,222,128,.09); }
-    .instr-amarillo{ border-color: rgba(251,191,36,.55); background: rgba(251,191,36,.09); }
-    .instr-num {
-      position: absolute; top: 8px; right: 10px;
-      font-size: 10px; font-weight: 800; color: rgba(255,255,255,.28);
-    }
-    .instr-emoji { font-size: 30px; margin-bottom: 8px; display: block; }
-    .instr-rojo     .instr-emoji { filter: drop-shadow(0 0 8px rgba(220,38,38,.9)); }
-    .instr-azul     .instr-emoji { filter: drop-shadow(0 0 8px rgba(96,165,250,.9)); }
-    .instr-verde    .instr-emoji { filter: drop-shadow(0 0 8px rgba(74,222,128,.9)); }
-    .instr-amarillo .instr-emoji { filter: drop-shadow(0 0 8px rgba(251,191,36,.9)); }
-    .instr-text { font-size: 13px; color: #cbd5e1; line-height: 1.4; }
+    .subtitulo-juego { font-size: 15px; color: #94a3b8; margin-bottom: 26px; }
 
     .btn-empezar {
       display: inline-flex; align-items: center; gap: 10px;
@@ -368,6 +323,7 @@ interface ConfettiPiece { id: number; left: number; color: string; delay: number
       box-shadow: 0 8px 32px rgba(124,58,237,.5);
       position: relative; overflow: hidden;
       animation: pulseBtn 2s infinite;
+      width: 100%; justify-content: center; margin-bottom: 16px;
     }
     .btn-empezar:hover { transform: translateY(-4px) scale(1.05); box-shadow: 0 16px 40px rgba(124,58,237,.65); animation: none; }
     .btn-shine {
@@ -381,7 +337,7 @@ interface ConfettiPiece { id: number; left: number; color: string; delay: number
       50%    { box-shadow:0 8px 32px rgba(124,58,237,.5),0 0 0 14px rgba(124,58,237,0); }
     }
 
-    .inicio-footer { display: flex; align-items: center; justify-content: center; gap: 14px; }
+    .volumen-footer { display: flex; align-items: center; justify-content: center; gap: 14px; }
 
     .btn-voz {
       background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2);
@@ -590,7 +546,6 @@ interface ConfettiPiece { id: number; left: number; color: string; delay: number
     @keyframes slideUp    { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
     @keyframes popIn      { from{opacity:0;transform:scale(.7)} to{opacity:1;transform:scale(1)} }
     @keyframes bounce     { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
-    @keyframes flotar     { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
     @keyframes pulsoActivo{ 0%{transform:scale(1)} 40%{transform:scale(1.16)} 70%{transform:scale(1.09)} 100%{transform:scale(1.12)} }
     @keyframes errorShake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-10px) rotate(-3deg)} 40%{transform:translateX(10px) rotate(3deg)} 60%{transform:translateX(-7px) rotate(-2deg)} 80%{transform:translateX(7px) rotate(2deg)} }
     @keyframes mascotShake{ 0%,100%{transform:rotate(0)} 25%{transform:rotate(-12deg)} 75%{transform:rotate(12deg)} }
@@ -668,6 +623,9 @@ export class RitmoPatronComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    this.cargarVozBongo();
+    this.hablar('¡Hola! Soy Bongo. Vamos a escuchar y repetir el ritmo.');
+
     this.profileService.activeProfile$.subscribe(state => {
       this.perfilId = state.profileId;
     });
@@ -749,13 +707,39 @@ export class RitmoPatronComponent implements OnInit, OnDestroy {
 
   toggleVoz(): void { this.voiceEnabled = !this.voiceEnabled; if (!this.voiceEnabled) window.speechSynthesis?.cancel(); }
 
+  private bongoVoice: SpeechSynthesisVoice | null = null;
+
+  /** Selecciona la voz de Bongo (mismo patrón que Michi/Koby/Tigre/Buddy). */
+  private cargarVozBongo(): void {
+    const seleccionar = () => {
+      const voces = window.speechSynthesis?.getVoices() ?? [];
+      const candidatas = [
+        voces.find(v => /jorge|diego|juan/i.test(v.name) && v.lang.startsWith('es')),
+        voces.find(v => v.lang === 'es-MX'),
+        voces.find(v => v.lang === 'es-ES'),
+        voces.find(v => v.lang.startsWith('es')),
+      ];
+      this.bongoVoice = candidatas.find(v => !!v) ?? null;
+    };
+    if (window.speechSynthesis?.getVoices().length) {
+      seleccionar();
+    } else if (window.speechSynthesis) {
+      window.speechSynthesis.onvoiceschanged = seleccionar;
+    }
+  }
+
   private hablar(texto: string, rate = 0.92, pitch = 1.15): Promise<void> {
-    if (!this.voiceEnabled || !window.speechSynthesis) return Promise.resolve();
+    if (!this.voiceEnabled || !window.speechSynthesis || !texto) return Promise.resolve();
     return new Promise(resolve => {
       try {
         window.speechSynthesis.cancel();
         const utt = new SpeechSynthesisUtterance(texto);
-        utt.lang   = 'es-ES';
+        if (this.bongoVoice) {
+          utt.voice = this.bongoVoice;
+          utt.lang  = this.bongoVoice.lang;
+        } else {
+          utt.lang = 'es-ES';
+        }
         utt.volume = 0.9;
         utt.rate   = rate;
         utt.pitch  = pitch;
@@ -764,6 +748,11 @@ export class RitmoPatronComponent implements OnInit, OnDestroy {
         window.speechSynthesis.speak(utt);
       } catch (_) { resolve(); }
     });
+  }
+
+  /** Quita emojis antes de mandar el texto al sintetizador de voz (mismo criterio que Espejo Mental/Michi/Koby/Tigre/Buddy). */
+  private sinEmojis(texto: string): string {
+    return texto.replace(/[\u{1F300}-\u{1FFFF}]/gu, '').trim();
   }
 
   // Cada instrumento tiene su propia sintesis (percusion real: golpe/ruido, no solo tonos puros)
@@ -997,7 +986,7 @@ export class RitmoPatronComponent implements OnInit, OnDestroy {
 
   private finalizarPartida(): void {
     this.estado = 'resultados'; this.sonarFanfare();
-    const txt = (this.tituloFinal + '. ' + this.mensajeFinal).replace(/[\u{1F300}-\u{1FFFF}]/gu, '').trim();
+    const txt = this.sinEmojis(this.tituloFinal + '. ' + this.mensajeFinal);
     setTimeout(() => this.hablar(txt, 0.88, 1.1), 800);
 
     // CA-03: fire-and-forget con 3 reintentos + localStorage fallback
@@ -1013,7 +1002,7 @@ export class RitmoPatronComponent implements OnInit, OnDestroy {
     this.estado = 'resultados';
     this.sonarFanfare();
     this.cdr.detectChanges();
-    setTimeout(() => this.hablar(this.tituloFinal + '. ' + this.mensajeFinal.replace(/[\u{1F300}-\u{1FFFF}]/gu, '').trim(), 0.88, 1.1), 800);
+    setTimeout(() => this.hablar(this.sinEmojis(this.tituloFinal + '. ' + this.mensajeFinal), 0.88, 1.1), 800);
 
     if (this.sesionId) {
       this.sesionJuegoService.finalizarSesion(this.sesionId, this.puntuacion, this.aciertos + this.errores, this.aciertos);
@@ -1043,8 +1032,7 @@ export class RitmoPatronComponent implements OnInit, OnDestroy {
     this.mascotMood = mood;
     const msgs = this.MASCOTA_MSGS[mood];
     this.mascotMsg = msgs[Math.floor(Math.random() * msgs.length)];
-    const textoVoz = this.mascotMsg.replace(/[\u{1F300}-\u{1FFFF}]/gu, '').trim();
-    return this.hablar(textoVoz);
+    return this.hablar(this.sinEmojis(this.mascotMsg));
   }
 
   private mostrarFlash(verde: boolean): void {

@@ -25,66 +25,40 @@ const TIEMPO_MAX_MS = 8 * 60 * 1000; // CA-05: maximo 8 minutos
       <!-- ══ INICIO ══════════════════════════════════════════ -->
       @if (estado === 'inicio') {
         <div class="pantalla-inicio">
-          <img class="escena-fondo" src="assets/games/mapa-aventura/escena-mapa.jpg"
-               alt="" onerror="this.style.display='none'">
+          <img class="bg-escena" src="mascotas/buddy-escena.png" alt="Mapa del mundo de Buddy">
+          <div class="inicio-velo"></div>
 
-          <div class="orb orb-1"></div>
-          <div class="orb orb-2"></div>
-          <div class="orb orb-3"></div>
+          <button type="button" class="btn-volver-inicio" (click)="volver()">← Volver</button>
 
-          <div class="inicio-content">
-            <div class="hero-mascota">
-              <div class="fox-sparkles">
-                <span class="sp sp-1">🧭</span>
-                <span class="sp sp-2">🗺️</span>
-                <span class="sp sp-3">✨</span>
-                <span class="sp sp-4">📍</span>
+          <!-- Buddy explica las instrucciones desde su burbuja -->
+          <div class="buddy-habla">
+            <div class="habla-bubble">
+              <p class="habla-saludo">¡Hola! Soy <strong>Buddy</strong> 🐶</p>
+              <p class="habla-intro">Para jugar Mapa Aventura:</p>
+              <div class="habla-pasos">
+                <div class="habla-paso"><span class="h-ico">🗺️</span><span>Explora el mapa y toca los países</span></div>
+                <div class="habla-paso"><span class="h-ico">❓</span><span>Responde dónde está o su capital</span></div>
+                <div class="habla-paso"><span class="h-ico">⏱️</span><span>10 preguntas en 8 minutos</span></div>
               </div>
-              <div class="fox-ring">
-                <img class="buddy-portrait" src="assets/games/mapa-aventura/buddy-portrait.png"
-                     alt="" onerror="this.style.display='none'">
-                <div class="fox-avatar">🐶</div>
-              </div>
-              <div class="fox-bubble-inicio">
-                ¡Hola! Soy <strong>Buddy</strong> 🐶<br>
-                ¡Tu compañero explorador! ¿Vamos a recorrer el mundo? 🧭
-              </div>
+              <p class="habla-animo">¡Vamos a explorar! ✨</p>
             </div>
+            <div class="habla-tail"></div>
+          </div>
 
+          <!-- Panel derecho — título y botón -->
+          <div class="inicio-panel">
             <h1 class="titulo-juego">
               <span class="titulo-grad">Mapa</span><span class="titulo-blanco"> Aventura</span>
             </h1>
             <p class="subtitulo-juego">Explora el mapa y responde preguntas sobre países del mundo</p>
 
-            <div class="instrucciones-grid">
-              <div class="instr-card instr-rojo">
-                <span class="instr-num">1</span>
-                <div class="instr-emoji">🗺️</div>
-                <div class="instr-text">Explora el mapa y toca los países</div>
-              </div>
-              <div class="instr-card instr-azul">
-                <span class="instr-num">2</span>
-                <div class="instr-emoji">❓</div>
-                <div class="instr-text">Responde dónde está o cuál es su capital</div>
-              </div>
-              <div class="instr-card instr-verde">
-                <span class="instr-num">3</span>
-                <div class="instr-emoji">🌟</div>
-                <div class="instr-text">Acierta y descubre un dato curioso</div>
-              </div>
-              <div class="instr-card instr-amarillo">
-                <span class="instr-num">4</span>
-                <div class="instr-emoji">⏱️</div>
-                <div class="instr-text">10 preguntas en 8 minutos</div>
-              </div>
-            </div>
+            <button class="btn-empezar" (click)="iniciarJuego()">
+              <span>🧭</span> ¡Empezar!
+              <span class="btn-shine"></span>
+            </button>
 
-            <div class="inicio-footer">
-              <button class="btn-empezar" (click)="iniciarJuego()">
-                <span>🧭</span> ¡Empezar!
-                <span class="btn-shine"></span>
-              </button>
-              <button class="btn-voz" (click)="toggleVoz()" [title]="voiceEnabled ? 'Silenciar voz' : 'Activar voz'">
+            <div class="volumen-footer">
+              <button class="btn-voz" (click)="toggleVoz()" [title]="voiceEnabled ? 'Silenciar a Buddy' : 'Activar voz de Buddy'">
                 {{ voiceEnabled ? '🔊' : '🔇' }}
               </button>
             </div>
@@ -300,72 +274,96 @@ const TIEMPO_MAX_MS = 8 * 60 * 1000; // CA-05: maximo 8 minutos
       color: white; overflow: hidden; position: relative;
     }
 
-    /* ══ INICIO ══ */
+    /* ══ INICIO — cinematográfico (mismo patrón que Espejo Mental / Laberinto / Maratón Mental / Piezas en Tiempo) ══ */
     .pantalla-inicio { min-height: 100vh; width: 100%; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
-    .escena-fondo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .38; z-index: 0; }
-    .orb { position: absolute; border-radius: 50%; filter: blur(70px); pointer-events: none; z-index: 0; }
-    .orb-1 { width: 380px; height: 380px; background: rgba(59,130,246,.22); top: -100px; left: -80px; animation: orbFloat 9s ease-in-out infinite; }
-    .orb-2 { width: 300px; height: 300px; background: rgba(16,185,129,.18); bottom: -80px; right: -60px; animation: orbFloat 7s ease-in-out infinite 2s; }
-    .orb-3 { width: 200px; height: 200px; background: rgba(96,165,250,.14); top: 40%; right: 8%; animation: orbFloat 11s ease-in-out infinite 4s; }
-    @keyframes orbFloat { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-25px) scale(1.08)} }
 
-    .inicio-content { position: relative; z-index: 1; text-align: center; padding: 24px 24px 40px; max-width: 540px; width: 100%; animation: slideUp .5s cubic-bezier(.34,1.56,.64,1); }
-    .hero-mascota { display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; position: relative; }
-    .fox-sparkles { position: absolute; width: 220px; height: 220px; top: -20px; left: 50%; transform: translateX(-50%); pointer-events: none; }
-    .sp { position: absolute; font-size: 22px; }
-    .sp-1 { top: 4%; left: 0%; animation: sparkleFloat 2.2s ease-in-out infinite 0s; }
-    .sp-2 { top: 0%; right: 4%; animation: sparkleFloat 1.8s ease-in-out infinite .5s; }
-    .sp-3 { bottom: 4%; left: 4%; animation: sparkleFloat 2.5s ease-in-out infinite 1s; }
-    .sp-4 { bottom: 0%; right: 0%; animation: sparkleFloat 2.0s ease-in-out infinite 1.5s; }
-    @keyframes sparkleFloat { 0%,100%{transform:translateY(0) rotate(0deg);opacity:.7} 50%{transform:translateY(-14px) rotate(20deg);opacity:1} }
-
-    .fox-ring {
-      width: 148px; height: 148px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-      background: radial-gradient(circle, rgba(59,130,246,.18), rgba(16,185,129,.08));
-      border: 2px solid rgba(96,165,250,.35); position: relative; overflow: hidden;
-      box-shadow: 0 0 40px rgba(59,130,246,.3), 0 0 80px rgba(59,130,246,.1);
-      animation: ringPulse 2.8s ease-in-out infinite;
+    .bg-escena {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; object-position: center center; z-index: 0;
+      /* Valores verificados renderizando la transformación real sobre la imagen
+         (mismo método usado para Michi/Koby/Tigre): Buddy, centrado en la imagen
+         original, queda de cuerpo completo y despejado del panel. */
+      transform-origin: 115% 48%;
+      animation: bgZoomBuddy 24s ease-in-out infinite alternate;
     }
-    .fox-ring::before { content: ''; position: absolute; inset: -10px; border-radius: 50%; border: 1.5px solid rgba(96,165,250,.2); animation: ringPulse 2.8s ease-in-out infinite .5s; }
-    .fox-ring::after  { content: ''; position: absolute; inset: -20px; border-radius: 50%; border: 1px solid rgba(96,165,250,.1); animation: ringPulse 2.8s ease-in-out infinite 1s; }
-    @keyframes ringPulse { 0%,100%{opacity:.7;transform:scale(1)} 50%{opacity:1;transform:scale(1.04)} }
-    .buddy-portrait { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; z-index: 1; }
-    .fox-avatar { font-size: 88px; line-height: 1; animation: flotar 3s ease-in-out infinite; filter: drop-shadow(0 0 24px rgba(96,165,250,.8)); }
-
-    .fox-bubble-inicio {
-      position: relative; margin-top: 14px; max-width: 310px; background: white; color: #1e293b;
-      border-radius: 20px; padding: 14px 20px; font-size: 15px; font-weight: 600; line-height: 1.6;
-      box-shadow: 0 8px 32px rgba(0,0,0,.35); animation: popIn .4s .4s both cubic-bezier(.34,1.56,.64,1);
+    @keyframes bgZoomBuddy {
+      from { transform: scale(1.30) translate(0,0); }
+      to   { transform: scale(1.34) translate(-.5%, .3%); }
     }
-    .fox-bubble-inicio::before { content: ''; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); border: 10px solid transparent; border-bottom-color: white; }
 
-    .titulo-juego { font-size: 44px; font-weight: 900; margin: 20px 0 6px; line-height: 1.1; }
+    .inicio-velo {
+      position: absolute; inset: 0; z-index: 1;
+      background: linear-gradient(
+        to right,
+        transparent 0%,
+        transparent 26%,
+        rgba(11,35,64,.65) 40%,
+        rgba(11,35,64,.9) 54%,
+        rgba(11,35,64,.96) 100%
+      );
+    }
+
+    .btn-volver-inicio {
+      position: absolute; top: 24px; left: 24px; z-index: 4;
+      padding: 10px 16px; border: 1px solid rgba(255,255,255,.2); border-radius: 14px;
+      background: rgba(8,14,30,.7); color: #dce7f8; font-size: 14px; font-weight: 700;
+      cursor: pointer; backdrop-filter: blur(10px); transition: transform .2s ease, background .2s ease;
+    }
+    .btn-volver-inicio:hover { transform: translateY(-2px); background: rgba(255,255,255,.12); }
+
+    /* Burbuja de Buddy con instrucciones */
+    .buddy-habla {
+      position: absolute; left: 4%; bottom: 6%; z-index: 3;
+      width: 300px; display: flex; flex-direction: column-reverse; align-items: flex-end;
+      animation: popInBuddy .5s .3s both cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes popInBuddy { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: scale(1); } }
+    .habla-bubble {
+      background: rgba(255,255,255,0.97); border: 3px solid #60a5fa; border-radius: 22px;
+      padding: 18px 20px 14px; color: #0b2340; box-shadow: 0 8px 40px rgba(96,165,250,.4);
+    }
+    .habla-saludo { font-size: 17px; font-weight: 800; margin: 0 0 6px; }
+    .habla-intro  { font-size: 13px; font-weight: 700; color: #2563eb; margin: 0 0 10px; text-transform: uppercase; letter-spacing: .5px; }
+    .habla-pasos  { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+    .habla-paso   { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 700; color: #0b2340; }
+    .h-ico        { font-size: 20px; flex-shrink: 0; }
+    .habla-animo  { font-size: 14px; font-weight: 700; color: #059669; margin: 0; text-align: right; }
+    .habla-tail {
+      width: 0; height: 0; border-left: 16px solid transparent; border-right: 16px solid transparent;
+      border-bottom: 22px solid #60a5fa; margin: 0 28px 0 0; position: relative;
+    }
+    .habla-tail::after {
+      content: ''; position: absolute; bottom: -25px; left: -12px;
+      width: 0; height: 0; border-left: 12px solid transparent; border-right: 12px solid transparent;
+      border-bottom: 18px solid rgba(255,255,255,.97);
+    }
+
+    .inicio-panel {
+      position: absolute; z-index: 2; left: 50%; top: 50%; transform: translateY(-50%);
+      width: 48%; max-width: 480px; max-height: 90vh; overflow-y: auto;
+      display: flex; flex-direction: column; align-items: center; text-align: center;
+      padding: 28px 32px; background: rgba(11,35,64,.5); backdrop-filter: blur(4px);
+      border-radius: 28px; animation: slideUpBuddy .5s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes slideUpBuddy { from { opacity: 0; transform: translateY(-50%) translateY(20px); } to { opacity: 1; transform: translateY(-50%) translateY(0); } }
+
+    .titulo-juego { font-size: 40px; font-weight: 900; margin: 0 0 8px; line-height: 1.1; }
     .titulo-grad { background: linear-gradient(135deg,#60a5fa,#34d399); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
     .titulo-blanco { color: white; }
-    .subtitulo-juego { font-size: 15px; color: #94a3b8; margin-bottom: 24px; }
-
-    .instrucciones-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px; text-align: left; }
-    .instr-card { border: 1.5px solid rgba(255,255,255,.1); border-radius: 16px; padding: 16px 14px; position: relative; transition: transform .2s; }
-    .instr-card:hover { transform: translateY(-3px); }
-    .instr-rojo     { border-color: rgba(220,38,38,.55);  background: rgba(220,38,38,.09);  }
-    .instr-azul     { border-color: rgba(96,165,250,.55); background: rgba(96,165,250,.09); }
-    .instr-verde    { border-color: rgba(74,222,128,.55); background: rgba(74,222,128,.09); }
-    .instr-amarillo { border-color: rgba(251,191,36,.55); background: rgba(251,191,36,.09); }
-    .instr-num { position: absolute; top: 8px; right: 10px; font-size: 10px; font-weight: 800; color: rgba(255,255,255,.28); }
-    .instr-emoji { font-size: 30px; margin-bottom: 8px; display: block; }
-    .instr-text { font-size: 13px; color: #cbd5e1; line-height: 1.4; }
+    .subtitulo-juego { font-size: 15px; color: #94a3b8; margin-bottom: 26px; }
 
     .btn-empezar {
       display: inline-flex; align-items: center; gap: 10px; background: linear-gradient(135deg,#2563eb,#059669);
       color: white; border: none; border-radius: 20px; padding: 18px 52px; font-size: 20px; font-weight: 800;
       cursor: pointer; transition: all .2s; box-shadow: 0 8px 32px rgba(37,99,235,.5);
       position: relative; overflow: hidden; animation: pulseBtn 2s infinite;
+      width: 100%; justify-content: center; margin-bottom: 16px;
     }
     .btn-empezar:hover { transform: translateY(-4px) scale(1.05); box-shadow: 0 16px 40px rgba(37,99,235,.65); animation: none; }
     .btn-shine { position: absolute; top: 0; left: -80%; width: 50%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.25), transparent); animation: shine 2.5s ease-in-out infinite 1s; }
     @keyframes shine { 0%{left:-80%} 100%{left:120%} }
     @keyframes pulseBtn { 0%,100%{ box-shadow:0 8px 32px rgba(37,99,235,.5),0 0 0 0 rgba(37,99,235,.4); } 50%{ box-shadow:0 8px 32px rgba(37,99,235,.5),0 0 0 14px rgba(37,99,235,0); } }
-    .inicio-footer { display: flex; align-items: center; justify-content: center; gap: 14px; }
+    .volumen-footer { display: flex; align-items: center; justify-content: center; gap: 14px; }
     .btn-voz { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); border-radius: 50%; width: 42px; height: 42px; font-size: 20px; cursor: pointer; transition: all .2s; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .btn-voz:hover { background: rgba(255,255,255,.2); transform: scale(1.1); }
 
@@ -497,8 +495,6 @@ const TIEMPO_MAX_MS = 8 * 60 * 1000; // CA-05: maximo 8 minutos
     .btn-volver:hover { background: rgba(255,255,255,.13); color: #f1f5f9; }
 
     @keyframes slideUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
-    @keyframes flotar  { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
-    @keyframes popIn   { from{opacity:0;transform:scale(.7)} to{opacity:1;transform:scale(1)} }
   `]
 })
 export class MapaAventuraComponent implements OnInit, OnDestroy {
@@ -569,6 +565,9 @@ export class MapaAventuraComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    this.cargarVozBuddy();
+    this.hablar('¡Hola! Soy Buddy. Vamos a explorar el mapa del mundo.');
+
     this.profileService.activeProfile$.subscribe(state => {
       this.perfilId = state.profileId;
     });
@@ -599,6 +598,32 @@ export class MapaAventuraComponent implements OnInit, OnDestroy {
   }
 
   // ── AUDIO / VOZ ───────────────────────────────────
+  private buddyVoice: SpeechSynthesisVoice | null = null;
+
+  /** Selecciona la voz de Buddy (mismo patrón que Michi/Koby/Tigre). */
+  private cargarVozBuddy(): void {
+    const seleccionar = () => {
+      const voces = window.speechSynthesis?.getVoices() ?? [];
+      const candidatas = [
+        voces.find(v => /jorge|diego|juan/i.test(v.name) && v.lang.startsWith('es')),
+        voces.find(v => v.lang === 'es-MX'),
+        voces.find(v => v.lang === 'es-ES'),
+        voces.find(v => v.lang.startsWith('es')),
+      ];
+      this.buddyVoice = candidatas.find(v => !!v) ?? null;
+    };
+    if (window.speechSynthesis?.getVoices().length) {
+      seleccionar();
+    } else if (window.speechSynthesis) {
+      window.speechSynthesis.onvoiceschanged = seleccionar;
+    }
+  }
+
+  /** Quita emojis antes de mandar el texto al sintetizador de voz (mismo criterio que Espejo Mental/Michi/Koby/Tigre). */
+  private sinEmojis(texto: string): string {
+    return texto.replace(/[\u{1F300}-\u{1FFFF}]/gu, '').trim();
+  }
+
   private initAudio(): void {
     if (!this.audioCtx) this.audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
   }
@@ -621,13 +646,19 @@ export class MapaAventuraComponent implements OnInit, OnDestroy {
   private sonarAcierto(): void { [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => this.tocar(f, 0.18, 'sine', 0.35), i * 75)); }
   private sonarError(): void { this.tocar(220, 0.12, 'sawtooth', 0.3); setTimeout(() => this.tocar(180, 0.22, 'sawtooth', 0.25, 140), 100); }
 
-  private hablar(texto: string): Promise<void> {
-    if (!this.voiceEnabled || !window.speechSynthesis) return Promise.resolve();
+  private hablar(texto: string, rate = 0.95, pitch = 1.0): Promise<void> {
+    if (!this.voiceEnabled || !window.speechSynthesis || !texto) return Promise.resolve();
     return new Promise(resolve => {
       try {
         window.speechSynthesis.cancel();
         const utt = new SpeechSynthesisUtterance(texto);
-        utt.lang = 'es-ES'; utt.volume = 0.9; utt.rate = 0.95; utt.pitch = 1.0;
+        if (this.buddyVoice) {
+          utt.voice = this.buddyVoice;
+          utt.lang = this.buddyVoice.lang;
+        } else {
+          utt.lang = 'es-ES';
+        }
+        utt.volume = 0.9; utt.rate = rate; utt.pitch = pitch;
         utt.onend = () => resolve();
         utt.onerror = () => resolve();
         window.speechSynthesis.speak(utt);
@@ -638,7 +669,7 @@ export class MapaAventuraComponent implements OnInit, OnDestroy {
   private setMascota(mood: MascotMood, msg: string): void {
     this.mascotMood = mood;
     this.mascotMsg = msg;
-    this.hablar(msg.replace(/[\u{1F300}-\u{1FFFF}]/gu, '').trim());
+    this.hablar(this.sinEmojis(msg));
   }
 
   // ── FLUJO ─────────────────────────────────────────
@@ -768,7 +799,7 @@ export class MapaAventuraComponent implements OnInit, OnDestroy {
     this.sonarFanfare();
     this.cdr.detectChanges();
 
-    const txt = (this.tituloFinal + '. ' + this.mensajeFinal).replace(/[\u{1F300}-\u{1FFFF}]/gu, '').trim();
+    const txt = this.sinEmojis(this.tituloFinal + '. ' + this.mensajeFinal);
     setTimeout(() => this.hablar(txt), 800);
 
     // CA-03: fire-and-forget, guarda métricas de la sesión
