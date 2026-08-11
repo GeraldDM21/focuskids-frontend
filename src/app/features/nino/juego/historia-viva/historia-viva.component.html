@@ -53,7 +53,8 @@
           <span class="nivel-dot" [class.activo]="nivelActual >= 1">⭐</span>
           <span class="nivel-dot" [class.activo]="nivelActual >= 2">⭐</span>
           <span class="nivel-dot" [class.activo]="nivelActual >= 3">⭐</span>
-          <span class="nivel-txt">Nivel {{ nivelActual }}</span>
+          <span class="nivel-dot nivel-dot-4" [class.activo]="nivelActual >= 4">🏆</span>
+          <span class="nivel-txt">Nivel {{ nivelActual }}{{ nivelActual === 4 ? ' · Desafío' : '' }}</span>
         </div>
 
         <button class="btn-empezar" (click)="iniciarLectura()">
@@ -190,19 +191,52 @@
           <div class="pregunta-texto">{{ preguntaActual?.texto }}</div>
         </div>
 
-        <div class="opciones-grid">
-          @for (op of preguntaActual?.opciones ?? []; track $index) {
-            <button class="opcion"
-              [class.opcion-correcta]="respondioCorrectamente && respuestaSeleccionada === $index"
-              [class.opcion-correcta-temporal]="mostrarCorrectaTemporal && $index === preguntaActual?.correcta"
-              [class.opcion-errada]="opcionesErradas.includes($index)"
-              [class.opcion-disabled]="opcionesErradas.includes($index) || respondioCorrectamente === true"
-              (click)="seleccionarOpcion($event, $index)">
-              <span class="opcion-letra">{{ LETRAS[$index] }}</span>
-              <span class="opcion-txt">{{ op }}</span>
-            </button>
-          }
-        </div>
+        @if (preguntaActual?.tipoPregunta === 'abierta') {
+          <!-- ── Respuesta abierta (Nivel 4) ── -->
+          <div class="respuesta-abierta-wrap">
+            <textarea class="textarea-respuesta"
+              [(ngModel)]="respuestaAbierta"
+              placeholder="Escribe tu respuesta con tus propias palabras…"
+              rows="5"
+              [disabled]="evaluandoRespuesta">
+            </textarea>
+
+            @if (evaluandoRespuesta) {
+              <div class="evaluando-msg">
+                <span class="evaluando-spinner"></span>
+                Benny está leyendo tu respuesta…
+              </div>
+            } @else if (!feedbackActual) {
+              <button class="btn-enviar-abierta"
+                      [disabled]="!respuestaAbierta.trim()"
+                      (click)="enviarRespuestaAbierta()">
+                ✏️ Enviar respuesta
+              </button>
+            }
+
+            @if (feedbackActual) {
+              <div class="feedback-abierto" [class.feedback-positivo]="(evaluacionesAbiertas[evaluacionesAbiertas.length-1]?.score ?? 0) >= 60">
+                <span class="feedback-ico">{{ (evaluacionesAbiertas[evaluacionesAbiertas.length-1]?.score ?? 0) >= 60 ? '🌟' : '💡' }}</span>
+                {{ feedbackActual }}
+              </div>
+            }
+          </div>
+        } @else {
+          <!-- ── Opción múltiple (Niveles 1–3) ── -->
+          <div class="opciones-grid">
+            @for (op of preguntaActual?.opciones ?? []; track $index) {
+              <button class="opcion"
+                [class.opcion-correcta]="respondioCorrectamente && respuestaSeleccionada === $index"
+                [class.opcion-correcta-temporal]="mostrarCorrectaTemporal && $index === preguntaActual?.correcta"
+                [class.opcion-errada]="opcionesErradas.includes($index)"
+                [class.opcion-disabled]="opcionesErradas.includes($index) || respondioCorrectamente === true"
+                (click)="seleccionarOpcion($event, $index)">
+                <span class="opcion-letra">{{ LETRAS[$index] }}</span>
+                <span class="opcion-txt">{{ op }}</span>
+              </button>
+            }
+          </div>
+        }
 
         @if (mostrandoPista) {
           <div class="pista-box">
@@ -268,11 +302,25 @@
         </div>
 
         <div class="metricas-row">
-          <div class="metrica"><div class="m-icon">✅</div><div class="m-val verde">{{ preguntasCorrectas }}/{{ historiaActual?.preguntas?.length }}</div><div class="m-lbl">Correctas</div></div>
+          @if (historiaActual?.nivel !== 4) {
+            <div class="metrica"><div class="m-icon">✅</div><div class="m-val verde">{{ preguntasCorrectas }}/{{ historiaActual?.preguntas?.length }}</div><div class="m-lbl">Correctas</div></div>
+          }
           <div class="metrica"><div class="m-icon">⏱️</div><div class="m-val azul">{{ tiempoLecturaFmt }}</div><div class="m-lbl">Lectura</div></div>
           <div class="metrica"><div class="m-icon">🔊</div><div class="m-val morado">{{ usoAudio }}</div><div class="m-lbl">Audio</div></div>
           <div class="metrica"><div class="m-icon">📖</div><div class="m-val naranja">{{ releidasCount }}</div><div class="m-lbl">Relecturas</div></div>
         </div>
+
+        @if (historiaActual?.nivel === 4 && evaluacionesAbiertas.length > 0) {
+          <div class="nivel4-feedbacks">
+            <div class="n4-titulo">📝 Evaluación de tus respuestas</div>
+            @for (ev of evaluacionesAbiertas; track $index) {
+              <div class="n4-item" [class.n4-ok]="ev.score >= 60">
+                <span class="n4-pct">{{ ev.score }}%</span>
+                <span class="n4-txt">{{ ev.feedback }}</span>
+              </div>
+            }
+          </div>
+        }
 
         @if (tiposInferencia.length > 0) {
           <div class="inferencias-section">

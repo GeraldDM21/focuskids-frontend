@@ -421,6 +421,22 @@ interface DiaActividad     { dia: string; valor: number; }
               }
             </div>
           </div>
+          <div class="config-card">
+            <h3 class="config-title">📧 Correos y notificaciones</h3>
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <div class="toggle-label">Resumen semanal de progreso</div>
+                <div class="toggle-desc">Recibe cada lunes un correo con el progreso de tus hijos</div>
+              </div>
+              <button class="toggle-btn" [class.toggle-on]="preferenciaResumenSemanal"
+                      (click)="cambiarResumenSemanal()" [disabled]="guardandoResumen">
+                <span class="toggle-thumb"></span>
+              </button>
+            </div>
+            @if (guardandoResumen) {
+              <p class="config-note" style="margin-top:8px">Guardando...</p>
+            }
+          </div>
         </div>
       }
 
@@ -766,6 +782,15 @@ interface DiaActividad     { dia: string; valor: number; }
     .btn-danger { background:#B91C1C; color:white; border:none; border-radius:12px; padding:11px 22px; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; }
     .delete-msg { font-size:14px; color:#64748B; line-height:1.6; margin-bottom:4px; }
     .delete-msg strong { color:#1E1B4B; }
+    .toggle-row { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+    .toggle-info { flex:1; }
+    .toggle-label { font-size:13.5px; font-weight:700; color:#1E1B4B; margin-bottom:3px; }
+    .toggle-desc  { font-size:11.5px; color:#64748B; }
+    .toggle-btn { width:48px; height:26px; border-radius:13px; background:#CBD5E1; border:none; cursor:pointer; position:relative; transition:background .2s; flex-shrink:0; padding:0; }
+    .toggle-btn.toggle-on { background:#7C3AED; }
+    .toggle-btn:disabled { opacity:.55; cursor:not-allowed; }
+    .toggle-thumb { position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%; background:white; transition:left .2s; display:block; box-shadow:0 1px 4px rgba(0,0,0,.2); }
+    .toggle-btn.toggle-on .toggle-thumb { left:25px; }
     .docente-section { background:#F5F3FF; border:1.5px solid #DDD6FE; border-radius:14px; padding:14px 16px; margin-top:4px; }
     .docente-section label { color:#5B21B6 !important; }
     .no-docentes-msg { font-size:12.5px; color:#94A3B8; background:white; border-radius:10px; padding:10px 14px; margin-top:8px; line-height:1.5; }
@@ -833,6 +858,10 @@ export class PadreDashboardComponent implements OnInit {
   xpMax    = 1000;
   nivel    = 1;
 
+  // Config padre
+  preferenciaResumenSemanal = true;
+  guardandoResumen          = false;
+
   constructor(
     public  auth:                AuthService,
     private childProfileService: ChildProfileService,
@@ -850,6 +879,10 @@ export class PadreDashboardComponent implements OnInit {
       this.loadNotificaciones(user.usuarioId);
       this.docenteService.getListaDocentes().pipe(catchError(() => of([]))).subscribe(d => {
         this.docentesList = d; this.cdr.detectChanges();
+      });
+      this.padreService.getConfiguracionPadre(user.usuarioId).pipe(catchError(() => of(null))).subscribe(cfg => {
+        if (cfg) this.preferenciaResumenSemanal = cfg.preferenciaResumenSemanal;
+        this.cdr.detectChanges();
       });
     }
   }
@@ -1107,6 +1140,17 @@ export class PadreDashboardComponent implements OnInit {
   }
 
   jugarDesdeInicio(p: ChildProfile): void { this.jugar(p); }
+
+  cambiarResumenSemanal(): void {
+    const uid = this.auth.user()?.usuarioId;
+    if (!uid) return;
+    const nuevo = !this.preferenciaResumenSemanal;
+    this.guardandoResumen = true;
+    this.padreService.toggleResumenSemanal(uid, nuevo).subscribe({
+      next: () => { this.preferenciaResumenSemanal = nuevo; this.guardandoResumen = false; this.cdr.detectChanges(); },
+      error: () => { this.guardandoResumen = false; this.cdr.detectChanges(); }
+    });
+  }
 
   // ── Helpers ──
   avatarFn(key?: string | null): string { return AVATAR_MAP[key ?? 'fox'] ?? '🦊'; }

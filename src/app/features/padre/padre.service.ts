@@ -69,4 +69,17 @@ export class PadreService {
   marcarTodasLeidas(usuarioId: number) {
     return this.http.put<void>(`${this.api}/notificaciones/usuario/${usuarioId}/leer-todas`, {});
   }
+
+  getConfiguracionPadre(usuarioId: number) {
+    return this.http.get<{ padreId: number; preferenciaResumenSemanal: boolean }>(
+      `${this.api}/padre/configuracion?usuarioId=${usuarioId}`
+    );
+  }
+
+  toggleResumenSemanal(usuarioId: number, activo: boolean) {
+    return this.http.patch<{ preferenciaResumenSemanal: boolean }>(
+      `${this.api}/padre/resumen-semanal?usuarioId=${usuarioId}`,
+      { activo }
+    );
+  }
 }
