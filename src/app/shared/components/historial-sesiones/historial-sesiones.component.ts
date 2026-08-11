@@ -62,12 +62,14 @@ const NIVELES = [
 
       <div class="filtro-group">
         <label class="filtro-label">Desde</label>
-        <input class="filtro-input" type="date" [(ngModel)]="filtroFechaDesde" (change)="buscar()"/>
+        <input class="filtro-input" type="text" placeholder="DD/MM/AAAA" maxlength="10"
+               [(ngModel)]="filtroFechaDesde" (input)="onFechaInput()"/>
       </div>
 
       <div class="filtro-group">
         <label class="filtro-label">Hasta</label>
-        <input class="filtro-input" type="date" [(ngModel)]="filtroFechaHasta" (change)="buscar()"/>
+        <input class="filtro-input" type="text" placeholder="DD/MM/AAAA" maxlength="10"
+               [(ngModel)]="filtroFechaHasta" (input)="onFechaInput()"/>
       </div>
 
       <div class="filtro-group filtro-group-btn">
@@ -377,8 +379,8 @@ export class HistorialSesionesComponent implements OnInit {
       page: this.paginaActual,
       juegoId: this.filtroJuegoId,
       nivel: this.filtroNivel || undefined,
-      fechaDesde: this.filtroFechaDesde ? this.filtroFechaDesde + 'T00:00:00' : undefined,
-      fechaHasta: this.filtroFechaHasta ? this.filtroFechaHasta + 'T23:59:59' : undefined,
+      fechaDesde: this.parseFecha(this.filtroFechaDesde) ? this.parseFecha(this.filtroFechaDesde) + 'T00:00:00' : undefined,
+      fechaHasta: this.parseFecha(this.filtroFechaHasta) ? this.parseFecha(this.filtroFechaHasta) + 'T23:59:59' : undefined,
     };
 
     this.historialService.obtenerHistorial(this.perfilId, filtros)
@@ -439,8 +441,8 @@ export class HistorialSesionesComponent implements OnInit {
     const filtros = {
       juegoId: this.filtroJuegoId,
       nivel: this.filtroNivel || undefined,
-      fechaDesde: this.filtroFechaDesde ? this.filtroFechaDesde + 'T00:00:00' : undefined,
-      fechaHasta: this.filtroFechaHasta ? this.filtroFechaHasta + 'T23:59:59' : undefined,
+      fechaDesde: this.parseFecha(this.filtroFechaDesde) ? this.parseFecha(this.filtroFechaDesde) + 'T00:00:00' : undefined,
+      fechaHasta: this.parseFecha(this.filtroFechaHasta) ? this.parseFecha(this.filtroFechaHasta) + 'T23:59:59' : undefined,
     };
 
     this.historialService.exportarPdf(this.perfilId, filtros).subscribe({
@@ -488,6 +490,19 @@ export class HistorialSesionesComponent implements OnInit {
 
   get hayFiltrosActivos(): boolean {
     return !!(this.filtroJuegoId || this.filtroNivel || this.filtroFechaDesde || this.filtroFechaHasta);
+  }
+
+  /** Convierte DD/MM/AAAA → YYYY-MM-DD para el backend. Devuelve '' si el formato no es válido. */
+  private parseFecha(s: string): string {
+    if (!s || !/^\d{2}\/\d{2}\/\d{4}$/.test(s)) return '';
+    const [dd, mm, yyyy] = s.split('/');
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  /** Dispara buscar() solo cuando la fecha está vacía o completa (DD/MM/AAAA). */
+  onFechaInput(): void {
+    const ok = (v: string) => !v || /^\d{2}\/\d{2}\/\d{4}$/.test(v);
+    if (ok(this.filtroFechaDesde) && ok(this.filtroFechaHasta)) this.buscar();
   }
 
   /** Genera el array de páginas visibles (máx 7 botones alrededor de la actual). */
