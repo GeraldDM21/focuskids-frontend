@@ -9,6 +9,7 @@ import { ChildProfileService } from '../perfiles/child-profile.service';
 import { ChildProfile, ChildProfileRequest, AVATAR_EMOJIS } from '../perfiles/child-profile.model';
 import { PadreService, SesionJuego, Metrica, AlertaRegresion, Notificacion } from '../padre.service';
 import { DocenteService } from '../../docente/docente.service';
+import { EvolucionChartComponent } from '../../../shared/components/evolucion-chart/evolucion-chart.component';
 
 const AVATAR_MAP: Record<string, string> = {
   fox:'🦊', frog:'🐸', lion:'🦁', panda:'🐼', koala:'🐨',
@@ -36,7 +37,7 @@ interface DiaActividad     { dia: string; valor: number; }
 @Component({
   selector: 'app-padre-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, EvolucionChartComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
 <div class="root">
@@ -280,6 +281,9 @@ interface DiaActividad     { dia: string; valor: number; }
                   }
                 </div>
               }
+
+              <!-- Gráficas de evolución (% aciertos y tiempo de respuesta) -->
+              <app-evolucion-chart [perfilId]="selectedPerfil.id" />
 
             </div>
           }

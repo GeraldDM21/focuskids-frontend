@@ -10,6 +10,10 @@ export interface SesionJuego {
   fin?:   string;
   puntaje?:    number;
   completada?: boolean;
+  // Motor de IA / gráficas de evolución:
+  porcentajeAciertos?:        number;
+  tiempoRespuestaPromedioMs?: number | null;
+  sesionValida?:              boolean;
 }
 
 export interface Metrica {
