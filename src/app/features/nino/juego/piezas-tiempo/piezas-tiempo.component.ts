@@ -77,11 +77,6 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
     '¡La próxima vez lo vas a lograr! 🌈'
   ];
 
-  private readonly frasesCelebracion = [
-    '¡Bien hecho!', '¡Increíble!', '¡Fantástico!', '¡Sigue así!',
-    '¡Genial!', '¡Excelente!', '¡Muy bien!', '¡Eso es!', '¡Perfecto!', '¡Brillante!'
-  ];
-
   // Mascota Tigre 🐯
   mascotMood: MascotMood = 'idle';
   mascotMsg = '¡Hola! Soy Tigre 🐯 ¡Arrastrá las piezas a sus siluetas!';
@@ -99,10 +94,60 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
     clearTimeout(this.mascotTimer);
     this.mascotMood = mood;
     this.mascotMsg  = msg;
+    this.hablar(this.sinEmojis(msg));
     this.mascotTimer = setTimeout(() => {
       this.mascotMood = 'idle';
       this.mascotMsg  = this.TIPS_IDLE[Math.floor(Math.random() * this.TIPS_IDLE.length)];
     }, durMs);
+  }
+
+  // ── Voz de Tigre (mismo patrón que Michi/Koby) ────────────────────────────
+  voiceEnabled = true;
+  private tigreVoice: SpeechSynthesisVoice | null = null;
+
+  toggleVoz(): void {
+    this.voiceEnabled = !this.voiceEnabled;
+    if (!this.voiceEnabled) window.speechSynthesis?.cancel();
+  }
+
+  private cargarVozTigre(): void {
+    const seleccionar = () => {
+      const voces = window.speechSynthesis?.getVoices() ?? [];
+      // Prioridad: voces en español disponibles en Windows/Mac/Android (mismo orden que Espejo Mental/Michi/Koby)
+      const candidatas = [
+        voces.find(v => /jorge|diego|juan/i.test(v.name) && v.lang.startsWith('es')),
+        voces.find(v => v.lang === 'es-MX'),
+        voces.find(v => v.lang === 'es-ES'),
+        voces.find(v => v.lang.startsWith('es')),
+      ];
+      this.tigreVoice = candidatas.find(v => !!v) ?? null;
+    };
+    if (window.speechSynthesis?.getVoices().length) {
+      seleccionar();
+    } else if (window.speechSynthesis) {
+      window.speechSynthesis.onvoiceschanged = seleccionar;
+    }
+  }
+
+  /** Quita emojis antes de mandar el texto al sintetizador de voz (mismo criterio que Espejo Mental/Michi/Koby). */
+  private sinEmojis(texto: string): string {
+    return texto.replace(/[\u{1F300}-\u{1FFFF}]/gu, '').trim();
+  }
+
+  private hablar(texto: string, rate = 0.92, pitch = 1.25): void {
+    if (!this.voiceEnabled || !this.sonidoActivo || !window.speechSynthesis || !texto) return;
+    try {
+      window.speechSynthesis.cancel();
+      const utt = new SpeechSynthesisUtterance(texto);
+      if (this.tigreVoice) {
+        utt.voice = this.tigreVoice;
+        utt.lang = this.tigreVoice.lang;
+      } else {
+        utt.lang = 'es-ES';
+      }
+      utt.rate = rate; utt.pitch = pitch; utt.volume = 0.9;
+      window.speechSynthesis.speak(utt);
+    } catch {}
   }
 
   private audioCtx: AudioContext | null = null;
@@ -131,6 +176,9 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    this.cargarVozTigre();
+    this.hablar('¡Hola! Soy Tigre. Vamos a encajar piezas contra el tiempo.');
+
     this.profileService.activeProfile$.subscribe(state => {
       if (!state.profileId) { this.router.navigate(['/padre/perfiles/selector']); return; }
       this.perfilId = state.profileId;
@@ -348,7 +396,6 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
       this.tiempoInicioRonda = Date.now();
       this.sesionJuegoService.marcarElementoAparece();
       this.playPiezaColocada();
-      this.speak(this.frasesCelebracion[Math.floor(Math.random() * this.frasesCelebracion.length)]);
 
       if (this.piezasColocadas === this.slots.length) {
         this.setMascot('celebrate', '¡INCREÍBLE! 🎉 ¡Completaste todas las piezas!', 5000);
@@ -414,13 +461,11 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
         this.subioNivel = true;
       }
       this.playCompletado();
-      this.speak('¡Lo lograste! ¡Excelente trabajo!');
     } else {
       this.fraseMotivaconalActual = this.frasesMotivacionales[
         Math.floor(Math.random() * this.frasesMotivacionales.length)
       ];
       this.playTiempoAgotado();
-      this.speak('¡Sigue intentando, tú puedes!');
     }
 
     this.service.guardarSesion({
@@ -529,19 +574,6 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
   private playError():       void { this.playTone(200, 0.2, 'sawtooth', 0.12); }
   private playCompletado():  void { [523,659,784,1047].forEach((f,i) => this.playTone(f,0.28,'sine',0.3,i*0.13)); }
   private playTiempoAgotado(): void { this.playTone(330,0.35,'triangle',0.2); this.playTone(220,0.5,'triangle',0.2,0.4); }
-
-  private speak(texto: string): void {
-    if (!this.sonidoActivo) return;
-    try {
-      if (!window.speechSynthesis) return;
-      window.speechSynthesis.cancel();
-      const utt = new SpeechSynthesisUtterance(texto);
-      utt.lang = 'es-ES'; utt.rate = 0.88; utt.pitch = 1.15; utt.volume = 0.9;
-      const vozEs = window.speechSynthesis.getVoices().find(v => v.lang.startsWith('es'));
-      if (vozEs) utt.voice = vozEs;
-      window.speechSynthesis.speak(utt);
-    } catch {}
-  }
 
   // ── SVG ──────────────────────────────────────────────────────────────────
 
