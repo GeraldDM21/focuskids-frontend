@@ -956,6 +956,8 @@ export class DocenteDashboardComponent implements OnInit {
 
   cerrarEvolucion(): void {
     this.alumnoEnEvolucion = null;
+  }
+
   verHistorialDetallado(e: Estudiante): void {
     this.router.navigate(['/docente/historial', e.id], { queryParams: { nombre: e.nombre } });
   }
