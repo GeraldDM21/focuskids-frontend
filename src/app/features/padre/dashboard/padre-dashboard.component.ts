@@ -53,6 +53,7 @@ interface DiaActividad     { dia: string; valor: number; }
       <button class="nav-item" [class.active]="tab==='inicio'"    (click)="tab='inicio'">    <span>🏠</span>Inicio</button>
       <button class="nav-item" [class.active]="tab==='progreso'"  (click)="tab='progreso'">  <span>📊</span>Progreso</button>
       <button class="nav-item" [class.active]="tab==='actividad'" (click)="tab='actividad'"> <span>📅</span>Actividad</button>
+      <button class="nav-item" (click)="irAProgreso()"> <span>🧠</span>Progreso niños</button>
       <p class="nav-section">GESTIÓN</p>
       <button class="nav-item" [class.active]="tab==='hijos'"  (click)="tab='hijos'">  <span>👨‍👧‍👦</span>Mis hijos</button>
       <button class="nav-item" [class.active]="tab==='notif'"  (click)="setNotif()">
@@ -876,6 +877,8 @@ export class PadreDashboardComponent implements OnInit {
     private router:              Router,
     private cdr:                 ChangeDetectorRef
   ) {}
+
+  irAProgreso(): void { this.router.navigate(['/padre/progreso']); }
 
   ngOnInit(): void {
     const user = this.auth.user();

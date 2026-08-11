@@ -4,62 +4,33 @@
   @if (estado === 'inicio') {
     <div class="pantalla-inicio">
 
-      <!-- Orbes decorativos de fondo -->
-      <div class="orb orb-1"></div>
-      <div class="orb orb-2"></div>
-      <div class="orb orb-3"></div>
+      <img class="bg-escena" src="mascotas/pandi-escena.png" alt="Mundo de letras de Pandi">
+      <div class="inicio-velo"></div>
+      <button class="btn-volver-inicio" (click)="volverLobby()">← Volver</button>
 
-      <div class="inicio-content">
-
-        <!-- Mascota con burbuja -->
-        <div class="mascota-area">
-          <div class="sparkles">
-            <span class="sp sp-1">✨</span>
-            <span class="sp sp-2">⭐</span>
-            <span class="sp sp-3">💫</span>
-            <span class="sp sp-4">✨</span>
+      <!-- Pandi explica desde su burbuja -->
+      <div class="mascota-habla">
+        <div class="habla-bubble">
+          <p class="habla-saludo">¡Hola! Soy <strong>Pandi</strong> 🐼</p>
+          <p class="habla-intro">Para jugar Sopa de Letras:</p>
+          <div class="habla-pasos">
+            <div class="habla-paso"><span class="h-ico">🎯</span><span>Elige un tema de vocabulario</span></div>
+            <div class="habla-paso"><span class="h-ico">👆</span><span>Arrastra las letras para seleccionarlas</span></div>
+            <div class="habla-paso"><span class="h-ico">⚡</span><span>¡Si eres rápido, sube la dificultad!</span></div>
           </div>
-          <div class="mascota-ring">
-            <div class="mascota-avatar">🐼</div>
-          </div>
-          <div class="mascota-bubble">
-            ¡Hola! Soy <strong>Pandi</strong> 🐼<br>
-            ¡Encuentra todas las palabras escondidas en la grilla! 🔤
-          </div>
+          <p class="habla-animo">¡Yo te ayudo! ✨</p>
         </div>
+        <div class="habla-tail"></div>
+      </div>
 
-        <!-- Titulo -->
+      <!-- Panel derecho — título, tema y botón -->
+      <div class="inicio-panel">
         <h1 class="titulo-juego">
-          <span class="titulo-parte1">Sopa de</span>
-          <span class="titulo-parte2"> Letras</span>
+          <span class="titulo-parte1">Sopa de </span><span class="titulo-parte2">Letras</span>
         </h1>
         <p class="titulo-sub">Arrastra las letras para encontrar las palabras</p>
 
-        <!-- Instrucciones -->
-        <div class="instrucciones-grid">
-          <div class="instruccion-card">
-            <span class="ic-num">1</span>
-            <span class="ic-emoji">🎯</span>
-            <span class="ic-texto">Elige un tema de vocabulario</span>
-          </div>
-          <div class="instruccion-card">
-            <span class="ic-num">2</span>
-            <span class="ic-emoji">👆</span>
-            <span class="ic-texto">Arrastra las letras para seleccionarlas</span>
-          </div>
-          <div class="instruccion-card">
-            <span class="ic-num">3</span>
-            <span class="ic-emoji">✅</span>
-            <span class="ic-texto">Verde = correcto, rojo = incorrecto</span>
-          </div>
-          <div class="instruccion-card">
-            <span class="ic-num">4</span>
-            <span class="ic-emoji">⚡</span>
-            <span class="ic-texto">Si eres muy rápido, ¡sube la dificultad!</span>
-          </div>
-        </div>
-
-        <!-- Seleccion de tema (CA-06) -->
+        <!-- Selección de tema -->
         <div class="tema-seccion">
           <p class="tema-label">¿De qué tema quieres jugar?</p>
           <div class="temas-row">
@@ -72,17 +43,15 @@
           </div>
         </div>
 
-        <!-- Boton jugar -->
+        <!-- Botón jugar -->
         <div class="inicio-botones">
-          <button class="btn-empezar" (click)="iniciarJuego('FACIL')">
-            🔤 ¡Empezar!
-          </button>
+          <button class="btn-empezar" (click)="iniciarJuego('FACIL')">🔤 ¡Empezar!</button>
           <button class="btn-sonido" (click)="toggleSonido()" [title]="sonidoActivo ? 'Silenciar' : 'Activar sonido'">
             {{ sonidoActivo ? '🔊' : '🔇' }}
           </button>
         </div>
-
       </div>
+
     </div>
   }
 
