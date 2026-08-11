@@ -23,5 +23,12 @@ export const padreRoutes: Routes = [
   {
     path: 'perfiles/selector',
     loadComponent: () => import('./perfiles/profile-selector.component').then(m => m.ProfileSelectorComponent)
+  },
+  // RF-Historial: historial detallado de sesiones por juego
+  {
+    path: 'historial/:perfilId',
+    data: { back: '/padre/dashboard' },
+    loadComponent: () => import('../../shared/components/historial-sesiones/historial-sesiones.component')
+      .then(m => m.HistorialSesionesComponent)
   }
 ];
