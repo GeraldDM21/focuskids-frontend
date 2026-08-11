@@ -30,6 +30,7 @@ export const padreRoutes: Routes = [
     data: { back: '/padre/dashboard' },
     loadComponent: () => import('../../shared/components/historial-sesiones/historial-sesiones.component')
       .then(m => m.HistorialSesionesComponent)
+  },
   // Spring 5: dashboard de progreso del niño
   {
     path: 'progreso',

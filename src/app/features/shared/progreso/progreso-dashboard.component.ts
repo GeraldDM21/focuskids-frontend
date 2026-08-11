@@ -465,9 +465,10 @@ export class ProgresoDashboardComponent implements OnInit {
     });
   }
 
-  verHistorial(_: number): void {
+  verHistorial(perfilId: number): void {
     const rol = this.auth.user()?.rol ?? '';
-    this.router.navigate([rol === 'DOCENTE' ? '/docente/dashboard' : '/padre/dashboard']);
+    const base = rol === 'DOCENTE' ? '/docente' : '/padre';
+    this.router.navigate([`${base}/historial/${perfilId}`]);
   }
   irAlDashboard(): void {
     const rol = this.auth.user()?.rol ?? '';
