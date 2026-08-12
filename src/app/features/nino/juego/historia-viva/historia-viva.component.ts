@@ -799,59 +799,75 @@ export class HistoriaVivaComponent implements OnInit, OnDestroy {
   }
 
   enviarRespuestaVoz(): void {
-    if (!this.transcripcionVoz || this.enviandoVoz || this.transcripcionVozCensurada) return;
-    this.enviandoVoz = true;
-    this.cdr.detectChanges();
+    if (!this.transcripcionVoz || this.transcripcionVozCensurada) return;
 
+    const { correcto, opcionDetectada } = this.evaluarVozLocalmente(this.transcripcionVoz);
     const p = this.preguntaActual!;
-    const opcionCorrecta = p.opciones?.[p.correcta ?? 0] ?? '';
 
-    this.http.post<{ puntuacion: number; feedback: string }>(
-      `${environment.apiUrl}/historia-viva/evaluar-respuesta`,
-      {
-        historiaTitulo:  this.historiaActual!.titulo,
-        historiaTexto:   this.historiaActual!.texto,
-        preguntaTexto:   p.texto,
-        guiaRespuesta:   `La respuesta correcta es: "${opcionCorrecta}". Evalúa si la respuesta del alumno transmite la misma idea, aunque use palabras diferentes. Sé flexible con la expresión oral.`,
-        respuestaAlumno: this.transcripcionVoz,
-      }
-    ).subscribe({
-      next: res => {
-        const correcto = res.puntuacion >= 60;
-        this.feedbackVozCorrecto = correcto;
-        this.feedbackVoz = res.feedback;
-        this.enviandoVoz = false;
+    this.feedbackVozCorrecto = correcto;
 
-        if (correcto) {
-          this.preguntasCorrectas++;
-          this.setMascota('celebrate', res.feedback);
-          this.feedback.showCorrect();
-          this.hablar('¡Correcto! ¡Muy bien!');
-          this.cdr.detectChanges();
-          setTimeout(() => { this.siguientePregunta(); this.cdr.detectChanges(); }, 3200);
-        } else {
-          this.intentosTotales++;
-          const tipo = p.tipo ?? '';
-          if (!this.tiposErradas.includes(tipo)) this.tiposErradas.push(tipo);
-          this.mostrandoPista = true;
-          this.setMascota('encourage', res.feedback);
-          this.feedback.showIncorrect();
-          this.cdr.detectChanges();
-          // Tras 3s limpia el estado de voz para que pueda intentar con botones
-          setTimeout(() => {
-            this.transcripcionVoz = '';
-            this.feedbackVoz = null;
-            this.feedbackVozCorrecto = false;
-            this.cdr.detectChanges();
-          }, 3200);
-        }
-      },
-      error: () => {
-        this.feedbackVoz = '⚠️ No pude conectarme. Intenta con los botones de arriba.';
+    if (correcto) {
+      this.preguntasCorrectas++;
+      const msg = '¡Correcto! ¡Dijiste la respuesta correcta! 🎉';
+      this.feedbackVoz = msg;
+      this.setMascota('celebrate', msg);
+      this.feedback.showCorrect();
+      this.hablar('¡Correcto!');
+      this.cdr.detectChanges();
+      setTimeout(() => { this.siguientePregunta(); this.cdr.detectChanges(); }, 2800);
+    } else {
+      this.intentosTotales++;
+      const tipo = p.tipo ?? '';
+      if (!this.tiposErradas.includes(tipo)) this.tiposErradas.push(tipo);
+      this.mostrandoPista = true;
+      const msg = opcionDetectada >= 0
+        ? `Mencionaste la opción ${this.LETRAS[opcionDetectada]}, pero no es la correcta. Lee la pista. 💡`
+        : 'No reconocí tu respuesta. Lee la pista e intenta con los botones. 💡';
+      this.feedbackVoz = msg;
+      this.setMascota('encourage', msg);
+      this.feedback.showIncorrect();
+      this.cdr.detectChanges();
+      setTimeout(() => {
+        this.transcripcionVoz = '';
+        this.feedbackVoz = null;
         this.feedbackVozCorrecto = false;
-        this.enviandoVoz = false;
         this.cdr.detectChanges();
-      }
+      }, 3200);
+    }
+  }
+
+  private evaluarVozLocalmente(transcripcion: string): { correcto: boolean; opcionDetectada: number } {
+    const p = this.preguntaActual!;
+    if (!p.opciones || p.correcta === undefined) return { correcto: false, opcionDetectada: -1 };
+
+    const norm = (s: string) => s.toLowerCase()
+      .normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+
+    const trans = norm(transcripcion);
+
+    // 1. El niño dijo la letra ("la b", "b", "opcion b")
+    const letraMatch = trans.match(/\b(a|b|c)\b/);
+    if (letraMatch) {
+      const idx = ['a', 'b', 'c'].indexOf(letraMatch[1]);
+      if (idx >= 0) return { correcto: idx === p.correcta, opcionDetectada: idx };
+    }
+
+    // 2. Coincidencia por palabras clave con cada opción
+    const scores = p.opciones.map((opcion, idx) => {
+      const opNorm = norm(opcion);
+      const palabras = opNorm.split(' ').filter(w => w.length > 3);
+      if (!palabras.length) return { idx, score: 0 };
+      const hits = palabras.filter(w => trans.includes(w)).length;
+      return { idx, score: hits / palabras.length };
     });
+
+    scores.sort((a, b) => b.score - a.score);
+    const mejor = scores[0];
+
+    // Umbral mínimo del 30% de palabras coincidentes
+    if (mejor.score < 0.30) return { correcto: false, opcionDetectada: -1 };
+
+    return { correcto: mejor.idx === p.correcta, opcionDetectada: mejor.idx };
   }
 }
