@@ -46,8 +46,11 @@
         <!-- Botón jugar -->
         <div class="inicio-botones">
           <button class="btn-empezar" (click)="iniciarJuego('FACIL')">🔤 ¡Empezar!</button>
-          <button class="btn-sonido" (click)="toggleSonido()" [title]="sonidoActivo ? 'Silenciar' : 'Activar sonido'">
+          <button class="btn-sonido" (click)="toggleSonido()" [title]="sonidoActivo ? 'Silenciar sonido' : 'Activar sonido'">
             {{ sonidoActivo ? '🔊' : '🔇' }}
+          </button>
+          <button class="btn-voz" (click)="toggleVoz()" [title]="voiceEnabled ? 'Silenciar a Pandi' : 'Activar voz de Pandi'">
+            {{ voiceEnabled ? '🗣️' : '🤐' }}
           </button>
         </div>
       </div>

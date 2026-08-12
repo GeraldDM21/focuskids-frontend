@@ -204,7 +204,7 @@
   box-shadow: 0 10px 32px rgba(184,167,240,0.5);
 }
 
-.btn-sonido {
+.btn-sonido, .btn-voz {
   background: rgba(255,255,255,0.12);
   border: 1px solid rgba(255,255,255,0.2);
   border-radius: 12px;
@@ -214,7 +214,7 @@
   transition: all 0.2s;
   display: flex; align-items: center; justify-content: center;
 }
-.btn-sonido:hover { background: rgba(255,255,255,0.2); }
+.btn-sonido:hover, .btn-voz:hover { background: rgba(255,255,255,0.2); }
 
 /* ══ PANTALLA JUGANDO ══════════════════════════════════════════════════════ */
 .pantalla-juego {
