@@ -2,67 +2,47 @@
 
   @if (estado === 'inicio') {
   <div class="pantalla-inicio">
+    <img class="bg-escena" src="/mascotas/leo-escena.png" alt="Escena de Leo en Foco Extremo">
+    <div class="inicio-velo"></div>
 
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
-    <div class="orb orb-3"></div>
+    <button type="button" class="btn-volver-inicio" (click)="volverLobby()">← Volver</button>
 
-    <div class="inicio-content">
-
-      <div class="mascota-area">
-        <div class="sparkles">
-          <span class="sp sp-1">✨</span>
-          <span class="sp sp-2">⭐</span>
-          <span class="sp sp-3">💫</span>
-          <span class="sp sp-4">✨</span>
+    <!-- Leo explica las instrucciones desde su burbuja -->
+    <div class="leo-habla">
+      <div class="habla-bubble">
+        <p class="habla-saludo">¡Hola! Soy <strong>Leo</strong> 🦁</p>
+        <p class="habla-intro">Para jugar Foco Extremo:</p>
+        <div class="habla-pasos">
+          <div class="habla-paso"><span class="h-ico">🎯</span><span>Verás un dibujo objetivo antes de empezar</span></div>
+          <div class="habla-paso"><span class="h-ico">👆</span><span>Toca o presiona espacio SOLO con ese dibujo</span></div>
+          <div class="habla-paso"><span class="h-ico">🚫</span><span>Si aparece otro dibujo, no toques nada</span></div>
+          <div class="habla-paso"><span class="h-ico">🐢</span><span>Si te equivocas mucho, iremos más despacio</span></div>
         </div>
-        <div class="mascota-ring">
-          <div class="mascota-avatar">🦄</div>
-        </div>
-        <div class="mascota-bubble">
-          ¡Hola! Soy <strong>Uni</strong> 🦄<br>
-          ¡Vamos a entrenar tu atención y tu autocontrol! 🎯
-        </div>
+        <p class="habla-animo">¡Vamos a entrenar tu atención! ✨</p>
       </div>
+      <div class="habla-tail"></div>
+    </div>
 
+    <!-- Panel derecho — título y botón -->
+    <div class="inicio-panel">
       <h1 class="titulo-juego">
-        <span class="titulo-parte1">Foco</span>
-        <span class="titulo-parte2"> Extremo</span>
+        <span class="titulo-grad">Foco</span><span class="titulo-blanco"> Extremo</span>
       </h1>
-      <p class="titulo-sub">Presiona solo cuando aparezca tu objetivo</p>
+      <p class="subtitulo-juego">Presiona solo cuando aparezca tu objetivo</p>
 
-      <div class="instrucciones-grid">
-        <div class="instruccion-card">
-          <span class="ic-num">1</span>
-          <span class="ic-emoji">🎯</span>
-          <span class="ic-texto">Verás un dibujo objetivo antes de empezar</span>
-        </div>
-        <div class="instruccion-card">
-          <span class="ic-num">2</span>
-          <span class="ic-emoji">👆</span>
-          <span class="ic-texto">Toca o presiona espacio SOLO con ese dibujo</span>
-        </div>
-        <div class="instruccion-card">
-          <span class="ic-num">3</span>
-          <span class="ic-emoji">🚫</span>
-          <span class="ic-texto">Si aparece otro dibujo, no toques nada</span>
-        </div>
-        <div class="instruccion-card">
-          <span class="ic-num">4</span>
-          <span class="ic-emoji">🐢</span>
-          <span class="ic-texto">Si te equivocas mucho, iremos más despacio</span>
-        </div>
-      </div>
+      <button class="btn-empezar" (click)="iniciarJuego('FACIL')">
+        ⚡ ¡Empezar!
+        <span class="btn-shine"></span>
+      </button>
 
-      <div class="inicio-botones">
-        <button class="btn-empezar" (click)="iniciarJuego('FACIL')">
-          ⚡ ¡Empezar!
-        </button>
-        <button class="btn-sonido" (click)="toggleSonido()" [title]="sonidoActivo ? 'Silenciar' : 'Activar sonido'">
+      <div class="volumen-footer">
+        <button class="btn-sonido" (click)="toggleSonido()" [title]="sonidoActivo ? 'Silenciar sonido' : 'Activar sonido'">
           {{ sonidoActivo ? '🔊' : '🔇' }}
         </button>
+        <button class="btn-voz" (click)="toggleVoz()" [title]="voiceEnabled ? 'Silenciar a Leo' : 'Activar voz de Leo'">
+          {{ voiceEnabled ? '🗣️' : '🤐' }}
+        </button>
       </div>
-
     </div>
   </div>
   }
@@ -189,7 +169,7 @@
   }
 
   @if (estado === 'jugando') {
-  <app-mascot game="foco" [mood]="mascotMood" [message]="mascotMsg"></app-mascot>
+  <app-mascot game="juego7" [mood]="mascotMood" [message]="mascotMsg"></app-mascot>
   }
 
 </div>

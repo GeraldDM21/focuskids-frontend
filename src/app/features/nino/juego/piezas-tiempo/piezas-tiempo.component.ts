@@ -87,6 +87,10 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
   mascotMsg = '¡Hola! Soy Tigre 🐯 ¡Arrastrá las piezas a sus siluetas!';
   private mascotTimer: any;
 
+  /** Voz de Tigre (TTS), independiente del control de sonido/efectos (sonidoActivo). */
+  voiceEnabled = true;
+  private tigreVoice: SpeechSynthesisVoice | null = null;
+
   private readonly TIPS_IDLE = [
     '💡 Arrastrá la pieza hasta su silueta y soltá.',
     '🔄 Si la pieza no encaja, ¡rotála con el botón Rotar!',
@@ -156,6 +160,9 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
       },
       error: () => {}
     });
+
+    this.cargarVozTigre();
+    this.speak('¡Hola! Soy Tigre. Vamos a encajar piezas contra el tiempo.');
   }
 
   ngOnDestroy(): void {
@@ -530,15 +537,48 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
   private playCompletado():  void { [523,659,784,1047].forEach((f,i) => this.playTone(f,0.28,'sine',0.3,i*0.13)); }
   private playTiempoAgotado(): void { this.playTone(330,0.35,'triangle',0.2); this.playTone(220,0.5,'triangle',0.2,0.4); }
 
+  toggleVoz(): void {
+    this.voiceEnabled = !this.voiceEnabled;
+    if (!this.voiceEnabled) window.speechSynthesis?.cancel();
+  }
+
+  private cargarVozTigre(): void {
+    const seleccionar = () => {
+      const voces = window.speechSynthesis?.getVoices() ?? [];
+      // Prioridad: voces en español disponibles en Windows/Mac/Android (mismo orden que Koby/Buddy/Bongo/Leo)
+      const candidatas = [
+        voces.find(v => v.name.includes('Jorge')),
+        voces.find(v => v.name.includes('Diego')),
+        voces.find(v => v.name.includes('Juan')),
+        voces.find(v => v.lang === 'es-MX'),
+        voces.find(v => v.lang === 'es-ES'),
+        voces.find(v => v.lang.startsWith('es')),
+      ];
+      this.tigreVoice = candidatas.find(v => !!v) ?? null;
+    };
+    if (window.speechSynthesis?.getVoices().length) {
+      seleccionar();
+    } else {
+      window.speechSynthesis?.addEventListener('voiceschanged', seleccionar, { once: true });
+    }
+  }
+
+  private sinEmojis(texto: string): string {
+    return texto.replace(/[\u{1F300}-\u{1FFFF}]/gu, '').trim();
+  }
+
   private speak(texto: string): void {
-    if (!this.sonidoActivo) return;
+    if (!this.voiceEnabled || !window.speechSynthesis) return;
     try {
-      if (!window.speechSynthesis) return;
       window.speechSynthesis.cancel();
-      const utt = new SpeechSynthesisUtterance(texto);
-      utt.lang = 'es-ES'; utt.rate = 0.88; utt.pitch = 1.15; utt.volume = 0.9;
-      const vozEs = window.speechSynthesis.getVoices().find(v => v.lang.startsWith('es'));
-      if (vozEs) utt.voice = vozEs;
+      const utt = new SpeechSynthesisUtterance(this.sinEmojis(texto));
+      if (this.tigreVoice) {
+        utt.voice = this.tigreVoice;
+        utt.lang = this.tigreVoice.lang;
+      } else {
+        utt.lang = 'es-ES';
+      }
+      utt.rate = 0.92; utt.pitch = 1.05; utt.volume = 0.9;
       window.speechSynthesis.speak(utt);
     } catch {}
   }

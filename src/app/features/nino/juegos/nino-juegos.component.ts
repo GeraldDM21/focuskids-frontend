@@ -9,10 +9,10 @@ import { SesionJuego, Metrica } from '../../padre/padre.service';
 import { MisionService, MisionReclamada } from '../../../core/services/mision.service';
 
 interface Juego       { nombre: string; tipo: string; icono: string; personaje: string; color: string; nivelTxt: string; progreso: number; ruta: string; mascotaImg: string; tip: string; portraitScale?: number; }
-interface ProgresoItem{ nombre: string; valor: number; color: string; icono: string; }
+interface ProgresoItem{ nombre: string; valor: number | null; color: string; icono: string; }
 interface Logro       { icono: string; nombre: string; desc: string; puntos: number; }
 interface LogroFull   { icono: string; nombre: string; desc: string; puntos: number; ganado: boolean; cat: string; }
-interface Sesion      { juego: string; icono: string; hace: string; precision: number; pts: number; }
+interface Sesion      { juego: string; icono: string; hace: string; precision: number | null; pts: number; }
 interface Avatar      { key: string; emoji: string; }
 
 @Component({
@@ -216,7 +216,7 @@ interface Avatar      { key: string; emoji: string; }
                 <div class="sesion-row">
                   <div class="sesion-ico">{{ s.icono }}</div>
                   <div class="sesion-info"><div class="sesion-nombre">{{ s.juego }}</div><div class="sesion-hace">{{ s.hace }}</div></div>
-                  <div class="sesion-right"><div class="sesion-precision">🎯 {{ s.precision }}%</div><div class="sesion-pts">+{{ s.pts }} pts</div></div>
+                  <div class="sesion-right"><div class="sesion-precision" [class.sin-datos]="s.precision === null">🎯 {{ s.precision === null ? 'Sin datos' : s.precision + '%' }}</div><div class="sesion-pts">+{{ s.pts }} pts</div></div>
                 </div>
               }
             </div>
@@ -328,8 +328,8 @@ interface Avatar      { key: string; emoji: string; }
                 <div class="cat-row">
                   <div class="cat-label"><span class="cat-ico">{{ p.icono }}</span><span class="cat-name">{{ p.nombre }}</span></div>
                   <div class="cat-bar-wrap">
-                    <div class="cat-bar"><div class="cat-fill" [style.width.%]="p.valor" [style.background]="p.color"></div></div>
-                    <span class="cat-pct" [style.color]="p.color">{{ p.valor }}%</span>
+                    <div class="cat-bar"><div class="cat-fill" [style.width.%]="p.valor ?? 0" [style.background]="p.valor === null ? '#CBD5E1' : p.color"></div></div>
+                    <span class="cat-pct" [style.color]="p.valor === null ? '#94A3B8' : p.color">{{ p.valor === null ? 'Sin datos' : p.valor + '%' }}</span>
                   </div>
                 </div>
               }
@@ -342,7 +342,7 @@ interface Avatar      { key: string; emoji: string; }
                 <div class="sesion-row">
                   <div class="sesion-ico">{{ s.icono }}</div>
                   <div class="sesion-info"><div class="sesion-nombre">{{ s.juego }}</div><div class="sesion-hace">{{ s.hace }}</div></div>
-                  <div class="sesion-right"><div class="sesion-precision">🎯 {{ s.precision }}%</div><div class="sesion-pts">+{{ s.pts }} pts</div></div>
+                  <div class="sesion-right"><div class="sesion-precision" [class.sin-datos]="s.precision === null">🎯 {{ s.precision === null ? 'Sin datos' : s.precision + '%' }}</div><div class="sesion-pts">+{{ s.pts }} pts</div></div>
                 </div>
               }
             </div>
@@ -1166,6 +1166,7 @@ interface Avatar      { key: string; emoji: string; }
     .sesion-hace   { font-size: 11px; color: #94A3B8; margin-top: 2px; }
     .sesion-right  { text-align: right; }
     .sesion-precision { font-size: 13px; font-weight: 700; color: #0F766E; }
+    .sesion-precision.sin-datos { color: #94A3B8; font-weight: 600; }
     .sesion-pts       { font-size: 11px; color: #16A34A; font-weight: 700; margin-top: 2px; }
 
     /* ══ LOGROS 3D ══ */
@@ -1667,7 +1668,7 @@ export class NinoJuegosComponent implements OnInit {
           juego:     s.juego.nombre,
           icono:     this.juegoIcoNino(s.juego.nombre),
           hace:      this.haceCuanto(s.inicio),
-          precision: metMap.has(s.id) ? Math.round(metMap.get(s.id)!) : 0,
+          precision: metMap.has(s.id) ? Math.round(metMap.get(s.id)!) : null,
           pts:       s.puntaje ?? 0,
         }));
 
@@ -1700,7 +1701,7 @@ export class NinoJuegosComponent implements OnInit {
         .slice(0, 4)
         .map(([cat, data]) => {
           const avg = data.prec.length
-            ? Math.round(data.prec.reduce((s, v) => s + v, 0) / data.prec.length) : 0;
+            ? Math.round(data.prec.reduce((s, v) => s + v, 0) / data.prec.length) : null;
           return { nombre: cat, valor: avg, color: this.CAT_COLOR_MAP[cat] ?? '#7C3AED', icono: this.CAT_ICO_MAP[cat] ?? '🎮' };
         });
 

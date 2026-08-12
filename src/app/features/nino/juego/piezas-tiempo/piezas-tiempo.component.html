@@ -45,7 +45,8 @@
 
         <div class="inicio-botones">
           <button class="btn-empezar" (click)="iniciarJuego(nivelActual)">🧩 ¡Empezar!</button>
-          <button class="btn-sonido" (click)="toggleSonido()">{{ sonidoActivo ? '🔊' : '🔇' }}</button>
+          <button class="btn-sonido" (click)="toggleSonido()" [title]="sonidoActivo ? 'Silenciar sonido' : 'Activar sonido'">{{ sonidoActivo ? '🔊' : '🔇' }}</button>
+          <button class="btn-voz" (click)="toggleVoz()" [title]="voiceEnabled ? 'Silenciar a Tigre' : 'Activar voz de Tigre'">{{ voiceEnabled ? '🗣️' : '🤐' }}</button>
         </div>
       </div>
     </div>

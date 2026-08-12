@@ -70,8 +70,12 @@ export class FocoExtremoComponent implements OnInit, OnDestroy {
   nivelSugerido: Nivel | null = null;
 
   mascotMood: MascotMood = 'idle';
-  mascotMsg = '¡Hola! Soy Uni 🦄 ¡Vamos a entrenar tu atención!';
+  mascotMsg = '¡Hola! Soy Leo 🦁 ¡Vamos a entrenar tu atención!';
   private mascotTimer: any;
+
+  /** Voz de Leo (TTS), independiente del control de sonido/efectos (sonidoActivo). */
+  voiceEnabled = true;
+  private leoVoice: SpeechSynthesisVoice | null = null;
 
   private readonly TIPS_IDLE = [
     '¡Presiona solo cuando veas tu objetivo!',
@@ -134,6 +138,9 @@ export class FocoExtremoComponent implements OnInit, OnDestroy {
       },
       error: () => {}
     });
+
+    this.cargarVozLeo();
+    this.speak('¡Hola! Soy Leo. Vamos a entrenar tu atención y tu autocontrol.');
   }
 
   ngOnDestroy(): void {
@@ -522,19 +529,50 @@ export class FocoExtremoComponent implements OnInit, OnDestroy {
     [523, 659, 784, 1047].forEach((f, i) => this.playTone(f, 0.28, 'sine', 0.3, i * 0.13));
   }
 
+  toggleVoz(): void {
+    this.voiceEnabled = !this.voiceEnabled;
+    if (!this.voiceEnabled) window.speechSynthesis?.cancel();
+  }
+
+  private cargarVozLeo(): void {
+    const seleccionar = () => {
+      const voces = window.speechSynthesis?.getVoices() ?? [];
+      // Prioridad: voces en español disponibles en Windows/Mac/Android (mismo orden que Koby/Tigre/Buddy/Bongo)
+      const candidatas = [
+        voces.find(v => v.name.includes('Jorge')),
+        voces.find(v => v.name.includes('Diego')),
+        voces.find(v => v.name.includes('Juan')),
+        voces.find(v => v.lang === 'es-MX'),
+        voces.find(v => v.lang === 'es-ES'),
+        voces.find(v => v.lang.startsWith('es')),
+      ];
+      this.leoVoice = candidatas.find(v => !!v) ?? null;
+    };
+    if (window.speechSynthesis?.getVoices().length) {
+      seleccionar();
+    } else {
+      window.speechSynthesis?.addEventListener('voiceschanged', seleccionar, { once: true });
+    }
+  }
+
+  private sinEmojis(texto: string): string {
+    return texto.replace(/[\u{1F300}-\u{1FFFF}]/gu, '').trim();
+  }
+
   private speak(texto: string): void {
-    if (!this.sonidoActivo) return;
+    if (!this.voiceEnabled || !window.speechSynthesis) return;
     try {
-      if (!window.speechSynthesis) return;
       window.speechSynthesis.cancel();
-      const utt = new SpeechSynthesisUtterance(texto);
-      utt.lang = 'es-ES';
-      utt.rate = 0.88;
-      utt.pitch = 1.15;
+      const utt = new SpeechSynthesisUtterance(this.sinEmojis(texto));
+      if (this.leoVoice) {
+        utt.voice = this.leoVoice;
+        utt.lang = this.leoVoice.lang;
+      } else {
+        utt.lang = 'es-ES';
+      }
+      utt.rate = 0.92;
+      utt.pitch = 1.05;
       utt.volume = 0.9;
-      const voces = window.speechSynthesis.getVoices();
-      const vozEs = voces.find((v) => v.lang.startsWith('es'));
-      if (vozEs) utt.voice = vozEs;
       window.speechSynthesis.speak(utt);
     } catch {}
   }

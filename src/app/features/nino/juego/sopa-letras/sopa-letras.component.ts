@@ -52,6 +52,10 @@ export class SopaLetrasComponent implements OnInit, OnDestroy {
   mascotMsg  = '¡Hola! Soy Pandi 🐼 ¡Busca todas las palabras escondidas!';
   private mascotTimer: any;
 
+  /** Voz de Pandi (TTS), independiente del control de sonido/efectos (sonidoActivo). */
+  voiceEnabled = true;
+  private pandiVoice: SpeechSynthesisVoice | null = null;
+
   private readonly TIPS_IDLE = [
     '¡Busca en todas las direcciones: horizontal, vertical y diagonal!',
     '¡Las palabras pueden ir hacia atrás también!',
@@ -158,6 +162,9 @@ export class SopaLetrasComponent implements OnInit, OnDestroy {
       },
       error: () => {}
     });
+
+    this.cargarVozPandi();
+    this.speak('¡Hola! Soy Pandi. Vamos a buscar todas las palabras escondidas.');
   }
 
   ngOnDestroy(): void {
@@ -379,21 +386,54 @@ export class SopaLetrasComponent implements OnInit, OnDestroy {
     this.playTone(220, 0.5,  'triangle', 0.2, 0.4);
   }
 
+  toggleVoz(): void {
+    this.voiceEnabled = !this.voiceEnabled;
+    if (!this.voiceEnabled) window.speechSynthesis?.cancel();
+  }
+
+  private cargarVozPandi(): void {
+    const seleccionar = () => {
+      const voces = window.speechSynthesis?.getVoices() ?? [];
+      // Prioridad: voces en español disponibles en Windows/Mac/Android (mismo orden que Espejo Mental/Michi)
+      const candidatas = [
+        voces.find(v => v.name.includes('Sabina')),
+        voces.find(v => v.name.includes('Paulina')),
+        voces.find(v => v.name.includes('Monica')),
+        voces.find(v => v.name.includes('Helena')),
+        voces.find(v => v.name.includes('Laura')),
+        voces.find(v => v.name.includes('Elvira')),
+        voces.find(v => v.lang === 'es-MX'),
+        voces.find(v => v.lang === 'es-ES'),
+        voces.find(v => v.lang.startsWith('es')),
+      ];
+      this.pandiVoice = candidatas.find(v => !!v) ?? null;
+    };
+    if (window.speechSynthesis?.getVoices().length) {
+      seleccionar();
+    } else {
+      window.speechSynthesis?.addEventListener('voiceschanged', seleccionar, { once: true });
+    }
+  }
+
+  private sinEmojis(texto: string): string {
+    return texto.replace(/[\u{1F300}-\u{1FFFF}]/gu, '').trim();
+  }
+
   // Voz en español usando Web Speech API (como el "bien hecho" de Espejo Mental)
   private speak(texto: string): void {
-    if (!this.sonidoActivo) return;
+    if (!this.voiceEnabled || !window.speechSynthesis) return;
     try {
-      if (!window.speechSynthesis) return;
       window.speechSynthesis.cancel();
-      const utt = new SpeechSynthesisUtterance(texto);
-      utt.lang = 'es-ES';
-      utt.rate = 0.88;
+      const utt = new SpeechSynthesisUtterance(this.sinEmojis(texto));
+      if (this.pandiVoice) {
+        utt.voice = this.pandiVoice;
+        utt.lang = this.pandiVoice.lang;
+      } else {
+        utt.lang = 'es-ES';
+      }
+      utt.rate = 0.92;
       utt.pitch = 1.15;
       utt.volume = 0.9;
-      // Busca una voz en espanol si esta disponible
-      const voces = window.speechSynthesis.getVoices();
-      const vozEs = voces.find(v => v.lang.startsWith('es'));
-      if (vozEs) utt.voice = vozEs;
       window.speechSynthesis.speak(utt);
     } catch {}
   }
