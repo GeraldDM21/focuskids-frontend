@@ -72,6 +72,13 @@ const NIVELES = [
                [(ngModel)]="filtroFechaHasta" (input)="onFechaInput()"/>
       </div>
 
+      <div class="filtro-group">
+        <label class="filtro-label">Estado</label>
+        <button class="btn-toggle" [class.activo]="soloCompletadas" (click)="toggleCompletadas()">
+          {{ soloCompletadas ? '✓ Solo completadas' : 'Todas las sesiones' }}
+        </button>
+      </div>
+
       <div class="filtro-group filtro-group-btn">
         <button class="btn-limpiar" (click)="limpiarFiltros()">✕ Limpiar</button>
       </div>
@@ -253,6 +260,12 @@ const NIVELES = [
     .btn-limpiar { padding:9px 16px; background:#F3F0FF; color:#5B21B6; border:none; border-radius:10px;
                    font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap; }
     .btn-limpiar:hover { background:#EDE9FE; }
+    .btn-toggle { padding:9px 14px; background:#F1F5F9; color:#64748B; border:2px solid #E4DEFF;
+                  border-radius:10px; font-size:12.5px; font-weight:700; cursor:pointer;
+                  font-family:inherit; white-space:nowrap; transition:all .15s; }
+    .btn-toggle:hover { background:#EDE9FE; color:#5B21B6; border-color:#7C3AED; }
+    .btn-toggle.activo { background:linear-gradient(135deg,#4F46E5,#7C3AED); color:white;
+                         border-color:transparent; box-shadow:0 3px 10px rgba(79,70,229,.3); }
     .filtro-meta { margin-top:10px; font-size:12px; color:#64748B; border-top:1px solid #F1F5F9; padding-top:10px; }
 
     /* ── Loader / Empty ── */
@@ -338,6 +351,7 @@ export class HistorialSesionesComponent implements OnInit {
   filtroNivel:      string = '';
   filtroFechaDesde: string = '';
   filtroFechaHasta: string = '';
+  soloCompletadas:  boolean = true;  // por defecto solo sesiones con datos reales
 
   // Paginación (CA-03)
   paginaActual  = 0;
@@ -381,6 +395,7 @@ export class HistorialSesionesComponent implements OnInit {
       nivel: this.filtroNivel || undefined,
       fechaDesde: this.parseFecha(this.filtroFechaDesde) ? this.parseFecha(this.filtroFechaDesde) + 'T00:00:00' : undefined,
       fechaHasta: this.parseFecha(this.filtroFechaHasta) ? this.parseFecha(this.filtroFechaHasta) + 'T23:59:59' : undefined,
+      soloCompletadas: this.soloCompletadas ? true : undefined,
     };
 
     this.historialService.obtenerHistorial(this.perfilId, filtros)
@@ -405,11 +420,17 @@ export class HistorialSesionesComponent implements OnInit {
     this.buscar(false);
   }
 
+  toggleCompletadas(): void {
+    this.soloCompletadas = !this.soloCompletadas;
+    this.buscar();
+  }
+
   limpiarFiltros(): void {
     this.filtroJuegoId    = null;
     this.filtroNivel      = '';
     this.filtroFechaDesde = '';
     this.filtroFechaHasta = '';
+    this.soloCompletadas  = true;
     this.buscar();
   }
 
