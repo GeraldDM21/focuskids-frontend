@@ -21,6 +21,18 @@ interface ConfettiPiece { id: number; left: number; color: string; delay: number
   template: `
     <div class="game-wrapper">
 
+      <!-- ── Fondo animado (persistente en todos los estados) ─────────────── -->
+      <div class="rp-bg-orb rp-o1" aria-hidden="true"></div>
+      <div class="rp-bg-orb rp-o2" aria-hidden="true"></div>
+      <div class="rp-bg-orb rp-o3" aria-hidden="true"></div>
+      <div class="rp-eq" aria-hidden="true">
+        <div class="rp-bar rp-b1"></div><div class="rp-bar rp-b2"></div>
+        <div class="rp-bar rp-b3"></div><div class="rp-bar rp-b4"></div>
+        <div class="rp-bar rp-b5"></div><div class="rp-bar rp-b6"></div>
+        <div class="rp-bar rp-b7"></div><div class="rp-bar rp-b8"></div>
+        <div class="rp-bar rp-b9"></div><div class="rp-bar rp-b10"></div>
+      </div>
+
       <!-- Flash overlay -->
       @if (showFlash) {
         <div class="flash-overlay" [class.flash-verde]="flashVerde" [class.flash-rojo]="!flashVerde"></div>
@@ -168,8 +180,7 @@ interface ConfettiPiece { id: number; left: number; color: string; delay: number
 
           <div class="resultados-card">
             <div class="fox-resultado-hero">
-              <div class="fox-resultado-ring"></div>
-              <div class="fox-resultado-face">🐵</div>
+              <img class="foxy-resultado-img" src="mascotas/bongo-portrait.png" alt="Bongo">
               <div class="fox-resultado-trophy">{{ trofeoEmoji }}</div>
             </div>
 
@@ -195,7 +206,7 @@ interface ConfettiPiece { id: number; left: number; color: string; delay: number
             </div>
 
             <div class="foxy-msg-final">
-              <div class="foxy-msg-avatar">🐵</div>
+              <img class="foxy-msg-avatar-img" src="mascotas/bongo-portrait.png" alt="Bongo">
               <div class="foxy-msg-bubble">{{ mensajeFinal }}</div>
             </div>
 
@@ -487,17 +498,12 @@ interface ConfettiPiece { id: number; left: number; color: string; delay: number
       align-items: center; justify-content: center;
       margin-bottom: 16px; width: 120px; height: 120px;
     }
-    .fox-resultado-ring {
-      position: absolute; inset: -6px; border-radius: 50%;
-      background: conic-gradient(#a78bfa, #60a5fa, #4ade80, #fbbf24, #f87171, #a78bfa);
-      animation: spinRing 5s linear infinite; filter: blur(1px);
-    }
-    .fox-resultado-face {
-      font-size: 88px; line-height: 1; position: relative; z-index: 1;
+    .foxy-resultado-img {
+      width: 120px; height: auto;
+      filter: drop-shadow(0 0 20px rgba(167,139,250,.6));
       animation: bounce 2s ease-in-out infinite;
-      filter: drop-shadow(0 0 20px rgba(167,139,250,.7));
-      background: rgba(15,12,41,.5); border-radius: 50%;
-      width: 110px; height: 110px; display: flex; align-items: center; justify-content: center;
+      -webkit-mask-image: radial-gradient(ellipse 82% 90% at 50% 52%, black 55%, transparent 100%);
+      mask-image: radial-gradient(ellipse 82% 90% at 50% 52%, black 55%, transparent 100%);
     }
     .fox-resultado-trophy {
       position: absolute; top: -10px; right: -10px; z-index: 2;
@@ -522,7 +528,7 @@ interface ConfettiPiece { id: number; left: number; color: string; delay: number
     .score-lbl { font-size: 11px; color: #64748b; }
 
     .foxy-msg-final { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 20px; text-align: left; }
-    .foxy-msg-avatar { font-size: 36px; flex-shrink: 0; }
+    .foxy-msg-avatar-img { width:48px; height:auto; flex-shrink:0; filter:drop-shadow(0 0 8px rgba(167,139,250,.5)); -webkit-mask-image:radial-gradient(ellipse 82% 90% at 50% 52%, black 55%, transparent 100%); mask-image:radial-gradient(ellipse 82% 90% at 50% 52%, black 55%, transparent 100%); }
     .foxy-msg-bubble {
       background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14);
       border-radius: 4px 16px 16px 16px; padding: 10px 14px;
@@ -551,6 +557,30 @@ interface ConfettiPiece { id: number; left: number; color: string; delay: number
     @keyframes mascotShake{ 0%,100%{transform:rotate(0)} 25%{transform:rotate(-12deg)} 75%{transform:rotate(12deg)} }
     @keyframes comboPop   { from{opacity:0;transform:scale(.5) translateY(10px)} to{opacity:1;transform:scale(1) translateY(0)} }
     @keyframes starPop    { from{transform:scale(0) rotate(-30deg)} to{transform:scale(1) rotate(0)} }
+
+    /* ══ FONDO ANIMADO — RITMO Y PATRÓN ═══════════════════════════════════ */
+    .rp-bg-orb { position: fixed; border-radius: 50%; filter: blur(90px); pointer-events: none; z-index: 0; animation: rpOrbPulse 10s ease-in-out infinite; }
+    .rp-o1 { width: 500px; height: 500px; top: -160px; left: -110px; background: radial-gradient(circle, rgba(167,139,250,.32), transparent 70%); animation-delay: 0s; }
+    .rp-o2 { width: 370px; height: 370px; bottom: -130px; right: -90px; background: radial-gradient(circle, rgba(96,165,250,.25), transparent 70%); animation-delay: 4s; }
+    .rp-o3 { width: 270px; height: 270px; top: 40%; left: 58%; background: radial-gradient(circle, rgba(232,121,249,.18), transparent 70%); animation-delay: 8s; }
+    @keyframes rpOrbPulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.1);} }
+    /* ── Barras de ecualizador — distintivo de este juego ────────────────── */
+    .rp-eq {
+      position: fixed; bottom: 0; left: 0; right: 0; height: 100px;
+      display: flex; align-items: flex-end; justify-content: center; gap: 5px;
+      padding: 0 18%; pointer-events: none; z-index: 0;
+    }
+    .rp-bar {
+      flex: 1; border-radius: 3px 3px 0 0;
+      background: linear-gradient(180deg, rgba(167,139,250,.12), rgba(96,165,250,.06));
+      animation: rpBarPulse var(--d,4s) ease-in-out infinite var(--dl,0s);
+    }
+    @keyframes rpBarPulse { 0%,100%{height:14px} 50%{height:var(--h,50px)} }
+    .rp-b1  {--d:4.2s;--dl:0s;   --h:38px}  .rp-b2  {--d:3.1s;--dl:.4s;  --h:62px}
+    .rp-b3  {--d:5.0s;--dl:.8s;  --h:45px}  .rp-b4  {--d:3.8s;--dl:1.2s; --h:78px}
+    .rp-b5  {--d:4.5s;--dl:.6s;  --h:55px}  .rp-b6  {--d:3.4s;--dl:1.8s; --h:70px}
+    .rp-b7  {--d:5.2s;--dl:.2s;  --h:42px}  .rp-b8  {--d:3.9s;--dl:1.0s; --h:65px}
+    .rp-b9  {--d:4.7s;--dl:1.4s; --h:50px}  .rp-b10 {--d:3.6s;--dl:.5s;  --h:58px}
   `]
 })
 export class RitmoPatronComponent implements OnInit, OnDestroy {

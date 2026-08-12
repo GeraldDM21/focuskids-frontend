@@ -308,8 +308,8 @@ export class EvolucionChartComponent implements OnChanges, AfterViewInit, OnDest
           legend: { display: niveles.length > 1 },
           tooltip: {
             callbacks: {
-              title: (items) => `Fecha: ${items[0]?.label ?? ''}`,
-              label: (item) => `Nivel: ${item.dataset.label} — ${item.formattedValue}% aciertos`
+              title: (items: any[]) => `Fecha: ${items[0]?.label ?? ''}`,
+              label: (item: any) => `Nivel: ${item.dataset.label} — ${item.formattedValue}% aciertos`
             }
           }
         }
@@ -366,7 +366,7 @@ export class EvolucionChartComponent implements OnChanges, AfterViewInit, OnDest
           legend: { display: true },
           tooltip: {
             callbacks: {
-              title: (items) => `Fecha: ${items[0]?.label ?? ''}`,
+              title: (items: any[]) => `Fecha: ${items[0]?.label ?? ''}`,
             }
           }
         }

@@ -1,5 +1,15 @@
 <div class="game-wrapper">
 
+  <!-- ── Fondo animado (persistente en todos los estados) ─────────────── -->
+  <div class="hv-orb hv-o1" aria-hidden="true"></div>
+  <div class="hv-orb hv-o2" aria-hidden="true"></div>
+  <div class="hv-bg" aria-hidden="true">
+    <span class="hv-p hv-p1">✦</span><span class="hv-p hv-p2">✧</span>
+    <span class="hv-p hv-p3">⭐</span><span class="hv-p hv-p4">✦</span>
+    <span class="hv-p hv-p5">B</span><span class="hv-p hv-p6">✧</span>
+    <span class="hv-p hv-p7">⭐</span><span class="hv-p hv-p8">✦</span>
+  </div>
+
   <!-- ══ INICIO ══════════════════════════════════════════════════════════ -->
   @if (estado === 'inicio') {
     <div class="pantalla-inicio">
@@ -100,7 +110,7 @@
       <div class="game-area">
 
         <div class="lectura-header">
-          <button class="btn-salir" (click)="volver()">← Salir</button>
+          <button class="btn-salir" (click)="salirConResultados()">← Salir</button>
           <div class="header-titulo">{{ historiaActual?.titulo }}</div>
           <div class="header-nivel">Nivel {{ nivelActual }}</div>
         </div>
@@ -169,7 +179,7 @@
       <div class="game-area">
 
         <div class="game-header">
-          <button class="btn-salir" (click)="volver()">
+          <button class="btn-salir" (click)="salirConResultados()">
             <span>←</span><span>Salir</span>
           </button>
           <div class="header-centro">
@@ -267,49 +277,45 @@
     <div class="pantalla-resultados">
       <div class="confetti-container">
         @for (p of confettiPieces; track p.id) {
-          <div class="confeti"
-            [style.left.%]="p.left" [style.background]="p.color"
+          <div class="confeti" [style.left.%]="p.left" [style.background]="p.color"
             [style.animation-delay.ms]="p.delay" [style.animation-duration.ms]="p.dur"
-            [style.width.px]="p.size" [style.height.px]="p.size * 1.6"></div>
+            [style.width.px]="p.size" [style.height.px]="p.size*1.6"></div>
         }
       </div>
-
       <div class="resultados-card">
         <div class="fox-resultado-hero">
-          <img class="benny-resultado-img" src="mascotas/benny-portrait.png" alt="Benny">
+          <img class="foxy-resultado-img" src="mascotas/benny-portrait.png" alt="Benny">
           <div class="fox-resultado-trophy">{{ trofeoEmoji }}</div>
         </div>
-
         <h2 class="resultado-titulo">{{ tituloFinal }}</h2>
-
         <div class="estrellas">
           <span class="estrella"        [class.estrella-on]="puntuacion >= 40">⭐</span>
           <span class="estrella grande" [class.estrella-on]="puntuacion >= 70">⭐</span>
           <span class="estrella"        [class.estrella-on]="puntuacion >= 90">⭐</span>
         </div>
-
         <div class="score-ring">
           <svg viewBox="0 0 120 120">
             <circle cx="60" cy="60" r="50" class="ring-bg"/>
             <circle cx="60" cy="60" r="50" class="ring-fill"
               [style.stroke-dasharray]="314"
-              [style.stroke-dashoffset]="314 - (314 * puntuacion / 100)"/>
+              [style.stroke-dashoffset]="314-(314*puntuacion/100)"/>
           </svg>
           <div class="score-texto">
             <div class="score-num">{{ puntuacion }}%</div>
             <div class="score-lbl">comprensión</div>
           </div>
         </div>
-
-        <div class="metricas-row">
-          @if (historiaActual?.nivel !== 4) {
-            <div class="metrica"><div class="m-icon">✅</div><div class="m-val verde">{{ preguntasCorrectas }}/{{ historiaActual?.preguntas?.length }}</div><div class="m-lbl">Correctas</div></div>
-          }
-          <div class="metrica"><div class="m-icon">⏱️</div><div class="m-val azul">{{ tiempoLecturaFmt }}</div><div class="m-lbl">Lectura</div></div>
-          <div class="metrica"><div class="m-icon">🔊</div><div class="m-val morado">{{ usoAudio }}</div><div class="m-lbl">Audio</div></div>
-          <div class="metrica"><div class="m-icon">📖</div><div class="m-val naranja">{{ releidasCount }}</div><div class="m-lbl">Relecturas</div></div>
+        <div class="foxy-msg-final">
+          <img class="foxy-msg-avatar" src="mascotas/benny-portrait.png" alt="Benny">
+          <div class="foxy-msg-bubble">{{ mascotMsg }}</div>
         </div>
-
+        <div class="metricas-row">
+          <div class="metrica"><div class="m-icon">🧠</div><div class="m-val verde">{{ puntuacion }}%</div><div class="m-lbl">Comprensión</div></div>
+          @if (historiaActual?.nivel !== 4) {
+            <div class="metrica"><div class="m-icon">✅</div><div class="m-val azul">{{ preguntasCorrectas }}/{{ historiaActual?.preguntas?.length }}</div><div class="m-lbl">Correctas</div></div>
+          }
+          <div class="metrica"><div class="m-icon">⏱️</div><div class="m-val naranja">{{ tiempoLecturaFmt }}</div><div class="m-lbl">Lectura</div></div>
+        </div>
         @if (historiaActual?.nivel === 4 && evaluacionesAbiertas.length > 0) {
           <div class="nivel4-feedbacks">
             <div class="n4-titulo">📝 Evaluación de tus respuestas</div>
@@ -321,7 +327,6 @@
             }
           </div>
         }
-
         @if (tiposInferencia.length > 0) {
           <div class="inferencias-section">
             <div class="inf-titulo">Tipos de inferencia:</div>
@@ -336,15 +341,9 @@
             }
           </div>
         }
-
-        <div class="foxy-msg-final">
-          <img class="benny-msg-avatar" src="mascotas/benny-portrait.png" alt="Benny">
-          <div class="foxy-msg-bubble">{{ mascotMsg }}</div>
-        </div>
-
         <div class="btns-final">
           <button class="btn-repetir" (click)="jugarDeNuevo()">🔄 Jugar de nuevo</button>
-          <button class="btn-volver"  (click)="volver()">← Volver</button>
+          <button class="btn-volver" (click)="volver()">← Volver</button>
         </div>
       </div>
     </div>

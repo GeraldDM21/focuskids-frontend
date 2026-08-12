@@ -38,6 +38,18 @@ const MASCOTA_MSGS: Record<Mood, string[]> = {
   template: `
     <div class="game-wrapper">
 
+      <!-- ── Fondo animado (persistente en todos los estados) ─────────────── -->
+      <div class="lc-dots" aria-hidden="true"></div>
+      <div class="lc-bg-orb lc-o1" aria-hidden="true"></div>
+      <div class="lc-bg-orb lc-o2" aria-hidden="true"></div>
+      <div class="lc-bg-orb lc-o3" aria-hidden="true"></div>
+      <div class="lc-bg" aria-hidden="true">
+        <span class="lc-p lc-p1">△</span><span class="lc-p lc-p2">◻</span>
+        <span class="lc-p lc-p3">✦</span><span class="lc-p lc-p4">◈</span>
+        <span class="lc-p lc-p5">✧</span><span class="lc-p lc-p6">◇</span>
+        <span class="lc-p lc-p7">❖</span><span class="lc-p lc-p8">◻</span>
+      </div>
+
       <!-- ══ INICIO ══════════════════════════════════════════ -->
       @if (estado === 'inicio') {
         <div class="pantalla-inicio">
@@ -166,14 +178,28 @@ const MASCOTA_MSGS: Record<Mood, string[]> = {
       <!-- ══ RESULTADOS ══════════════════════════════════════ -->
       @if (estado === 'resultados') {
         <div class="pantalla-resultados">
+          @if (confettiActivo) {
+            <div class="confetti-container" aria-hidden="true">
+              @for (p of confettiPiezas; track p.id) {
+                <div class="confeti" [style.left.%]="p.left" [style.background]="p.color"
+                  [style.animation-delay.s]="p.delay" [style.animation-duration.s]="p.dur"
+                  [style.width.px]="p.size" [style.height.px]="p.size*1.6"></div>
+              }
+            </div>
+          }
           <div class="resultados-card">
             <div class="fox-resultado-hero">
-              <div class="fox-resultado-ring"></div>
-              <div class="fox-resultado-face">🐱</div>
+              <img class="foxy-resultado-img" src="mascotas/michi-portrait.png" alt="Michi">
               <div class="fox-resultado-trophy">{{ trofeoEmoji }}</div>
             </div>
 
             <h2 class="resultado-titulo">{{ tituloFinal }}</h2>
+
+            <div class="estrellas">
+              <span class="estrella"        [class.estrella-on]="eficienciaTotal >= 40">⭐</span>
+              <span class="estrella grande" [class.estrella-on]="eficienciaTotal >= 65">⭐</span>
+              <span class="estrella"        [class.estrella-on]="eficienciaTotal >= 85">⭐</span>
+            </div>
 
             <div class="score-ring">
               <svg viewBox="0 0 120 120">
@@ -196,7 +222,7 @@ const MASCOTA_MSGS: Record<Mood, string[]> = {
             </div>
 
             <div class="foxy-msg-final">
-              <div class="foxy-msg-avatar">🐱</div>
+              <img class="foxy-msg-avatar-img" src="mascotas/michi-portrait.png" alt="Michi">
               <div class="foxy-msg-bubble">{{ mensajeFinal }}</div>
             </div>
 
@@ -408,8 +434,12 @@ const MASCOTA_MSGS: Record<Mood, string[]> = {
       backdrop-filter: blur(16px); animation: slideUp .5s cubic-bezier(.34,1.56,.64,1);
     }
     .fox-resultado-hero { position:relative; display:inline-flex; align-items:center; justify-content:center; margin-bottom:14px; width:110px; height:110px; }
-    .fox-resultado-ring { position:absolute; inset:-6px; border-radius:50%; background:conic-gradient(#22d3ee,#0891b2,#4ade80,#fbbf24,#22d3ee); animation:spinRing 5s linear infinite; filter:blur(1px); }
-    .fox-resultado-face { font-size:80px; line-height:1; position:relative; z-index:1; animation:bounce 2s ease-in-out infinite; filter:drop-shadow(0 0 16px rgba(34,211,238,.7)); background:rgba(11,32,39,.5); border-radius:50%; width:100px; height:100px; display:flex; align-items:center; justify-content:center; }
+    .foxy-resultado-img { width:120px; height:auto; filter:drop-shadow(0 0 20px rgba(34,211,238,.6)); animation:bounce 2s ease-in-out infinite; -webkit-mask-image:radial-gradient(ellipse 82% 90% at 50% 52%, black 55%, transparent 100%); mask-image:radial-gradient(ellipse 82% 90% at 50% 52%, black 55%, transparent 100%); }
+    .estrellas { display:flex; justify-content:center; align-items:center; gap:8px; margin-bottom:18px; }
+    .estrella { font-size:30px; filter:grayscale(1) opacity(.3); transition:all .4s cubic-bezier(.34,1.56,.64,1); }
+    .estrella.grande { font-size:42px; }
+    .estrella.estrella-on { filter:grayscale(0) opacity(1) drop-shadow(0 0 12px rgba(250,204,21,.8)); animation:uniStarPop .5s cubic-bezier(.34,1.56,.64,1) both; }
+    @keyframes uniStarPop { from{transform:scale(0) rotate(-30deg)} to{transform:scale(1) rotate(0)} }
     .fox-resultado-trophy { position:absolute; top:-10px; right:-10px; z-index:2; font-size:30px; animation:bounce 1.5s ease-in-out infinite .3s; }
     @keyframes spinRing { from{transform:rotate(0)} to{transform:rotate(360deg)} }
 
@@ -432,7 +462,11 @@ const MASCOTA_MSGS: Record<Mood, string[]> = {
     .m-val.morado { color:#c4b5fd; } .m-val.naranja { color:#fb923c; }
 
     .foxy-msg-final { display:flex; align-items:flex-start; gap:10px; margin-bottom:16px; text-align:left; }
-    .foxy-msg-avatar { font-size:32px; flex-shrink:0; }
+    .foxy-msg-avatar-img { width:48px; height:auto; flex-shrink:0; filter:drop-shadow(0 0 8px rgba(34,211,238,.5)); -webkit-mask-image:radial-gradient(ellipse 82% 90% at 50% 52%, black 55%, transparent 100%); mask-image:radial-gradient(ellipse 82% 90% at 50% 52%, black 55%, transparent 100%); }
+    /* ── Confetti ─────────────────────────────────────────────────────────── */
+    .confetti-container { position: fixed; inset: 0; pointer-events: none; z-index: 100; overflow: hidden; }
+    .confeti { position: absolute; top: -20px; border-radius: 3px; animation: caer linear forwards; }
+    @keyframes caer { 0%{transform:translateY(-20px) rotate(0deg);opacity:1} 100%{transform:translateY(110vh) rotate(720deg);opacity:0} }
     .foxy-msg-bubble { background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.14); border-radius:4px 14px 14px 14px; padding:10px 14px; font-size:13px; color:#94a3b8; line-height:1.6; flex:1; }
 
     .error-backend { background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.3); color: #fca5a5; border-radius: 10px; padding: 8px 12px; font-size: 12px; margin-bottom: 14px; }
@@ -447,6 +481,27 @@ const MASCOTA_MSGS: Record<Mood, string[]> = {
     @keyframes popIn   { from{opacity:0;transform:scale(.7)} to{opacity:1;transform:scale(1)} }
     @keyframes bounce  { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
     @keyframes flotar  { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+
+    /* ── Grilla de puntos (patrón de laberinto) — distintivo de este juego ── */
+    .lc-dots {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background-image: radial-gradient(rgba(34,211,238,.09) 1.5px, transparent 1.5px);
+      background-size: 34px 34px;
+      animation: lcDotsFade 22s ease-in-out infinite;
+    }
+    @keyframes lcDotsFade { 0%,100%{opacity:.55} 50%{opacity:1} }
+    /* ══ FONDO ANIMADO — LABERINTO COGNITIVO ══════════════════════════════ */
+    .lc-bg-orb { position: fixed; border-radius: 50%; filter: blur(90px); pointer-events: none; z-index: 0; animation: lcOrbPulse 10s ease-in-out infinite; }
+    .lc-o1 { width: 480px; height: 480px; top: -150px; left: -100px; background: radial-gradient(circle, rgba(34,211,238,.3), transparent 70%); animation-delay: 0s; }
+    .lc-o2 { width: 360px; height: 360px; bottom: -120px; right: -90px; background: radial-gradient(circle, rgba(8,145,178,.25), transparent 70%); animation-delay: 4s; }
+    .lc-o3 { width: 260px; height: 260px; top: 42%; left: 60%; background: radial-gradient(circle, rgba(103,232,249,.18), transparent 70%); animation-delay: 8s; }
+    @keyframes lcOrbPulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.1);} }
+    .lc-bg { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+    .lc-p { position: absolute; font-size: 20px; color: rgba(103,232,249,.2); animation: lcPFloat var(--d,13s) ease-in-out infinite var(--dl,0s); }
+    @keyframes lcPFloat { 0%,100%{transform:translateY(0) rotate(-2deg);opacity:.1;} 50%{transform:translateY(-22px) rotate(5deg);opacity:.25;} }
+    .lc-p1{top:7%;left:10%;--d:11s;--dl:0s;} .lc-p2{top:22%;left:87%;--d:14s;--dl:2s;} .lc-p3{top:57%;left:5%;--d:10s;--dl:4s;}
+    .lc-p4{top:74%;left:78%;--d:13s;--dl:1s;font-size:24px;} .lc-p5{top:38%;left:48%;--d:9s;--dl:5s;font-size:14px;}
+    .lc-p6{top:13%;left:63%;--d:16s;--dl:3s;font-size:16px;} .lc-p7{top:84%;left:31%;--d:12s;--dl:7s;} .lc-p8{top:47%;left:92%;--d:15s;--dl:6s;font-size:18px;}
   `]
 })
 export class LaberintoComponent implements OnInit, OnDestroy {
@@ -478,6 +533,12 @@ export class LaberintoComponent implements OnInit, OnDestroy {
   vecesAtrapadoTotal = 0;
 
   mascotMsg = '¡Listo para planificar! 🧩';
+  confettiActivo = false;
+  confettiPiezas = Array.from({length:60},(_,i)=>({
+    id:i, left:Math.random()*100,
+    color:['#a78bfa','#60a5fa','#4ade80','#fbbf24','#f87171','#c084fc','#34d399','#fb923c'][i%8],
+    delay:Math.random()*2, dur:2.5+Math.random()*2, size:8+Math.random()*8
+  }));
   mascotMood: Mood = 'idle';
 
   volumenActual: NivelVolumen = 75;
@@ -686,6 +747,7 @@ export class LaberintoComponent implements OnInit, OnDestroy {
 
   private iniciarDespliegue(): void {
     this.estado = 'despliegue';
+    this.confettiActivo = false;
     this.despliegueSegundosRestantes = this.calcularSegundosDespliegue(); // CA-01
     this.cdr.detectChanges();
 
@@ -883,6 +945,7 @@ export class LaberintoComponent implements OnInit, OnDestroy {
 
   private finalizarSesion(): void {
     this.estado = 'resultados';
+    this.confettiActivo = true;
     this.hablar(this.sinEmojis(this.tituloFinal + '. ' + this.mensajeFinal), 0.9, 1.2);
     this.cdr.detectChanges();
 

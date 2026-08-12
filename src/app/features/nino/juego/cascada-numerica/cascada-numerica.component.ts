@@ -49,6 +49,14 @@ export class CascadaNumericaComponent implements OnInit, OnDestroy {
   sonidoActivo = true;
   mascotMood: Mood = 'idle';
   mascotMsg = '¡Hola! Soy Ollie 🦉 ¡Vamos a entrenar tu cálculo mental!';
+  // ── Confetti ────────────────────────────────────────────────────────────
+  confettiActivo = false;
+  confettiPiezas = Array.from({length:60},(_,i)=>({
+    id:i, left:Math.random()*100,
+    color:['#a78bfa','#60a5fa','#4ade80','#fbbf24','#f87171','#c084fc','#34d399','#fb923c'][i%8],
+    delay:Math.random()*2, dur:2.5+Math.random()*2, size:8+Math.random()*8
+  }));
+
 
   cuentaRegresiva = 3;
   cuentaTexto = '3';
@@ -953,6 +961,7 @@ export class CascadaNumericaComponent implements OnInit, OnDestroy {
     this.estado = 'resultados';
 
     this.mascotMood = 'celebrate';
+    this.confettiActivo = true;
 
     this.mascotMsg =
       '¡Terminaste la Cascada Numérica!';

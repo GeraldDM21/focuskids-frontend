@@ -2,6 +2,17 @@
   <div class="orb orb-1"></div>
   <div class="orb orb-2"></div>
   <div class="orb orb-3"></div>
+  <!-- ── Burbujas que suben (reacción química) — distintivo de este juego ── -->
+  <div class="lab-bubbles" aria-hidden="true">
+    <div class="lab-bub lab-b1"></div>
+    <div class="lab-bub lab-b2"></div>
+    <div class="lab-bub lab-b3"></div>
+    <div class="lab-bub lab-b4"></div>
+    <div class="lab-bub lab-b5"></div>
+    <div class="lab-bub lab-b6"></div>
+    <div class="lab-bub lab-b7"></div>
+    <div class="lab-bub lab-b8"></div>
+  </div>
 
   @if (estado === 'inicio') {
     <section class="pantalla-inicio">
@@ -118,7 +129,7 @@
       <header class="topbar">
         <button
           type="button"
-          (click)="volverInicio()"
+          (click)="salirConResultados()"
         >
           ✕ Salir
         </button>
@@ -399,172 +410,64 @@
   }
 
   @if (estado === 'completado') {
-    <section class="pantalla final">
-
+    <div class="pantalla-resultados">
       @if (confettiActivo) {
         <div class="confetti-container">
-          @for (
-            pieza of confettiPiezas;
-            track pieza.id
-            ) {
-            <span
-              class="confetti-piece"
+          @for (pieza of confettiPiezas; track pieza.id) {
+            <span class="confetti-piece"
               [style.left.%]="pieza.left"
-              [style.animation-delay.s]="
-          pieza.delay
-        "
-              [style.animation-duration.s]="
-          pieza.duration
-        "
-              [style.--rotation]="
-          pieza.rotation + 'deg'
-        "
-            >
-        {{ pieza.emoji }}
-      </span>
+              [style.animation-delay.s]="pieza.delay"
+              [style.animation-duration.s]="pieza.duration"
+              [style.--rotation]="pieza.rotation + 'deg'">{{ pieza.emoji }}</span>
           }
         </div>
       }
-
-      <div class="confeti">
-        ✨ 🎉 ⭐ 🧪 🎊 ✨
-      </div>
-
-      <article class="final-card">
-        <div class="trofeo">
-          🏆
+      <div class="resultados-card">
+        <div class="fox-resultado-hero">
+          <img class="foxy-resultado-img" src="mascotas/uni-portrait.png" alt="Uni">
+          <div class="fox-resultado-trophy">🏆</div>
         </div>
-
-        <h1>
-          ¡Laboratorio completado!
-        </h1>
-
-        <p>
-          Uni está orgullosa de
-          tu pensamiento científico.
-        </p>
-
-        <div class="nivel-final">
-          {{ nivelLabel() }}
-
-          ·
-
-          {{ experimentosCompletados }}
-          experimentos
+        <h2 class="resultado-titulo">¡Laboratorio completado!</h2>
+        <div class="estrellas">
+          <span class="estrella"        [class.estrella-on]="hipotesisCorrectas >= experimentos.length * 0.4">⭐</span>
+          <span class="estrella grande" [class.estrella-on]="hipotesisCorrectas >= experimentos.length * 0.65">⭐</span>
+          <span class="estrella"        [class.estrella-on]="hipotesisCorrectas >= experimentos.length">⭐</span>
         </div>
-
-        <div class="stats-final">
-          <div>
-            <span>✅</span>
-
-            <b>
-              {{ hipotesisCorrectas }}
-            </b>
-
-            <small>
-              Hipótesis correctas
-            </small>
-          </div>
-
-          <div>
-            <span>🔁</span>
-
-            <b>
-              {{ promedioIntentos() }}
-            </b>
-
-            <small>
-              Intentos promedio
-            </small>
-          </div>
-
-          <div>
-            <span>⏱️</span>
-
-            <b>
-              {{ tiempoPromedio() }}
-            </b>
-
-            <small>
-              Descubrimiento promedio
-            </small>
-          </div>
-
-          <div>
-            <span>⭐</span>
-
-            <b>
-              {{ puntaje }}
-            </b>
-
-            <small>
-              Puntaje
-            </small>
+        <div class="score-ring">
+          <svg viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="50" class="ring-bg"/>
+            <circle cx="60" cy="60" r="50" class="ring-fill"
+              [style.stroke-dasharray]="314"
+              [style.stroke-dashoffset]="314-(314*(hipotesisCorrectas/(experimentos.length||1)))"/>
+          </svg>
+          <div class="score-texto">
+            <div class="score-num">{{ hipotesisCorrectas }}/{{ experimentos.length }}</div>
+            <div class="score-lbl">hipótesis</div>
           </div>
         </div>
-
-        <div class="mensaje-final">
-          🔬 En ciencia, observar los
-          resultados y cambiar la hipótesis
-          es parte del descubrimiento.
-        </div>
-
-        @if (
-          nivelSugerido
-          && nivelSugerido !== nivelActual
-          ) {
-          <div class="sugerencia">
-            🚀 Tu desempeño sugiere
-            probar el nivel
-
-            <b>
-              {{ nivelLabel(nivelSugerido) }}
-            </b>.
-          </div>
+        @if (nivelSugerido && nivelSugerido !== nivelActual) {
+          <div class="ia-badge">🤖 Motor IA: nivel sugerido <strong>{{ nivelLabel(nivelSugerido) }}</strong></div>
         }
-
         @if (errorApi) {
-          <div class="error-api">
-            ⚠️ {{ errorApi }}
-          </div>
+          <div class="ia-badge" style="color:#f87171; border-color:rgba(248,113,113,.3);">⚠️ {{ errorApi }}</div>
         }
-
-        <div class="acciones-final">
-          <button
-            type="button"
-            class="btn-principal"
-            (click)="jugarDeNuevo()"
-          >
-            Repetir nivel
-          </button>
-
-          @if (siguienteNivel) {
-            <button
-              type="button"
-              class="btn-subir-nivel"
-              (click)="subirNivel()"
-            >
-              Subir a
-              {{ nivelLabel(siguienteNivel) }}
-              🚀
-            </button>
-          }
-
-          <button
-            type="button"
-            class="btn-secundario"
-            (click)="volverLobby()"
-          >
-            Volver a juegos
-          </button>
+        <div class="foxy-msg-final">
+          <img class="foxy-msg-avatar" src="mascotas/uni-portrait.png" alt="Uni">
+          <div class="foxy-msg-bubble">{{ mascotMsg }}</div>
         </div>
-      </article>
-
-      <app-mascot
-        game="juego9"
-        mood="celebrate"
-        message="¡Excelente trabajo, científico! 🦄"
-      ></app-mascot>
-    </section>
+        <div class="metricas-row">
+          <div class="metrica"><div class="m-icon">🧪</div><div class="m-val verde">{{ hipotesisCorrectas }}</div><div class="m-lbl">Hipótesis</div></div>
+          <div class="metrica"><div class="m-icon">🔁</div><div class="m-val azul">{{ promedioIntentos() }}</div><div class="m-lbl">Intentos prom.</div></div>
+          <div class="metrica"><div class="m-icon">⭐</div><div class="m-val amarillo">{{ puntaje }}</div><div class="m-lbl">Puntaje</div></div>
+        </div>
+        <div class="btns-final">
+          @if (siguienteNivel) {
+            <button type="button" class="btn-ia" (click)="subirNivel()">⬆️ Subir a {{ nivelLabel(siguienteNivel) }} 🚀</button>
+          }
+          <button type="button" class="btn-repetir" (click)="jugarDeNuevo()">🔄 Repetir nivel</button>
+          <button type="button" class="btn-volver" (click)="volverLobby()">← Volver</button>
+        </div>
+      </div>
+    </div>
   }
 </div>

@@ -31,6 +31,14 @@ const SVG_SHAPES: Record<string, string> = {
 export class PiezasTiempoComponent implements OnInit, OnDestroy {
 
   estado: Estado = 'inicio';
+  // ── Confetti ────────────────────────────────────────────────────────────
+  confettiActivo = false;
+  confettiPiezas = Array.from({length:60},(_,i)=>({
+    id:i, left:Math.random()*100,
+    color:['#a78bfa','#60a5fa','#4ade80','#fbbf24','#f87171','#c084fc','#34d399','#fb923c'][i%8],
+    delay:Math.random()*2, dur:2.5+Math.random()*2, size:8+Math.random()*8
+  }));
+
   nivelActual: Nivel = 'FACIL';
   sonidoActivo = true;
   perfilId = 0;
@@ -406,6 +414,7 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
     this.estado = nuevoEstado;
     this.cdr.detectChanges();
     this.stopBgMusic();
+    if (nuevoEstado === 'completado') { this.confettiActivo = true; }
 
     // CA-03: fire-and-forget con 3 reintentos + localStorage fallback
     if (this.sesionBackendId) {
@@ -636,6 +645,14 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
 
   jugarDeNuevo(): void { this.iniciarJuego(this.nivelActual); }
   subirNivel():   void { if (this.nivelSugerido) this.iniciarJuego(this.nivelSugerido); }
+
+  salirConResultados(): void {
+    this.detenerTimer();
+    clearTimeout(this.mascotTimer);
+    this.isDragging = false;
+    this.dragPieza = null;
+    this.finalizarSesion('tiempo-agotado');
+  }
 
   volverInicio(): void {
     this.detenerTimer(); this.stopBgMusic();

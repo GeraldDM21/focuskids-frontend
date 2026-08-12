@@ -560,6 +560,11 @@ export class HistoriaVivaComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
+  salirConResultados(): void {
+    window.speechSynthesis?.cancel();
+    this.terminarJuego();
+  }
+
   volver(): void {
     window.speechSynthesis?.cancel();
     this.router.navigate(['/nino/juegos']);
