@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { catchError, of } from 'rxjs';
+import { catchError, of, EMPTY } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 import { AdminService, Usuario, PerfilNinoAdmin, UsuarioEditRequest, UsuarioRol } from '../../../core/services/admin.service';
 import { AdminUsuariosComponent } from '../usuarios/admin-usuarios.component';
@@ -791,25 +791,24 @@ export class AdminDashboardComponent implements OnInit {
     if (this.eliminandoTipo === 'nino') {
       const ninoId = this.eliminandoId;
       this.http.delete(`${this.API}/perfil/${ninoId}`)
-        .pipe(catchError(e => { this.editError = e.error?.message ?? 'Error al eliminar.'; this.guardando = false; this.cdr.detectChanges(); return of('error'); }))
-        .subscribe(r => {
-          if (r !== 'error') {
-            this.ninos.update(list => list.filter(n => n.id !== ninoId));
-            this.ninosFiltrados = this.ninosFiltrados.filter(n => n.id !== ninoId);
-            this.guardando = false; this.cerrarEliminar(); this.cdr.detectChanges();
-          }
+        .pipe(catchError(e => {
+          this.editError = e.error?.message ?? 'Error al eliminar.';
+          this.guardando = false; this.cdr.detectChanges(); return EMPTY;
+        }))
+        .subscribe(() => {
+          this.ninos.update(list => list.filter(n => n.id !== ninoId));
+          this.ninosFiltrados = this.ninosFiltrados.filter(n => n.id !== ninoId);
+          this.guardando = false; this.cerrarEliminar(); this.cdr.detectChanges();
         });
       return;
     }
     const idAEliminar = this.eliminandoId;
     this.adminSvc.eliminarUsuario(idAEliminar).pipe(catchError(e => {
       this.editError = e.error?.message ?? 'Error al eliminar.';
-      this.guardando = false; this.cdr.detectChanges(); return of('error');
-    })).subscribe(r => {
-      if (r !== 'error') {
-        this.usuarios.update(list => list.filter(u => u.id !== idAEliminar));
-        this.filtrar(); this.guardando = false; this.cerrarEliminar(); this.cdr.detectChanges();
-      }
+      this.guardando = false; this.cdr.detectChanges(); return EMPTY;
+    })).subscribe(() => {
+      this.usuarios.update(list => list.filter(u => u.id !== idAEliminar));
+      this.filtrar(); this.guardando = false; this.cerrarEliminar(); this.cdr.detectChanges();
     });
   }
 
