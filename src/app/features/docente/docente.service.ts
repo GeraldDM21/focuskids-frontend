@@ -10,12 +10,12 @@ export interface AlumnoDocente {
   avatar?: string;
   diagnostico?: string;
   activo: boolean;
-  padre?: { id: number; usuario?: { nombre?: string; } };
+  padre?: { id: number; usuario?: { nombre?: string } };
 }
 
 export interface DocenteInfo {
   id: number;
-  usuario: { id: number; nombre: string; email: string; };
+  usuario: { id: number; nombre: string; email: string };
   institucion?: string;
   gradoGrupo?: string;
 }
@@ -26,7 +26,7 @@ export interface Asignacion {
   descripcion?: string;
   minimoSesiones: number;
   fechaLimite: string;
-  juego?: { id: number; nombre: string; } | null;
+  juego?: { id: number; nombre: string } | null;
 }
 
 export interface AsignacionPerfil {
@@ -61,7 +61,9 @@ export class DocenteService {
     return this.http.get<Metrica[]>(`${this.api}/reportes/perfil/${perfilId}/metricas`);
   }
   getAlertas(perfilId: number) {
-    return this.http.get<AlertaRegresion[]>(`${this.api}/reportes/perfil/${perfilId}/alertas/pendientes`);
+    return this.http.get<AlertaRegresion[]>(
+      `${this.api}/reportes/perfil/${perfilId}/alertas/pendientes`,
+    );
   }
 
   // ── Lista de docentes (para que el padre elija) ───────────────────────────
@@ -95,10 +97,28 @@ export class DocenteService {
 
   // ── Calificaciones ────────────────────────────────────────────────────────
   getResumenCalificacion(docenteId: number) {
-    return this.http.get<ResumenCalificacion>(`${this.api}/docente/${docenteId}/calificaciones/resumen`);
+    return this.http.get<ResumenCalificacion>(
+      `${this.api}/docente/${docenteId}/calificaciones/resumen`,
+    );
   }
   calificar(docenteId: number, padreUsuarioId: number, puntuacion: number, comentario: string) {
-    return this.http.post<any>(`${this.api}/docente/${docenteId}/calificaciones`,
-      { padreUsuarioId, puntuacion, comentario });
+    return this.http.post<any>(`${this.api}/docente/${docenteId}/calificaciones`, {
+      padreUsuarioId,
+      puntuacion,
+      comentario,
+    });
+  }
+
+  // ── Configuración / notificaciones in-app (CA-05) ───────────────────────
+  getConfiguracionDocente(usuarioId: number) {
+    return this.http.get<{ docenteId: number; notificacionesInAppActivas: boolean }>(
+      `${this.api}/docente/configuracion?usuarioId=${usuarioId}`,
+    );
+  }
+  toggleNotificacionesInApp(usuarioId: number, activo: boolean) {
+    return this.http.patch<{ notificacionesInAppActivas: boolean }>(
+      `${this.api}/docente/notificaciones-in-app?usuarioId=${usuarioId}`,
+      { activo },
+    );
   }
 }
