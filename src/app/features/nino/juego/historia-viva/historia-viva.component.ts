@@ -230,6 +230,23 @@ export class HistoriaVivaComponent implements OnInit, OnDestroy {
   evaluacionesAbiertas:  { score: number; feedback: string }[] = [];
   feedbackActual:        string | null = null;
 
+  // ── Voz (niveles 1-3) ────────────────────────────────────────────────────────
+  grabandoVoz            = false;
+  transcripcionVoz       = '';
+  transcripcionVozCensurada = false;
+  errorMicrofono         = false;
+  enviandoVoz            = false;
+  feedbackVoz:           string | null = null;
+  feedbackVozCorrecto    = false;
+  private recognition:   any = null;
+
+  private readonly GROSERIAS = [
+    'mierda','puta','puto','putona','puton','pendejo','pendeja','idiota',
+    'estupido','estupida','imbecil','carajo','coño','joder','cabron','cabrona',
+    'verga','chinga','chingada','culero','culera','marica','maricón','maldito',
+    'maldita','culo','perra','perro maldito','hijo de puta','hdp',
+  ];
+
   // ── Métricas (CA-04) ────────────────────────────────────────────────────────
   tiempoInicioLectura  = 0;
   tiempoInicoPreguntas = 0;  // CA-05/CA-08: cuándo se mostró la pregunta actual
@@ -353,6 +370,7 @@ export class HistoriaVivaComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     window.speechSynthesis?.cancel();
     this.audioCtx?.close();
+    this.recognition?.stop();
   }
 
   // ── Getters ─────────────────────────────────────────────────────────────────
@@ -655,6 +673,15 @@ export class HistoriaVivaComponent implements OnInit, OnDestroy {
     this.respuestaAbierta        = '';
     this.evaluandoRespuesta      = false;
     this.feedbackActual          = null;
+    // Voz
+    this.recognition?.stop();
+    this.grabandoVoz             = false;
+    this.transcripcionVoz        = '';
+    this.transcripcionVozCensurada = false;
+    this.errorMicrofono          = false;
+    this.enviandoVoz             = false;
+    this.feedbackVoz             = null;
+    this.feedbackVozCorrecto     = false;
   }
 
   // ── Nivel 4: evaluación de respuesta abierta por LLM ──────────────────────
@@ -708,4 +735,123 @@ export class HistoriaVivaComponent implements OnInit, OnDestroy {
   }
 
   private pick(arr: string[]): string { return arr[Math.floor(Math.random() * arr.length)]; }
+
+  // ── Voz: Speech Recognition ──────────────────────────────────────────────────
+
+  iniciarGrabacion(): void {
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) { this.errorMicrofono = true; this.cdr.detectChanges(); return; }
+    this.recognition?.stop();
+    this.grabandoVoz = true;
+    this.transcripcionVoz = '';
+    this.transcripcionVozCensurada = false;
+    this.errorMicrofono = false;
+    this.feedbackVoz = null;
+    this.cdr.detectChanges();
+
+    this.recognition = new SR();
+    this.recognition.lang = 'es-ES';
+    this.recognition.interimResults = false;
+    this.recognition.maxAlternatives = 1;
+
+    this.recognition.onresult = (event: any) => {
+      const raw: string = event.results[0][0].transcript ?? '';
+      const { texto, censurada } = this.filtrarGroserias(raw);
+      this.transcripcionVoz = texto;
+      this.transcripcionVozCensurada = censurada;
+      if (censurada) {
+        this.setMascota('encourage', '⚠️ Por favor usa un lenguaje adecuado.');
+        this.hablar('Por favor usa un lenguaje adecuado.');
+      }
+      this.grabandoVoz = false;
+      this.cdr.detectChanges();
+    };
+
+    this.recognition.onerror = () => {
+      this.grabandoVoz = false;
+      this.errorMicrofono = true;
+      this.cdr.detectChanges();
+    };
+
+    this.recognition.onend = () => {
+      this.grabandoVoz = false;
+      this.cdr.detectChanges();
+    };
+
+    this.recognition.start();
+  }
+
+  detenerGrabacion(): void {
+    this.recognition?.stop();
+    this.grabandoVoz = false;
+    this.cdr.detectChanges();
+  }
+
+  private filtrarGroserias(texto: string): { texto: string; censurada: boolean } {
+    let resultado = texto;
+    let censurada = false;
+    for (const g of this.GROSERIAS) {
+      const re = new RegExp(g, 'gi');
+      if (re.test(resultado)) { censurada = true; }
+      resultado = resultado.replace(re, '*'.repeat(g.length));
+    }
+    return { texto: resultado, censurada };
+  }
+
+  enviarRespuestaVoz(): void {
+    if (!this.transcripcionVoz || this.enviandoVoz || this.transcripcionVozCensurada) return;
+    this.enviandoVoz = true;
+    this.cdr.detectChanges();
+
+    const p = this.preguntaActual!;
+    const opcionCorrecta = p.opciones?.[p.correcta ?? 0] ?? '';
+
+    this.http.post<{ puntuacion: number; feedback: string }>(
+      `${environment.apiUrl}/historia-viva/evaluar-respuesta`,
+      {
+        historiaTitulo:  this.historiaActual!.titulo,
+        historiaTexto:   this.historiaActual!.texto,
+        preguntaTexto:   p.texto,
+        guiaRespuesta:   `La respuesta correcta es: "${opcionCorrecta}". Evalúa si la respuesta del alumno transmite la misma idea, aunque use palabras diferentes. Sé flexible con la expresión oral.`,
+        respuestaAlumno: this.transcripcionVoz,
+      }
+    ).subscribe({
+      next: res => {
+        const correcto = res.puntuacion >= 60;
+        this.feedbackVozCorrecto = correcto;
+        this.feedbackVoz = res.feedback;
+        this.enviandoVoz = false;
+
+        if (correcto) {
+          this.preguntasCorrectas++;
+          this.setMascota('celebrate', res.feedback);
+          this.feedback.showCorrect();
+          this.hablar('¡Correcto! ¡Muy bien!');
+          this.cdr.detectChanges();
+          setTimeout(() => { this.siguientePregunta(); this.cdr.detectChanges(); }, 3200);
+        } else {
+          this.intentosTotales++;
+          const tipo = p.tipo ?? '';
+          if (!this.tiposErradas.includes(tipo)) this.tiposErradas.push(tipo);
+          this.mostrandoPista = true;
+          this.setMascota('encourage', res.feedback);
+          this.feedback.showIncorrect();
+          this.cdr.detectChanges();
+          // Tras 3s limpia el estado de voz para que pueda intentar con botones
+          setTimeout(() => {
+            this.transcripcionVoz = '';
+            this.feedbackVoz = null;
+            this.feedbackVozCorrecto = false;
+            this.cdr.detectChanges();
+          }, 3200);
+        }
+      },
+      error: () => {
+        this.feedbackVoz = '⚠️ No pude conectarme. Intenta con los botones de arriba.';
+        this.feedbackVozCorrecto = false;
+        this.enviandoVoz = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
 }

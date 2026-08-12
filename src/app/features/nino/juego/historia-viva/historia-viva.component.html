@@ -236,6 +236,56 @@
               </button>
             }
           </div>
+
+          <!-- ── Opción de voz ── -->
+          @if (respondioCorrectamente !== true) {
+            <div class="voz-section">
+              @if (!grabandoVoz && !transcripcionVoz && !enviandoVoz && !feedbackVoz) {
+                <button class="btn-voz-opcion" (click)="iniciarGrabacion()">
+                  🎤 Responder con voz
+                </button>
+                @if (errorMicrofono) {
+                  <p class="voz-error">⚠️ No se pudo acceder al micrófono. Usa las opciones de arriba.</p>
+                }
+              }
+
+              @if (grabandoVoz) {
+                <div class="grabando-indicator">
+                  <div class="mic-pulse">🎤</div>
+                  <span>Escuchando… di tu respuesta</span>
+                  <button class="btn-detener-mic" (click)="detenerGrabacion()">⏹ Detener</button>
+                </div>
+              }
+
+              @if (transcripcionVoz && !enviandoVoz && !feedbackVoz) {
+                <div class="transcripcion-box">
+                  <p class="trans-label">Escuché:</p>
+                  <p class="trans-texto">"{{ transcripcionVoz }}"</p>
+                  @if (transcripcionVozCensurada) {
+                    <p class="voz-censura">⚠️ Por favor usa un lenguaje adecuado.</p>
+                  }
+                  <div class="trans-actions">
+                    <button class="btn-regrabar" (click)="iniciarGrabacion()">🔄 Volver a grabar</button>
+                    <button class="btn-enviar-voz" [disabled]="transcripcionVozCensurada" (click)="enviarRespuestaVoz()">✅ Enviar</button>
+                  </div>
+                </div>
+              }
+
+              @if (enviandoVoz) {
+                <div class="evaluando-msg">
+                  <span class="evaluando-spinner"></span>
+                  Benny está evaluando tu respuesta…
+                </div>
+              }
+
+              @if (feedbackVoz) {
+                <div class="feedback-abierto" [class.feedback-positivo]="feedbackVozCorrecto">
+                  <span class="feedback-ico">{{ feedbackVozCorrecto ? '🌟' : '💡' }}</span>
+                  {{ feedbackVoz }}
+                </div>
+              }
+            </div>
+          }
         }
 
         @if (mostrandoPista) {
