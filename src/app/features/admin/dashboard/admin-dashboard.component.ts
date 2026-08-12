@@ -31,18 +31,18 @@ type Tab = 'dashboard' | 'usuarios' | 'juegos' | 'analiticas' | 'alertas' | 'rep
 
     <nav class="sb-nav">
       <p class="sb-section">PANEL ADMIN</p>
-      <button class="sb-item" [class.active]="tab==='dashboard'"      (click)="tab='dashboard'">      <mat-icon>dashboard</mat-icon>       Dashboard</button>
-      <button class="sb-item" [class.active]="tab==='usuarios'"       (click)="tab='usuarios'">       <mat-icon>group</mat-icon>            Usuarios</button>
-      <button class="sb-item" [class.active]="tab==='instituciones'"  (click)="tab='instituciones'">  <mat-icon>account_balance</mat-icon>  Instituciones</button>
-      <button class="sb-item" [class.active]="tab==='juegos'"         (click)="irJuegos()">           <mat-icon>sports_esports</mat-icon>   Juegos</button>
+      <button class="sb-item" [class.active]="tab()==='dashboard'"      (click)="setTab('dashboard')">      <mat-icon>dashboard</mat-icon>       Dashboard</button>
+      <button class="sb-item" [class.active]="tab()==='usuarios'"       (click)="setTab('usuarios')">       <mat-icon>group</mat-icon>            Usuarios</button>
+      <button class="sb-item" [class.active]="tab()==='instituciones'"  (click)="setTab('instituciones')">  <mat-icon>account_balance</mat-icon>  Instituciones</button>
+      <button class="sb-item" [class.active]="tab()==='juegos'"         (click)="irJuegos()">               <mat-icon>sports_esports</mat-icon>   Juegos</button>
       <p class="sb-section">SISTEMA</p>
-      <button class="sb-item" [class.active]="tab==='analiticas'"     (click)="tab='analiticas'">     <mat-icon>analytics</mat-icon>        Analíticas</button>
-      <button class="sb-item" [class.active]="tab==='alertas'"        (click)="tab='alertas'">
+      <button class="sb-item" [class.active]="tab()==='analiticas'"     (click)="setTab('analiticas')">     <mat-icon>analytics</mat-icon>        Analíticas</button>
+      <button class="sb-item" [class.active]="tab()==='alertas'"        (click)="setTab('alertas')">
         <mat-icon>notifications</mat-icon> Alertas
         @if (inactivos().length > 0) { <span class="sb-badge">{{ inactivos().length }}</span> }
       </button>
       <button class="sb-item" (click)="router.navigate(['/admin/config'])"><mat-icon>settings</mat-icon> Config. Juegos</button>
-      <button class="sb-item" [class.active]="tab==='reportes'"       (click)="tab='reportes'">       <mat-icon>summarize</mat-icon>         Reportes</button>
+      <button class="sb-item" [class.active]="tab()==='reportes'"       (click)="setTab('reportes')">       <mat-icon>summarize</mat-icon>         Reportes</button>
     </nav>
 
     <div class="sb-user">
@@ -76,7 +76,7 @@ type Tab = 'dashboard' | 'usuarios' | 'juegos' | 'analiticas' | 'alertas' | 'rep
     </div>
 
     <!-- ══════════════════════════ DASHBOARD ══════════════════════════ -->
-    @if (tab === 'dashboard') {
+    @if (tab() === 'dashboard') {
 
       <!-- Stats -->
       <div class="stats-grid">
@@ -188,19 +188,19 @@ type Tab = 'dashboard' | 'usuarios' | 'juegos' | 'analiticas' | 'alertas' | 'rep
               Mostrando {{ filtroRol === 'NINO' ? ninosFiltrados.length : usuariosFiltrados.length }}
               · Total: {{ totalUsuarios() }} registros (incluye niños)
             </span>
-            <button class="btn-ver-todo" (click)="tab='usuarios'">Ver gestión completa →</button>
+            <button class="btn-ver-todo" (click)="setTab('usuarios')">Ver gestión completa →</button>
           </div>
         }
       </div>
     }
 
     <!-- ══════════════════════════ USUARIOS ══════════════════════════ -->
-    @if (tab === 'usuarios') {
+    @if (tab() === 'usuarios') {
       <app-admin-usuarios />
     }
 
     <!-- ══════════════════════════ INSTITUCIONES ══════════════════════════ -->
-    @if (tab === 'instituciones') {
+    @if (tab() === 'instituciones') {
       <div class="placeholder-card">
         <div class="ph-ico">🏫</div>
         <h2>Módulo de Instituciones</h2>
@@ -214,7 +214,7 @@ type Tab = 'dashboard' | 'usuarios' | 'juegos' | 'analiticas' | 'alertas' | 'rep
     }
 
     <!-- ══════════════════════════ JUEGOS ══════════════════════════ -->
-    @if (tab === 'juegos') {
+    @if (tab() === 'juegos') {
       <div class="card" style="padding:22px 24px">
         <div class="card-header" style="margin-bottom:18px">
           <h2 class="card-title">🎮 Catálogo de juegos</h2>
@@ -243,7 +243,7 @@ type Tab = 'dashboard' | 'usuarios' | 'juegos' | 'analiticas' | 'alertas' | 'rep
     }
 
     <!-- ══════════════════════════ ANALÍTICAS ══════════════════════════ -->
-    @if (tab === 'analiticas') {
+    @if (tab() === 'analiticas') {
       <div class="stats-grid">
         <div class="stat-card">
           <span class="stat-ico" style="background:#EDE9FE">👥</span>
@@ -301,7 +301,7 @@ type Tab = 'dashboard' | 'usuarios' | 'juegos' | 'analiticas' | 'alertas' | 'rep
     }
 
     <!-- ══════════════════════════ ALERTAS ══════════════════════════ -->
-    @if (tab === 'alertas') {
+    @if (tab() === 'alertas') {
       <div class="card" style="padding:22px 24px">
         <div class="card-header" style="margin-bottom:18px">
           <h2 class="card-title">⚠️ Usuarios inactivos</h2>
@@ -335,7 +335,7 @@ type Tab = 'dashboard' | 'usuarios' | 'juegos' | 'analiticas' | 'alertas' | 'rep
     }
 
     <!-- ══════════════════════════ REPORTES ══════════════════════════ -->
-    @if (tab === 'reportes') {
+    @if (tab() === 'reportes') {
       <div class="reportes-wrap">
         <div class="card" style="padding:28px;text-align:center">
           <div style="font-size:3rem;margin-bottom:12px">📋</div>
@@ -616,7 +616,8 @@ type Tab = 'dashboard' | 'usuarios' | 'juegos' | 'analiticas' | 'alertas' | 'rep
 })
 export class AdminDashboardComponent implements OnInit {
   readonly API = environment.apiUrl;
-  tab: Tab = 'dashboard';
+  tab = signal<Tab>('dashboard');
+  setTab(t: Tab) { this.tab.set(t); }
 
   usuarios = signal<Usuario[]>([]);
   ninos    = signal<PerfilNinoAdmin[]>([]);
@@ -691,7 +692,7 @@ export class AdminDashboardComponent implements OnInit {
       juegos: 'Juegos', analiticas: 'Analíticas', alertas: 'Alertas',
       reportes: 'Reportes', instituciones: 'Instituciones',
     };
-    return m[this.tab];
+    return m[this.tab()];
   }
 
   constructor(
@@ -717,7 +718,7 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   irJuegos() {
-    this.tab = 'juegos';
+    this.tab.set('juegos');
     if (this.juegos.length === 0 && !this.loadingJuegos) {
       this.loadingJuegos = true;
       this.http.get<Juego[]>(`${this.API}/juegos`).pipe(catchError(() => of([]))).subscribe(j => {
