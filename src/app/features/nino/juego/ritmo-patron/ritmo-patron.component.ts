@@ -121,35 +121,40 @@ interface ConfettiPiece { id: number; left: number; color: string; delay: number
             <div class="combo-badge">🔥 ¡Combo x{{ combo }}!</div>
           }
 
-          <div class="nivel-secuencia">
-            @for (i of secuenciaArray; track $index) {
-              <div class="seq-dot" [class.seq-dot-fill]="$index < respuestaJugador.length"></div>
-            }
-          </div>
-
-          <div class="elementos-grid" [class.grid-dimmed]="estado === 'cuenta'">
-            @for (el of elementosDisponibles; track el.id) {
-              <button class="elemento"
-                [class.activo]="elementoActivo === el.id"
-                [class.error-anim]="elementoError === el.id"
-                [class.clickable]="estado === 'input'"
-                [style.--color]="el.color"
-                [style.--color-activo]="el.colorActivo"
-                [style.--glow]="el.glow"
-                [disabled]="estado !== 'input'"
-                (click)="clicarElemento($event, el.id)">
-                <span class="el-simbolo">{{ el.simbolo }}</span>
-                <span class="el-nombre">{{ el.nombre }}</span>
-              </button>
-            }
-          </div>
-
-          @if (estado === 'cuenta') {
-            <div class="cuenta-overlay">
-              <div class="cuenta-num" [class.cuenta-pop]="cuentaPop">{{ cuentaTexto }}</div>
-              <div class="cuenta-sub">{{ cuentaTexto === '¡YA!' ? '¡A recordar!' : '¡Prepárate!' }}</div>
+          <div class="juego-panel">
+            <div class="nivel-secuencia">
+              @for (i of secuenciaArray; track $index) {
+                <div class="seq-dot" [class.seq-dot-fill]="$index < respuestaJugador.length"></div>
+              }
             </div>
-          }
+
+            <div class="elementos-grid"
+                 [class.grid-dimmed]="estado === 'cuenta'"
+                 [class.cols-2]="columnas === 2"
+                 [class.cols-3]="columnas === 3">
+              @for (el of elementosDisponibles; track el.id) {
+                <button class="elemento"
+                  [attr.data-instrumento]="el.id"
+                  [class.activo]="elementoActivo === el.id"
+                  [class.error-anim]="elementoError === el.id"
+                  [class.clickable]="estado === 'input'"
+                  [style.--glow]="el.glow"
+                  [disabled]="estado !== 'input'"
+                  (click)="clicarElemento($event, el.id)">
+                  <span class="el-glow"></span>
+                  <span class="el-simbolo">{{ el.simbolo }}</span>
+                  <span class="el-nombre">{{ el.nombre }}</span>
+                </button>
+              }
+            </div>
+
+            @if (estado === 'cuenta') {
+              <div class="cuenta-overlay">
+                <div class="cuenta-num" [class.cuenta-pop]="cuentaPop">{{ cuentaTexto }}</div>
+                <div class="cuenta-sub">{{ cuentaTexto === '¡YA!' ? '¡A recordar!' : '¡Prepárate!' }}</div>
+              </div>
+            }
+          </div>
 
         </div>
       }
@@ -436,27 +441,59 @@ interface ConfettiPiece { id: number; left: number; color: string; delay: number
 
     .grid-dimmed { opacity: .35; pointer-events: none; filter: blur(1px); transition: opacity .3s, filter .3s; }
 
-    .elementos-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    /* Caja/panel que enmarca el area de juego (secuencia + instrumentos) */
+    .juego-panel {
+      position: relative;
+      background: rgba(255,255,255,.05); border: 1.5px solid rgba(255,255,255,.14);
+      border-radius: 26px; padding: 22px 18px 26px; margin-bottom: 4px;
+      box-shadow: 0 12px 40px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.06);
+      backdrop-filter: blur(6px);
+    }
+
+    /* Cuadricula balanceada: 4 instrumentos -> 2x2, 3/5/6 -> filas de 3 centradas */
+    .elementos-grid { display: flex; flex-wrap: wrap; justify-content: center; align-content: center; gap: 20px; padding: 10px 4px; }
+    .elementos-grid.cols-2 .elemento { flex: 0 0 calc(50% - 20px); }
+    .elementos-grid.cols-3 .elemento { flex: 0 0 calc(33.333% - 20px); }
+    .elementos-grid.cols-2 .el-simbolo { font-size: 84px; }
+    .elementos-grid.cols-3 .el-simbolo { font-size: 62px; }
+
+    /* Sin circulo: el emoji queda grande y "al descubierto", con un resplandor
+       suave detras (no un fondo permanente) cuando el instrumento suena. */
     .elemento {
-      aspect-ratio: 1; border-radius: 50%; border: 4px solid rgba(255,255,255,.15);
-      background: var(--color);
-      box-shadow: 0 10px 40px color-mix(in srgb,var(--color) 45%,transparent), inset 0 2px 0 rgba(255,255,255,.3);
+      background: transparent; border: none; box-shadow: none;
       cursor: default; display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 4px; transition: transform .12s ease, box-shadow .15s ease, border-color .15s;
-      position: relative; overflow: hidden;
+      gap: 6px; padding: 10px 6px; transition: transform .15s ease;
+      position: relative;
     }
-    .elemento::after { content: ''; position: absolute; top: 12%; left: 20%; width: 35%; height: 28%; background: rgba(255,255,255,.25); border-radius: 50%; filter: blur(4px); pointer-events: none; }
     .elemento.clickable { cursor: pointer; }
-    .elemento.clickable:hover { transform: scale(1.06); border-color: rgba(255,255,255,.5); box-shadow: 0 16px 50px color-mix(in srgb,var(--color) 60%,transparent), inset 0 2px 0 rgba(255,255,255,.35); }
-    .elemento.clickable:active { transform: scale(.93); }
-    .elemento.activo {
-      transform: scale(1.12); background: var(--color-activo); border-color: rgba(255,255,255,.8);
-      box-shadow: 0 0 0 8px rgba(255,255,255,.12), 0 0 60px var(--glow), 0 0 120px color-mix(in srgb,var(--glow) 50%,transparent), inset 0 2px 0 rgba(255,255,255,.5);
-      animation: pulsoActivo .65s ease;
+    .elemento.clickable:hover { transform: scale(1.08); }
+    .elemento.clickable:hover .el-glow { opacity: .55; }
+    .elemento.clickable:active { transform: scale(.92); }
+
+    .el-glow {
+      position: absolute; top: 50%; left: 50%; width: 92px; height: 92px;
+      transform: translate(-50%,-50%); border-radius: 50%;
+      background: radial-gradient(circle, var(--glow) 0%, transparent 70%);
+      opacity: 0; filter: blur(6px); transition: opacity .2s ease; pointer-events: none;
     }
-    .el-simbolo { font-size: 36px; line-height: 1; pointer-events: none; position: relative; z-index: 1; }
-    .el-nombre  { font-size: 11px; font-weight: 800; color: rgba(255,255,255,.9); pointer-events: none; position: relative; z-index: 1; text-shadow: 0 1px 4px rgba(0,0,0,.4); }
-    .error-anim { animation: errorShake .4s ease !important; border-color: #f87171 !important; box-shadow: 0 0 0 6px rgba(239,68,68,.5) !important; }
+    .elemento.activo .el-glow { opacity: 1; animation: glowPulso .65s ease; }
+
+    .el-simbolo {
+      font-size: 64px; line-height: 1; pointer-events: none; position: relative; z-index: 1;
+      transition: font-size .2s ease; filter: drop-shadow(0 4px 10px rgba(0,0,0,.35));
+    }
+    .el-nombre { font-size: 12px; font-weight: 800; color: rgba(255,255,255,.85); pointer-events: none; position: relative; z-index: 1; text-shadow: 0 1px 4px rgba(0,0,0,.5); }
+
+    .error-anim { animation: errorShake .4s ease !important; }
+    .error-anim .el-glow { opacity: .75; background: radial-gradient(circle, rgba(239,68,68,.9) 0%, transparent 70%); }
+
+    /* Animacion "de como se toca" cada instrumento, sobre el propio emoji */
+    .elemento.activo[data-instrumento="0"] .el-simbolo { animation: tocarTambor .5s ease; }
+    .elemento.activo[data-instrumento="1"] .el-simbolo { animation: tocarMaracas .5s ease; }
+    .elemento.activo[data-instrumento="2"] .el-simbolo { animation: tocarCampana .6s ease; transform-origin: top center; }
+    .elemento.activo[data-instrumento="3"] .el-simbolo { animation: tocarXilofono .5s ease; }
+    .elemento.activo[data-instrumento="4"] .el-simbolo { animation: tocarPandereta .5s ease; }
+    .elemento.activo[data-instrumento="5"] .el-simbolo { animation: tocarTrompeta .5s ease; }
 
     .cuenta-overlay {
       position: absolute; inset: 0;
@@ -546,11 +583,67 @@ interface ConfettiPiece { id: number; left: number; color: string; delay: number
     @keyframes slideUp    { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
     @keyframes popIn      { from{opacity:0;transform:scale(.7)} to{opacity:1;transform:scale(1)} }
     @keyframes bounce     { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
-    @keyframes pulsoActivo{ 0%{transform:scale(1)} 40%{transform:scale(1.16)} 70%{transform:scale(1.09)} 100%{transform:scale(1.12)} }
     @keyframes errorShake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-10px) rotate(-3deg)} 40%{transform:translateX(10px) rotate(3deg)} 60%{transform:translateX(-7px) rotate(-2deg)} 80%{transform:translateX(7px) rotate(2deg)} }
     @keyframes mascotShake{ 0%,100%{transform:rotate(0)} 25%{transform:rotate(-12deg)} 75%{transform:rotate(12deg)} }
     @keyframes comboPop   { from{opacity:0;transform:scale(.5) translateY(10px)} to{opacity:1;transform:scale(1) translateY(0)} }
     @keyframes starPop    { from{transform:scale(0) rotate(-30deg)} to{transform:scale(1) rotate(0)} }
+
+    @keyframes glowPulso {
+      0%   { transform: translate(-50%,-50%) scale(.6); opacity: .4; }
+      50%  { transform: translate(-50%,-50%) scale(1.25); opacity: 1; }
+      100% { transform: translate(-50%,-50%) scale(1); opacity: 1; }
+    }
+    /* Tambor: golpe (se aplasta y rebota, como al recibir el golpe de la baqueta) */
+    @keyframes tocarTambor {
+      0%   { transform: scale(1); }
+      18%  { transform: scale(1.05,.82) translateY(6px); }
+      40%  { transform: scale(.95,1.12) translateY(-8px); }
+      65%  { transform: scale(1.03,.96) translateY(2px); }
+      100% { transform: scale(1); }
+    }
+    /* Maracas: sacudida de lado a lado */
+    @keyframes tocarMaracas {
+      0%,100% { transform: rotate(0) translateX(0); }
+      15%  { transform: rotate(-20deg) translateX(-7px); }
+      30%  { transform: rotate(18deg) translateX(7px); }
+      45%  { transform: rotate(-15deg) translateX(-5px); }
+      60%  { transform: rotate(12deg) translateX(4px); }
+      80%  { transform: rotate(-5deg); }
+    }
+    /* Campana: balanceo de badajo, como si repicara */
+    @keyframes tocarCampana {
+      0%,100% { transform: rotate(0); }
+      20%  { transform: rotate(24deg); }
+      40%  { transform: rotate(-18deg); }
+      60%  { transform: rotate(12deg); }
+      80%  { transform: rotate(-6deg); }
+    }
+    /* Xilofono: doble golpe de mazo (rebote rapido) */
+    @keyframes tocarXilofono {
+      0%   { transform: translateY(0) scale(1); }
+      20%  { transform: translateY(-12px) scale(1.06); }
+      38%  { transform: translateY(2px) scale(.95); }
+      55%  { transform: translateY(-7px) scale(1.03); }
+      75%  { transform: translateY(1px); }
+      100% { transform: translateY(0) scale(1); }
+    }
+    /* Pandereta: sacudida rapida con jitter, como al agitarla */
+    @keyframes tocarPandereta {
+      0%,100% { transform: translate(0,0) rotate(0); }
+      12%  { transform: translate(-5px,-3px) rotate(-11deg); }
+      28%  { transform: translate(5px,-3px) rotate(11deg); }
+      44%  { transform: translate(-4px,0) rotate(-8deg); }
+      60%  { transform: translate(4px,0) rotate(8deg); }
+      76%  { transform: translate(-2px,0) rotate(-4deg); }
+    }
+    /* Trompeta: se inclina hacia adelante como al soplar */
+    @keyframes tocarTrompeta {
+      0%   { transform: rotate(0) scale(1); }
+      25%  { transform: rotate(-14deg) scale(1.08); }
+      50%  { transform: rotate(-7deg) scale(1.14); }
+      75%  { transform: rotate(-11deg) scale(1.05); }
+      100% { transform: rotate(0) scale(1); }
+    }
   `]
 })
 export class RitmoPatronComponent implements OnInit, OnDestroy {
@@ -603,6 +696,10 @@ export class RitmoPatronComponent implements OnInit, OnDestroy {
   botonesActivos = 4;
   private tempoBase = 650;
   get elementosDisponibles(): Elemento[] { return this.ELEMENTOS.slice(0, this.botonesActivos); }
+
+  // Cuadricula ordenada: con 4 instrumentos se ven 2 arriba y 2 abajo;
+  // con 3, 5 o 6 se acomodan en filas de 3 (la ultima fila queda centrada).
+  get columnas(): number { return this.botonesActivos === 4 ? 2 : 3; }
 
   private perfilId: number | null = null;
   private juegoActual: Juego | null = null;
@@ -899,6 +996,14 @@ export class RitmoPatronComponent implements OnInit, OnDestroy {
   clicarElemento(event: MouseEvent, id: number): void {
     if (this.estado !== 'input') return;
     this.sonarElemento(id);
+
+    // Muestra la misma animacion de "como se toca" tambien al tocarlo el nino,
+    // no solo cuando el juego reproduce la secuencia.
+    this.elementoActivo = id;
+    this.timers.push(setTimeout(() => {
+      if (this.elementoActivo === id) { this.elementoActivo = -1; this.cdr.detectChanges(); }
+    }, 500));
+
     const ms       = Date.now() - this.tiempoInicioInput;
     const esperado = this.secuencia[this.respuestaJugador.length];
     const correcto = id === esperado;
