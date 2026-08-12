@@ -91,11 +91,11 @@ export class MaratonMentalComponent implements OnInit, OnDestroy {
   nivelSugerido: NivelMaraton | null = null;
 
   confettiActivo = false;
-  confettiPiezas = Array.from({ length: 50 }, (_, i) => ({
+  confettiPiezas = Array.from({ length: 80 }, (_, i) => ({
     id: i,
     left: Math.random() * 100,
-    delay: Math.random() * 1.6,
-    duration: 2.2 + Math.random() * 2,
+    delay: Math.random() * 2.5,
+    duration: 2.5 + Math.random() * 2.5,
     emoji: ['🎉', '🧠', '⚡', '✨', '🎊', '⭐'][i % 6],
   }));
 
@@ -553,6 +553,11 @@ export class MaratonMentalComponent implements OnInit, OnDestroy {
 
   subirNivel(): void {
     if (this.nivelSugerido) this.iniciarJuego(this.nivelSugerido);
+  }
+
+  salirConResultados(): void {
+    this.limpiarTemporizadores();
+    this.finalizarJuego();
   }
 
   volverLobby(): void {

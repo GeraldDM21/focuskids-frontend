@@ -71,6 +71,14 @@ export class FocoExtremoComponent implements OnInit, OnDestroy {
 
   mascotMood: MascotMood = 'idle';
   mascotMsg = '¡Hola! Soy Leo 🦁 ¡Vamos a entrenar tu atención!';
+  // ── Confetti ────────────────────────────────────────────────────────────
+  confettiActivo = false;
+  confettiPiezas = Array.from({length:60},(_,i)=>({
+    id:i, left:Math.random()*100,
+    color:['#a78bfa','#60a5fa','#4ade80','#fbbf24','#f87171','#c084fc','#34d399','#fb923c'][i%8],
+    delay:Math.random()*2, dur:2.5+Math.random()*2, size:8+Math.random()*8
+  }));
+
   private mascotTimer: any;
 
   /** Voz de Leo (TTS), independiente del control de sonido/efectos (sonidoActivo). */
@@ -363,6 +371,7 @@ export class FocoExtremoComponent implements OnInit, OnDestroy {
     this.stopBgMusic();
     this.estado = 'completado';
     this.estimuloActual = null;
+    this.confettiActivo = true;
     this.resultado = this.calcularResultado();
     this.playFinalizado();
 
@@ -419,11 +428,16 @@ export class FocoExtremoComponent implements OnInit, OnDestroy {
   subirNivel(): void {
     if (this.nivelSugerido) this.iniciarJuego(this.nivelSugerido);
   }
+  salirConResultados(): void {
+    this.finalizarSesion();
+  }
+
   volverInicio(): void {
     this.detenerTimer();
     this.detenerCiclo();
     this.stopBgMusic();
     this.estado = 'inicio';
+    this.confettiActivo = false;
     this.config = null;
     this.estimuloActual = null;
   }

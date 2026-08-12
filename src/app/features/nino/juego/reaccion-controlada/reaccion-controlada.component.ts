@@ -324,6 +324,10 @@ export class ReaccionControladaComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
+  salirConResultados(): void {
+    this.terminarJuego();
+  }
+
   volver(): void {
     this.detenerTimers();
     this.router.navigate(['/nino/juegos']);

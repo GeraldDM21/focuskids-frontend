@@ -227,6 +227,15 @@
   @if (estado === 'resultados') {
     <section class="pantalla-resultados">
 
+      @if (confettiActivo) {
+        <div class="confetti-container" aria-hidden="true">
+          @for (p of confettiPiezas; track p.id) {
+            <div class="confeti" [style.left.%]="p.left" [style.background]="p.color"
+              [style.animation-delay.s]="p.delay" [style.animation-duration.s]="p.dur"
+              [style.width.px]="p.size" [style.height.px]="p.size*1.6"></div>
+          }
+        </div>
+      }
       <div class="resultados-card">
 
         <!-- Mascota Ollie -->

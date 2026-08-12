@@ -20,6 +20,14 @@ export class SopaLetrasComponent implements OnInit, OnDestroy {
 
   // Estado general
   estado: Estado = 'inicio';
+  // ── Confetti ────────────────────────────────────────────────────────────
+  confettiActivo = false;
+  confettiPiezas = Array.from({length:60},(_,i)=>({
+    id:i, left:Math.random()*100,
+    color:['#a78bfa','#60a5fa','#4ade80','#fbbf24','#f87171','#c084fc','#34d399','#fb923c'][i%8],
+    delay:Math.random()*2, dur:2.5+Math.random()*2, size:8+Math.random()*8
+  }));
+
   temaSeleccionado: Tema = 'CIENCIAS';
   nivelActual: Nivel = 'FACIL';
   sonidoActivo = true;
@@ -596,6 +604,7 @@ export class SopaLetrasComponent implements OnInit, OnDestroy {
   private finalizarSesion(nuevoEstado: 'completado' | 'tiempo-agotado'): void {
     this.estado = nuevoEstado;
     this.stopBgMusic();
+    this.confettiActivo = true;
 
     // CA-03: fire-and-forget con 3 reintentos + localStorage fallback
     if (this.sesionBackendId) {
@@ -641,11 +650,19 @@ export class SopaLetrasComponent implements OnInit, OnDestroy {
 
   jugarDeNuevo(): void { this.iniciarJuego(this.nivelActual); }
   subirNivel(): void { if (this.nivelSugerido) this.iniciarJuego(this.nivelSugerido as Nivel); }
+  salirConResultados(): void {
+    this.detenerTimer();
+    clearTimeout(this.mascotTimer);
+    this.limpiarSeleccion();
+    this.finalizarSesion('tiempo-agotado');
+  }
+
   volverInicio(): void {
     this.detenerTimer();
     this.stopBgMusic();
     this.sopaLetrasService.resetearPalabrasUsadas(this.temaSeleccionado);
     this.estado = 'inicio';
+    this.confettiActivo = false;
     this.config = null;
   }
   volverLobby(): void { this.detenerTimer(); this.stopBgMusic(); this.router.navigate(['/nino/juegos']); }

@@ -1025,6 +1025,11 @@ export class LabCienciasComponent
     );
   }
 
+  salirConResultados(): void {
+    if (this.sesionId === null) { this.volverInicio(); return; }
+    this.finalizarJuego();
+  }
+
   volverInicio(): void {
     this.limpiarTemporizadores();
     window.speechSynthesis?.cancel();

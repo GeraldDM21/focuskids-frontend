@@ -1,5 +1,16 @@
 <div class="rc-wrapper">
 
+  <!-- ── Fondo animado (persistente en todos los estados) ─────────────── -->
+  <div class="rc-bg-orb rc-o1" aria-hidden="true"></div>
+  <div class="rc-bg-orb rc-o2" aria-hidden="true"></div>
+  <div class="rc-bg-orb rc-o3" aria-hidden="true"></div>
+  <div class="rc-bg" aria-hidden="true">
+    <span class="rc-bpp rc-bpp1">▶</span><span class="rc-bpp rc-bpp2">⏸</span>
+    <span class="rc-bpp rc-bpp3">←</span><span class="rc-bpp rc-bpp4">→</span>
+    <span class="rc-bpp rc-bpp5">⚡</span><span class="rc-bpp rc-bpp6">✓</span>
+    <span class="rc-bpp rc-bpp7">✗</span><span class="rc-bpp rc-bpp8">▶</span>
+  </div>
+
   <!-- ══ INICIO ══════════════════════════════════════════════════════════ -->
   @if (estado === 'inicio') {
   <div class="rc-pantalla-inicio">
@@ -74,7 +85,7 @@
 
     <!-- Header -->
     <div class="rc-game-header">
-      <button class="rc-btn-salir" (click)="volver()">
+      <button class="rc-btn-salir" (click)="salirConResultados()">
         <span>←</span> <span>Salir</span>
       </button>
       <div class="rc-header-centro">
@@ -121,7 +132,7 @@
 
   <!-- ══ RESULTADOS ══════════════════════════════════════════════════════════ -->
   @if (estado === 'resultados' && metricasFinal) {
-  <div class="rc-pantalla-resultados">
+  <div class="pantalla-resultados">
     <div class="rc-confetti-container">
       @for (p of confettiPieces; track p.id) {
       <div class="rc-confeti"
@@ -130,53 +141,44 @@
            [style.width.px]="p.size" [style.height.px]="p.size * 1.6"></div>
       }
     </div>
-
-    <div class="rc-resultados-card">
-      <div class="rc-resultado-hero">
-        <div class="rc-resultado-ring"></div>
-        <div class="rc-resultado-face">🐸</div>
-        <div class="rc-resultado-trophy">{{ trofeoEmoji }}</div>
+    <div class="resultados-card">
+      <div class="fox-resultado-hero">
+        <div class="rc-mascot-emoji">🐸</div>
+        <div class="fox-resultado-trophy">{{ trofeoEmoji }}</div>
       </div>
-
-      <h2 class="rc-resultado-titulo">{{ tituloFinal }}</h2>
-
-      <!-- CA-05: notificación de mejora -->
-      @if (comparacionSesion?.mejoraSignificativa) {
-      <div class="rc-mejora-banner">
-        🎉 ¡Mejoraste tu control un {{ comparacionSesion?.mejoraSSRTPorc }}% desde la última sesión!
+      <h2 class="resultado-titulo">{{ tituloFinal }}</h2>
+      <div class="estrellas">
+        <span class="estrella"        [class.estrella-on]="(100 - metricasFinal.indiceImpulsividad) >= 40">⭐</span>
+        <span class="estrella grande" [class.estrella-on]="(100 - metricasFinal.indiceImpulsividad) >= 65">⭐</span>
+        <span class="estrella"        [class.estrella-on]="(100 - metricasFinal.indiceImpulsividad) >= 85">⭐</span>
       </div>
-      }
-
-      <div class="rc-score-ring">
+      <div class="score-ring">
         <svg viewBox="0 0 120 120">
-          <circle cx="60" cy="60" r="50" class="rc-ring-bg"/>
-          <circle cx="60" cy="60" r="50" class="rc-ring-fill"
-                  [style.stroke-dasharray]="314"
-                  [style.stroke-dashoffset]="314 - (314 * (100 - metricasFinal.indiceImpulsividad) / 100)"/>
+          <circle cx="60" cy="60" r="50" class="ring-bg"/>
+          <circle cx="60" cy="60" r="50" class="ring-fill"
+            [style.stroke-dasharray]="314"
+            [style.stroke-dashoffset]="314-(314*(100-metricasFinal.indiceImpulsividad)/100)"/>
         </svg>
-        <div class="rc-score-texto">
-          <div class="rc-score-num">{{ 100 - metricasFinal.indiceImpulsividad }}%</div>
-          <div class="rc-score-lbl">autocontrol</div>
+        <div class="score-texto">
+          <div class="score-num">{{ 100 - metricasFinal.indiceImpulsividad }}%</div>
+          <div class="score-lbl">autocontrol</div>
         </div>
       </div>
-
-      <!-- Métricas (datos de salida de la HU) -->
-      <div class="rc-metricas-row">
-        <div class="rc-metrica"><div class="rc-m-icon">🪰</div><div class="rc-m-val rc-verde">{{ metricasFinal.tasaAciertosGo }}%</div><div class="rc-m-lbl">Aciertos Go</div></div>
-        <div class="rc-metrica"><div class="rc-m-icon">🐝</div><div class="rc-m-val rc-rojo">{{ metricasFinal.tasaFalsasAlarmasNoGo }}%</div><div class="rc-m-lbl">Falsas alarmas</div></div>
-        <div class="rc-metrica"><div class="rc-m-icon">⏱️</div><div class="rc-m-val rc-azul">{{ metricasFinal.ssrtMs }}ms</div><div class="rc-m-lbl">SSRT</div></div>
-        <div class="rc-metrica"><div class="rc-m-icon">🧠</div><div class="rc-m-val rc-morado">{{ metricasFinal.indiceImpulsividad }}</div><div class="rc-m-lbl">Índ. impulsividad</div></div>
+      @if (comparacionSesion?.mejoraSignificativa) {
+        <div class="ia-badge">🎉 ¡Mejoraste tu control un {{ comparacionSesion?.mejoraSSRTPorc }}% desde la última sesión!</div>
+      }
+      <div class="foxy-msg-final">
+        <div class="rc-mascot-emoji-sm">🐸</div>
+        <div class="foxy-msg-bubble">{{ mascotMsg }}</div>
       </div>
-
-      <!-- Mensaje de Froggy -->
-      <div class="rc-froggy-msg-final">
-        <div class="rc-froggy-msg-avatar">🐸</div>
-        <div class="rc-froggy-msg-bubble">{{ mascotMsg }}</div>
+      <div class="metricas-row">
+        <div class="metrica"><div class="m-icon">🧘</div><div class="m-val verde">{{ 100 - metricasFinal.indiceImpulsividad }}%</div><div class="m-lbl">Autocontrol</div></div>
+        <div class="metrica"><div class="m-icon">🪰</div><div class="m-val azul">{{ metricasFinal.tasaAciertosGo }}%</div><div class="m-lbl">Aciertos Go</div></div>
+        <div class="metrica"><div class="m-icon">⚡</div><div class="m-val amarillo">{{ metricasFinal.ssrtMs }}ms</div><div class="m-lbl">SSRT</div></div>
       </div>
-
-      <div class="rc-btns-final">
-        <button class="rc-btn-repetir" (click)="jugarDeNuevo()">🔄 Jugar de nuevo</button>
-        <button class="rc-btn-volver"  (click)="volver()">← Volver</button>
+      <div class="btns-final">
+        <button class="btn-repetir" (click)="jugarDeNuevo()">🔄 Jugar de nuevo</button>
+        <button class="btn-volver" (click)="volver()">← Volver</button>
       </div>
     </div>
   </div>
