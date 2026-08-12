@@ -75,16 +75,12 @@ const MOTIVACION = [
       <p class="nav-sec">MENÚ</p>
       <button class="nav-btn" (click)="irAlDashboard()"><span>🏠</span>Inicio</button>
       <button class="nav-btn active"><span>📊</span>Progreso</button>
-      <p class="nav-sec">CUENTA</p>
-      <button class="nav-btn" (click)="auth.logout(); router.navigate(['/auth/login'])"><span>🚪</span>Salir</button>
+      <button class="nav-btn" (click)="irAlDashboard()"><span>←</span>Volver</button>
     </nav>
 
-    <!-- Mascota Foxy con mensaje motivacional -->
+    <!-- Burbuja motivacional -->
     <div class="mascot-wrap">
       <div class="mascot-bubble">{{ motivacion }}</div>
-      <img src="/mascotas/foxy-escena.png" alt="Foxy" class="mascot-img"
-           onerror="this.style.display='none'; this.nextElementSibling.style.display='block'"/>
-      <div class="mascot-fallback" style="display:none">🦊</div>
     </div>
   </aside>
 
@@ -207,33 +203,42 @@ const MOTIVACION = [
             <h3 class="card-title">Actividad semanal</h3>
             <span class="card-tag">Esta semana</span>
           </div>
-          <!-- Gráfico de barras CSS -->
-          <div class="bar-chart">
-            @for (min of seleccionado.minutosSemanales; track $index) {
-              <div class="bar-col">
-                <span class="bar-val">{{ min > 0 ? min+'m' : '' }}</span>
-                <div class="bar-wrap">
-                  <div class="bar-fill"
-                       [style.height]="barH(min, seleccionado.minutosSemanales)+'%'"
-                       [class.bar-active]="seleccionado.actividadSemanal[$index]"></div>
+          @if (sumaMin(seleccionado.minutosSemanales) === 0) {
+            <!-- Sin actividad esta semana -->
+            <div class="empty-msg">Sin actividad esta semana.</div>
+            <div class="chart-footer">
+              <span class="cf-label">Total esta semana</span>
+              <span class="cf-val">0 minutos</span>
+            </div>
+          } @else {
+            <!-- Gráfico de barras CSS -->
+            <div class="bar-chart">
+              @for (min of seleccionado.minutosSemanales; track $index) {
+                <div class="bar-col">
+                  <span class="bar-val">{{ min > 0 ? min+'m' : '' }}</span>
+                  <div class="bar-wrap">
+                    <div class="bar-fill"
+                         [style.height]="barH(min, seleccionado.minutosSemanales)+'%'"
+                         [class.bar-active]="seleccionado.actividadSemanal[$index]"></div>
+                  </div>
+                  <span class="bar-day" [class.bar-day-on]="seleccionado.actividadSemanal[$index]">
+                    {{ DIAS[$index] }}
+                  </span>
                 </div>
-                <span class="bar-day" [class.bar-day-on]="seleccionado.actividadSemanal[$index]">
-                  {{ DIAS[$index] }}
-                </span>
-              </div>
-            }
-          </div>
-          <!-- Indicador de minutos totales esta semana -->
-          <div class="chart-footer">
-            <span class="cf-label">Total esta semana</span>
-            <span class="cf-val">{{ sumaMin(seleccionado.minutosSemanales) }} minutos</span>
-          </div>
-          <!-- CA-04: círculos de actividad -->
-          <div class="dot-row">
-            @for (dia of seleccionado.actividadSemanal; track $index) {
-              <div class="dot" [class.dot-on]="dia" [title]="DIAS[$index]"></div>
-            }
-          </div>
+              }
+            </div>
+            <!-- Indicador de minutos totales esta semana -->
+            <div class="chart-footer">
+              <span class="cf-label">Total esta semana</span>
+              <span class="cf-val">{{ sumaMin(seleccionado.minutosSemanales) }} minutos</span>
+            </div>
+            <!-- CA-04: círculos de actividad -->
+            <div class="dot-row">
+              @for (dia of seleccionado.actividadSemanal; track $index) {
+                <div class="dot" [class.dot-on]="dia" [title]="DIAS[$index]"></div>
+              }
+            </div>
+          }
         </div>
 
       </div>
@@ -308,14 +313,12 @@ const MOTIVACION = [
               border-radius:10px; text-align:left; cursor:pointer; transition:all .15s; }
     .nav-btn:hover{ background:rgba(255,255,255,.08); color:rgba(255,255,255,.9); }
     .nav-btn.active{ background:rgba(99,102,241,.45); color:#fff; font-weight:700; }
-    .mascot-wrap{ margin-top:auto; position:relative; padding:0 12px 0; text-align:center; }
+    .mascot-wrap{ margin-top:auto; padding:0 12px 16px; }
     .mascot-bubble{
       background:rgba(255,255,255,.12); color:#e0e7ff; font-size:.75rem; font-weight:600;
-      border-radius:14px 14px 14px 4px; padding:8px 12px; margin:0 8px 10px; line-height:1.4;
+      border-radius:14px; padding:10px 14px; line-height:1.5;
       backdrop-filter:blur(4px);
     }
-    .mascot-img{ width:100%; max-height:170px; object-fit:contain; display:block; filter:drop-shadow(0 4px 12px rgba(0,0,0,.3)); }
-    .mascot-fallback{ font-size:5rem; }
 
     /* ── MAIN ─────────────────────── */
     .main{ flex:1; padding:28px 32px; overflow-y:auto; display:flex; flex-direction:column; gap:22px; }
@@ -364,11 +367,12 @@ const MOTIVACION = [
     .empty-msg{ color:#94a3b8; font-size:.85rem; text-align:center; padding:20px 0; }
 
     /* mid grid */
-    .mid-grid{ display:grid; grid-template-columns:1.1fr 1fr; gap:20px; }
+    .mid-grid{ display:grid; grid-template-columns:1.1fr 1fr; gap:20px; align-items:start; }
     @media(max-width:920px){ .mid-grid{ grid-template-columns:1fr; } }
 
     /* learning progress */
-    .prog-list{ display:flex; flex-direction:column; gap:14px; }
+    .prog-list{ display:flex; flex-direction:column; gap:14px; max-height:420px; overflow-y:auto;
+                scrollbar-width:thin; scrollbar-color:#e2e8f0 transparent; padding-right:4px; }
     .prog-row{ display:flex; align-items:center; gap:12px; }
     .prog-icon{ width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; }
     .prog-info{ flex:1; min-width:0; }
