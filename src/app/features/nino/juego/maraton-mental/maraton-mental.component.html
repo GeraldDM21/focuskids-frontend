@@ -1,5 +1,16 @@
 <div class="mm-root">
 
+  <!-- ── Fondo animado (persistente en todos los estados) ─────────────── -->
+  <div class="mm-bg-orb mm-bo1" aria-hidden="true"></div>
+  <div class="mm-bg-orb mm-bo2" aria-hidden="true"></div>
+  <div class="mm-bg-orb mm-bo3" aria-hidden="true"></div>
+  <div class="mm-bg" aria-hidden="true">
+    <span class="mm-bpp mm-bpp1">1</span><span class="mm-bpp mm-bpp2">2</span>
+    <span class="mm-bpp mm-bpp3">∞</span><span class="mm-bpp mm-bpp4">÷</span>
+    <span class="mm-bpp mm-bpp5">✦</span><span class="mm-bpp mm-bpp6">=</span>
+    <span class="mm-bpp mm-bpp7">✧</span><span class="mm-bpp mm-bpp8">3</span>
+  </div>
+
   @if (estado === 'inicio') {
     <div class="mm-pantalla-inicio">
       <img class="mm-bg-escena" src="/mascotas/koby-escena.png" alt="Escena de Koby en el espacio">
@@ -69,6 +80,7 @@
 
   @if (estado === 'calibracion_a' || estado === 'calibracion_b') {
     <div class="mm-calibracion">
+      <button type="button" class="mm-btn-salir-juego" (click)="salirConResultados()">← Salir</button>
       <div class="mm-banner-info">
         🔎 Ronda de práctica {{ calibracionRondaActual }}/{{ config?.rondasCalibracionPorTarea }}
         — primero cada tarea por separado
@@ -120,6 +132,7 @@
 
   @if (estado === 'transicion_dual') {
     <div class="mm-transicion">
+      <button type="button" class="mm-btn-salir-juego" (click)="salirConResultados()">← Salir</button>
       <div class="mm-transicion-emoji">🧠⚡</div>
       <h2>¡Ahora las dos tareas al mismo tiempo!</h2>
       <p>Pantalla dividida: una tarea a la izquierda, otra a la derecha. ¡Atento a las dos!</p>
@@ -129,6 +142,7 @@
   @if (estado === 'dual') {
     <div class="mm-dual-wrap">
       <div class="mm-dual-header">
+        <button type="button" class="mm-btn-salir-juego" (click)="salirConResultados()">← Salir</button>
         <div class="mm-ronda-info">Ronda {{ rondaDualActual }}/{{ config?.rondasDuales }}</div>
         <div class="mm-timer-bar-wrap">
           <div
@@ -194,66 +208,80 @@
   }
 
   @if (estado === 'completado') {
-    <div class="mm-resultado">
-
+    <div class="pantalla-resultados">
       @if (confettiActivo) {
         <div class="mm-confetti">
           @for (p of confettiPiezas; track p.id) {
-            <span
-              class="mm-confetti-pieza"
+            <span class="mm-confetti-pieza"
               [style.left.%]="p.left"
               [style.animation-delay.s]="p.delay"
-              [style.animation-duration.s]="p.duration"
-            >{{ p.emoji }}</span>
+              [style.animation-duration.s]="p.duration">{{ p.emoji }}</span>
           }
         </div>
       }
-
-      <h1>🎉 ¡Maratón completado!</h1>
-
-      @if (resultadoFinal) {
-        <div class="mm-resumen-grid">
-          <div class="mm-resumen-card">
-            <h3>🔢 Contar Objetos</h3>
-            <p>Tú solo: <strong>{{ resultadoFinal.precisionIndividualAPorcentaje }}%</strong></p>
-            <p>En dual: <strong>{{ resultadoFinal.precisionDualAPorcentaje }}%</strong></p>
-            <p class="mm-costo">Costo por dividir la atención: {{ resultadoFinal.costoDualAPorcentaje }}%</p>
-          </div>
-          <div class="mm-resumen-card">
-            <h3>🎨 Identificar Color</h3>
-            <p>Tú solo: <strong>{{ resultadoFinal.precisionIndividualBPorcentaje }}%</strong></p>
-            <p>En dual: <strong>{{ resultadoFinal.precisionDualBPorcentaje }}%</strong></p>
-            <p class="mm-costo">Costo por dividir la atención: {{ resultadoFinal.costoDualBPorcentaje }}%</p>
-          </div>
+      <div class="resultados-card">
+        <div class="fox-resultado-hero">
+          <img class="foxy-resultado-img" src="mascotas/koby-portrait.png" alt="Koby">
+          <div class="fox-resultado-trophy">🎉</div>
         </div>
-
-        <div class="mm-carga-cognitiva" [class]="'mm-carga-' + resultadoFinal.cargaCognitivaCategoria.toLowerCase()">
-          Carga cognitiva estimada: <strong>{{ resultadoFinal.cargaCognitivaCategoria }}</strong>
-          ({{ resultadoFinal.cargaCognitivaEstimada }}%)
-        </div>
-
-        @if (resultadoFinal.tareaMasDebil !== 'NINGUNA') {
-          <div class="mm-area-reforzar">
-            💪 Área para reforzar: {{ resultadoFinal.tareaMasDebil === 'A' ? 'Contar Objetos' : 'Identificar Color' }}
+        <h2 class="resultado-titulo">¡Maratón completado!</h2>
+        @if (resultadoFinal) {
+          <div class="estrellas">
+            <span class="estrella"        [class.estrella-on]="((resultadoFinal.precisionDualAPorcentaje + resultadoFinal.precisionDualBPorcentaje) / 2) >= 40">⭐</span>
+            <span class="estrella grande" [class.estrella-on]="((resultadoFinal.precisionDualAPorcentaje + resultadoFinal.precisionDualBPorcentaje) / 2) >= 65">⭐</span>
+            <span class="estrella"        [class.estrella-on]="((resultadoFinal.precisionDualAPorcentaje + resultadoFinal.precisionDualBPorcentaje) / 2) >= 85">⭐</span>
+          </div>
+          <div class="score-ring">
+            <svg viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="50" class="ring-bg"/>
+              <circle cx="60" cy="60" r="50" class="ring-fill"
+                [style.stroke-dasharray]="314"
+                [style.stroke-dashoffset]="314-(314*((resultadoFinal.precisionDualAPorcentaje+resultadoFinal.precisionDualBPorcentaje)/2)/100)"/>
+            </svg>
+            <div class="score-texto">
+              <div class="score-num">{{ ((resultadoFinal.precisionDualAPorcentaje + resultadoFinal.precisionDualBPorcentaje) / 2) | number:'1.0-0' }}%</div>
+              <div class="score-lbl">precisión dual</div>
+            </div>
+          </div>
+          @if (resultadoFinal.nivelSugerido !== resultadoFinal.nivelFinal) {
+            <div class="ia-badge">🤖 Motor IA: nivel sugerido <strong>{{ resultadoFinal.nivelSugerido }}</strong></div>
+          }
+          @if (resultadoFinal.tareaMasDebil !== 'NINGUNA') {
+            <div class="ia-badge">💪 Reforzar: {{ resultadoFinal.tareaMasDebil === 'A' ? 'Contar Objetos' : 'Identificar Color' }}</div>
+          }
+          <div class="foxy-msg-final">
+            <img class="foxy-msg-avatar" src="mascotas/koby-portrait.png" alt="Koby">
+            <div class="foxy-msg-bubble">{{ mascotMsg }}</div>
+          </div>
+          <div class="metricas-row">
+            <div class="metrica"><div class="m-icon">🔢</div><div class="m-val verde">{{ resultadoFinal.precisionDualAPorcentaje }}%</div><div class="m-lbl">Objetos</div></div>
+            <div class="metrica"><div class="m-icon">🎨</div><div class="m-val azul">{{ resultadoFinal.precisionDualBPorcentaje }}%</div><div class="m-lbl">Colores</div></div>
+            <div class="metrica"><div class="m-icon">🧠</div><div class="m-val naranja">{{ resultadoFinal.cargaCognitivaEstimada }}%</div><div class="m-lbl">Carga cognitiva</div></div>
+          </div>
+        } @else {
+          <div class="estrellas">
+            <span class="estrella"        [class.estrella-on]="puntaje >= 30">⭐</span>
+            <span class="estrella grande" [class.estrella-on]="puntaje >= 60">⭐</span>
+            <span class="estrella"        [class.estrella-on]="puntaje >= 90">⭐</span>
+          </div>
+          <div class="foxy-msg-final">
+            <img class="foxy-msg-avatar" src="mascotas/koby-portrait.png" alt="Koby">
+            <div class="foxy-msg-bubble">{{ mascotMsg }}</div>
+          </div>
+          <div class="metricas-row">
+            <div class="metrica"><div class="m-icon">⭐</div><div class="m-val verde">{{ puntaje }}</div><div class="m-lbl">Puntaje</div></div>
           </div>
         }
-
-        <div class="mm-puntaje">⭐ Puntaje: {{ resultadoFinal.puntaje }} pts</div>
-
-        @if (resultadoFinal.nivelSugerido !== resultadoFinal.nivelFinal) {
-          <button type="button" class="mm-btn-primario" (click)="subirNivel()">
-            ⬆️ Subir a nivel {{ resultadoFinal.nivelSugerido }}
-          </button>
+        @if (errorApi) {
+          <div class="ia-badge" style="color:#f87171; border-color:rgba(248,113,113,.3);">{{ errorApi }}</div>
         }
-      }
-
-      @if (errorApi) {
-        <p class="mm-error">{{ errorApi }}</p>
-      }
-
-      <div class="mm-resultado-acciones">
-        <button type="button" class="mm-btn-primario" (click)="jugarDeNuevo()">🔁 Jugar de nuevo</button>
-        <button type="button" class="mm-btn-secundario" (click)="volverLobby()">← Volver a juegos</button>
+        <div class="btns-final">
+          @if (resultadoFinal && resultadoFinal.nivelSugerido !== resultadoFinal.nivelFinal) {
+            <button type="button" class="btn-ia" (click)="subirNivel()">⬆️ Jugar en {{ resultadoFinal.nivelSugerido }}</button>
+          }
+          <button type="button" class="btn-repetir" (click)="jugarDeNuevo()">🔁 Jugar de nuevo</button>
+          <button type="button" class="btn-volver" (click)="volverLobby()">← Volver</button>
+        </div>
       </div>
     </div>
   }

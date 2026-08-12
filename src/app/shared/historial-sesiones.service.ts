@@ -37,6 +37,7 @@ export interface HistorialFiltros {
   nivel?: string;
   fechaDesde?: string;   // ISO datetime
   fechaHasta?: string;   // ISO datetime
+  soloCompletadas?: boolean;
 }
 
 export interface ComparacionSesion {
@@ -78,11 +79,12 @@ export class HistorialSesionesService {
   /** CA-01/CA-02/CA-03: lista paginada con filtros combinables. */
   obtenerHistorial(perfilId: number, filtros: HistorialFiltros) {
     let params = new HttpParams();
-    if (filtros.page != null)      params = params.set('page', filtros.page.toString());
-    if (filtros.juegoId != null)   params = params.set('juegoId', filtros.juegoId.toString());
-    if (filtros.nivel)             params = params.set('nivel', filtros.nivel);
-    if (filtros.fechaDesde)        params = params.set('fechaDesde', filtros.fechaDesde);
-    if (filtros.fechaHasta)        params = params.set('fechaHasta', filtros.fechaHasta);
+    if (filtros.page != null)           params = params.set('page', filtros.page.toString());
+    if (filtros.juegoId != null)        params = params.set('juegoId', filtros.juegoId.toString());
+    if (filtros.nivel)                  params = params.set('nivel', filtros.nivel);
+    if (filtros.fechaDesde)             params = params.set('fechaDesde', filtros.fechaDesde);
+    if (filtros.fechaHasta)             params = params.set('fechaHasta', filtros.fechaHasta);
+    if (filtros.soloCompletadas != null) params = params.set('soloCompletadas', filtros.soloCompletadas.toString());
     return this.http.get<HistorialPage>(`${this.api}/reportes/perfil/${perfilId}/historial`, { params });
   }
 

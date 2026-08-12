@@ -1,5 +1,16 @@
 <div class="juego-wrapper">
 
+  <!-- ── Fondo animado (persistente en todos los estados) ─────────────── -->
+  <div class="sl-orb sl-o1" aria-hidden="true"></div>
+  <div class="sl-orb sl-o2" aria-hidden="true"></div>
+  <div class="sl-orb sl-o3" aria-hidden="true"></div>
+  <div class="sl-bg" aria-hidden="true">
+    <span class="sl-p sl-p1">A</span><span class="sl-p sl-p2">B</span>
+    <span class="sl-p sl-p3">?</span><span class="sl-p sl-p4">Z</span>
+    <span class="sl-p sl-p5">✦</span><span class="sl-p sl-p6">M</span>
+    <span class="sl-p sl-p7">✧</span><span class="sl-p sl-p8">E</span>
+  </div>
+
   <!-- ══ PANTALLA INICIO ══════════════════════════════════════════════════ -->
   @if (estado === 'inicio') {
     <div class="pantalla-inicio">
@@ -46,8 +57,11 @@
         <!-- Botón jugar -->
         <div class="inicio-botones">
           <button class="btn-empezar" (click)="iniciarJuego('FACIL')">🔤 ¡Empezar!</button>
-          <button class="btn-sonido" (click)="toggleSonido()" [title]="sonidoActivo ? 'Silenciar' : 'Activar sonido'">
+          <button class="btn-sonido" (click)="toggleSonido()" [title]="sonidoActivo ? 'Silenciar sonido' : 'Activar sonido'">
             {{ sonidoActivo ? '🔊' : '🔇' }}
+          </button>
+          <button class="btn-voz" (click)="toggleVoz()" [title]="voiceEnabled ? 'Silenciar a Pandi' : 'Activar voz de Pandi'">
+            {{ voiceEnabled ? '🗣️' : '🤐' }}
           </button>
         </div>
       </div>
@@ -61,7 +75,7 @@
 
       <!-- Barra superior -->
       <div class="juego-topbar">
-        <button class="btn-salir" (click)="volverInicio()">← Salir</button>
+        <button class="btn-salir" (click)="salirConResultados()">← Salir</button>
 
         <!-- Timer (CA-04) -->
         <div class="timer-area">
@@ -138,40 +152,57 @@
 
   <!-- ══ PANTALLA RESULTADO ═══════════════════════════════════════════════ -->
   @if (estado === 'completado' || estado === 'tiempo-agotado') {
-    <div class="pantalla-resultado">
+    <div class="pantalla-resultados">
       <div class="orb orb-1"></div>
       <div class="orb orb-2"></div>
 
-      <div class="resultado-card">
-        <div class="res-icono">{{ estado === 'completado' ? '🎉' : '⏰' }}</div>
-        <div class="res-espacio"></div>
-        <h2 class="res-titulo">{{ estado === 'completado' ? '¡Lo lograste!' : '¡Se acabó el tiempo!' }}</h2>
-
-        @if (estado === 'tiempo-agotado' && fraseMotivaconalActual) {
-          <p class="frase-motivacional">{{ fraseMotivaconalActual }}</p>
-        }
-
-        @if (subioNivel) {
-          <div class="ia-badge">
-            🤖 ¡Motor IA: nivel subido a <strong>{{ nivelSugerido }}</strong>!
-          </div>
-        }
-
-        <div class="res-stats">
-          <div class="res-stat">
-            <span class="rs-num verde">{{ palabrasEncontradasCount }}</span>
-            <span class="rs-label">Encontradas</span>
-          </div>
-          <div class="res-stat">
-            <span class="rs-num amarillo">{{ errores }}</span>
-            <span class="rs-label">Errores</span>
-          </div>
-          <div class="res-stat">
-            <span class="rs-num celeste">{{ formatTiempo(tiempoTotal - tiempoRestante) }}</span>
-            <span class="rs-label">Tiempo</span>
+      @if (confettiActivo) {
+        <div class="confetti-container" aria-hidden="true">
+          @for (p of confettiPiezas; track p.id) {
+            <div class="confeti" [style.left.%]="p.left" [style.background]="p.color"
+              [style.animation-delay.s]="p.delay" [style.animation-duration.s]="p.dur"
+              [style.width.px]="p.size" [style.height.px]="p.size*1.6"></div>
+          }
+        </div>
+      }
+      <div class="resultados-card">
+        <div class="fox-resultado-hero">
+          <img class="foxy-resultado-img" src="mascotas/pandi-portrait.png" alt="Pandi">
+          <div class="fox-resultado-trophy">{{ estado === 'completado' ? '🎉' : '⏰' }}</div>
+        </div>
+        <h2 class="resultado-titulo">{{ estado === 'completado' ? '¡Lo lograste!' : '¡Se acabó el tiempo!' }}</h2>
+        <div class="estrellas">
+          <span class="estrella"        [class.estrella-on]="palabrasEncontradasCount >= palabrasColocadas.length * 0.4">⭐</span>
+          <span class="estrella grande" [class.estrella-on]="palabrasEncontradasCount >= palabrasColocadas.length * 0.65">⭐</span>
+          <span class="estrella"        [class.estrella-on]="palabrasEncontradasCount >= palabrasColocadas.length * 0.85">⭐</span>
+        </div>
+        <div class="score-ring">
+          <svg viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="50" class="ring-bg"/>
+            <circle cx="60" cy="60" r="50" class="ring-fill"
+              [style.stroke-dasharray]="314"
+              [style.stroke-dashoffset]="314-(314*(palabrasEncontradasCount/(palabrasColocadas.length||1)))"/>
+          </svg>
+          <div class="score-texto">
+            <div class="score-num">{{ palabrasEncontradasCount }}/{{ palabrasColocadas.length }}</div>
+            <div class="score-lbl">palabras</div>
           </div>
         </div>
-
+        @if (subioNivel) {
+          <div class="ia-badge">🤖 Motor IA: nivel subido a <strong>{{ nivelSugerido }}</strong></div>
+        }
+        @if (estado === 'tiempo-agotado' && fraseMotivaconalActual) {
+          <div class="ia-badge" style="color:#94a3b8">💬 {{ fraseMotivaconalActual }}</div>
+        }
+        <div class="foxy-msg-final">
+          <img class="foxy-msg-avatar" src="mascotas/pandi-portrait.png" alt="Pandi">
+          <div class="foxy-msg-bubble">{{ mascotMsg }}</div>
+        </div>
+        <div class="metricas-row">
+          <div class="metrica"><div class="m-icon">✅</div><div class="m-val verde">{{ palabrasEncontradasCount }}</div><div class="m-lbl">Encontradas</div></div>
+          <div class="metrica"><div class="m-icon">❌</div><div class="m-val rojo">{{ errores }}</div><div class="m-lbl">Errores</div></div>
+          <div class="metrica"><div class="m-icon">⏱️</div><div class="m-val naranja">{{ formatTiempo(tiempoTotal - tiempoRestante) }}</div><div class="m-lbl">Tiempo</div></div>
+        </div>
         <div class="res-palabras">
           @for (pw of palabrasColocadas; track pw.palabra) {
             <span class="pw-badge" [class.pw-ok]="pw.encontrada" [class.pw-no]="!pw.encontrada">
@@ -179,14 +210,12 @@
             </span>
           }
         </div>
-
-        <div class="res-botones">
+        <div class="btns-final">
           @if (subioNivel && nivelSugerido) {
             <button class="btn-ia" (click)="subirNivel()">⬆️ Jugar en {{ nivelSugerido }}</button>
           }
-          <button class="btn-reintentar" (click)="jugarDeNuevo()">🔄 Jugar de nuevo</button>
-          <button class="btn-cambiar" (click)="volverInicio()">🎯 Cambiar tema</button>
-          <button class="btn-volver" (click)="volverLobby()">← Volver a juegos</button>
+          <button class="btn-repetir" (click)="jugarDeNuevo()">🔄 Jugar de nuevo</button>
+          <button class="btn-volver" (click)="volverLobby()">← Volver</button>
         </div>
       </div>
     </div>

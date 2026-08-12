@@ -230,6 +230,23 @@ export class HistoriaVivaComponent implements OnInit, OnDestroy {
   evaluacionesAbiertas:  { score: number; feedback: string }[] = [];
   feedbackActual:        string | null = null;
 
+  // ── Voz (niveles 1-3) ────────────────────────────────────────────────────────
+  grabandoVoz            = false;
+  transcripcionVoz       = '';
+  transcripcionVozCensurada = false;
+  errorMicrofono         = false;
+  enviandoVoz            = false;
+  feedbackVoz:           string | null = null;
+  feedbackVozCorrecto    = false;
+  private recognition:   any = null;
+
+  private readonly GROSERIAS = [
+    'mierda','puta','puto','putona','puton','pendejo','pendeja','idiota',
+    'estupido','estupida','imbecil','carajo','coño','joder','cabron','cabrona',
+    'verga','chinga','chingada','culero','culera','marica','maricón','maldito',
+    'maldita','culo','perra','perro maldito','hijo de puta','hdp',
+  ];
+
   // ── Métricas (CA-04) ────────────────────────────────────────────────────────
   tiempoInicioLectura  = 0;
   tiempoInicoPreguntas = 0;  // CA-05/CA-08: cuándo se mostró la pregunta actual
@@ -353,6 +370,7 @@ export class HistoriaVivaComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     window.speechSynthesis?.cancel();
     this.audioCtx?.close();
+    this.recognition?.stop();
   }
 
   // ── Getters ─────────────────────────────────────────────────────────────────
@@ -560,6 +578,11 @@ export class HistoriaVivaComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
+  salirConResultados(): void {
+    window.speechSynthesis?.cancel();
+    this.terminarJuego();
+  }
+
   volver(): void {
     window.speechSynthesis?.cancel();
     this.router.navigate(['/nino/juegos']);
@@ -655,6 +678,15 @@ export class HistoriaVivaComponent implements OnInit, OnDestroy {
     this.respuestaAbierta        = '';
     this.evaluandoRespuesta      = false;
     this.feedbackActual          = null;
+    // Voz
+    this.recognition?.stop();
+    this.grabandoVoz             = false;
+    this.transcripcionVoz        = '';
+    this.transcripcionVozCensurada = false;
+    this.errorMicrofono          = false;
+    this.enviandoVoz             = false;
+    this.feedbackVoz             = null;
+    this.feedbackVozCorrecto     = false;
   }
 
   // ── Nivel 4: evaluación de respuesta abierta por LLM ──────────────────────
@@ -708,4 +740,139 @@ export class HistoriaVivaComponent implements OnInit, OnDestroy {
   }
 
   private pick(arr: string[]): string { return arr[Math.floor(Math.random() * arr.length)]; }
+
+  // ── Voz: Speech Recognition ──────────────────────────────────────────────────
+
+  iniciarGrabacion(): void {
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) { this.errorMicrofono = true; this.cdr.detectChanges(); return; }
+    this.recognition?.stop();
+    this.grabandoVoz = true;
+    this.transcripcionVoz = '';
+    this.transcripcionVozCensurada = false;
+    this.errorMicrofono = false;
+    this.feedbackVoz = null;
+    this.cdr.detectChanges();
+
+    this.recognition = new SR();
+    this.recognition.lang = 'es-ES';
+    this.recognition.interimResults = false;
+    this.recognition.maxAlternatives = 1;
+
+    this.recognition.onresult = (event: any) => {
+      const raw: string = event.results[0][0].transcript ?? '';
+      const { texto, censurada } = this.filtrarGroserias(raw);
+      this.transcripcionVoz = texto;
+      this.transcripcionVozCensurada = censurada;
+      if (censurada) {
+        this.setMascota('encourage', '⚠️ Por favor usa un lenguaje adecuado.');
+        this.hablar('Por favor usa un lenguaje adecuado.');
+      }
+      this.grabandoVoz = false;
+      this.cdr.detectChanges();
+    };
+
+    this.recognition.onerror = () => {
+      this.grabandoVoz = false;
+      this.errorMicrofono = true;
+      this.cdr.detectChanges();
+    };
+
+    this.recognition.onend = () => {
+      this.grabandoVoz = false;
+      this.cdr.detectChanges();
+    };
+
+    this.recognition.start();
+  }
+
+  detenerGrabacion(): void {
+    this.recognition?.stop();
+    this.grabandoVoz = false;
+    this.cdr.detectChanges();
+  }
+
+  private filtrarGroserias(texto: string): { texto: string; censurada: boolean } {
+    let resultado = texto;
+    let censurada = false;
+    for (const g of this.GROSERIAS) {
+      const re = new RegExp(g, 'gi');
+      if (re.test(resultado)) { censurada = true; }
+      resultado = resultado.replace(re, '*'.repeat(g.length));
+    }
+    return { texto: resultado, censurada };
+  }
+
+  enviarRespuestaVoz(): void {
+    if (!this.transcripcionVoz || this.transcripcionVozCensurada) return;
+
+    const { correcto, opcionDetectada } = this.evaluarVozLocalmente(this.transcripcionVoz);
+    const p = this.preguntaActual!;
+
+    this.feedbackVozCorrecto = correcto;
+
+    if (correcto) {
+      this.preguntasCorrectas++;
+      const msg = '¡Correcto! ¡Dijiste la respuesta correcta! 🎉';
+      this.feedbackVoz = msg;
+      this.setMascota('celebrate', msg);
+      this.feedback.showCorrect();
+      this.hablar('¡Correcto!');
+      this.cdr.detectChanges();
+      setTimeout(() => { this.siguientePregunta(); this.cdr.detectChanges(); }, 2800);
+    } else {
+      this.intentosTotales++;
+      const tipo = p.tipo ?? '';
+      if (!this.tiposErradas.includes(tipo)) this.tiposErradas.push(tipo);
+      this.mostrandoPista = true;
+      const msg = opcionDetectada >= 0
+        ? `Mencionaste la opción ${this.LETRAS[opcionDetectada]}, pero no es la correcta. Lee la pista. 💡`
+        : 'No reconocí tu respuesta. Lee la pista e intenta con los botones. 💡';
+      this.feedbackVoz = msg;
+      this.setMascota('encourage', msg);
+      this.feedback.showIncorrect();
+      this.cdr.detectChanges();
+      setTimeout(() => {
+        this.transcripcionVoz = '';
+        this.feedbackVoz = null;
+        this.feedbackVozCorrecto = false;
+        this.cdr.detectChanges();
+      }, 3200);
+    }
+  }
+
+  private evaluarVozLocalmente(transcripcion: string): { correcto: boolean; opcionDetectada: number } {
+    const p = this.preguntaActual!;
+    if (!p.opciones || p.correcta === undefined) return { correcto: false, opcionDetectada: -1 };
+
+    const norm = (s: string) => s.toLowerCase()
+      .normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+
+    const trans = norm(transcripcion);
+
+    // 1. El niño dijo la letra ("la b", "b", "opcion b")
+    const letraMatch = trans.match(/\b(a|b|c)\b/);
+    if (letraMatch) {
+      const idx = ['a', 'b', 'c'].indexOf(letraMatch[1]);
+      if (idx >= 0) return { correcto: idx === p.correcta, opcionDetectada: idx };
+    }
+
+    // 2. Coincidencia por palabras clave con cada opción
+    const scores = p.opciones.map((opcion, idx) => {
+      const opNorm = norm(opcion);
+      const palabras = opNorm.split(' ').filter(w => w.length > 3);
+      if (!palabras.length) return { idx, score: 0 };
+      const hits = palabras.filter(w => trans.includes(w)).length;
+      return { idx, score: hits / palabras.length };
+    });
+
+    scores.sort((a, b) => b.score - a.score);
+    const mejor = scores[0];
+
+    // Umbral mínimo del 30% de palabras coincidentes
+    if (mejor.score < 0.30) return { correcto: false, opcionDetectada: -1 };
+
+    return { correcto: mejor.idx === p.correcta, opcionDetectada: mejor.idx };
+  }
 }

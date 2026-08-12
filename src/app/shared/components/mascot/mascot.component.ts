@@ -19,7 +19,7 @@ export const MASCOTAS: Record<string, MascotConfig> = {
   piezas:   { emoji: '🐯', name: 'Tigre', color: '#EF4444', imageSrc: '/mascotas/tigre-portrait.png' },
   ritmo:    { emoji: '🐵', name: 'Bongo', color: '#7C3AED', imageSrc: '/mascotas/bongo-portrait.png' },
   reaccion: { emoji: '🐸', name: 'Froggy', color: '#22C55E' },
-  juego7:   { emoji: '🦁', name: 'Leo',   color: '#F59E0B' },
+  juego7:   { emoji: '🦁', name: 'Leo',   color: '#F59E0B', imageSrc: '/mascotas/leo-portrait.png' },
   juego8:   { emoji: '🐨', name: 'Koby',  color: '#6366F1', imageSrc: '/mascotas/koby-portrait.png' },
   juego9:   { emoji: '🦄', name: 'Uni',   color: '#D946EF', imageSrc: '/mascotas/uni-portrait.png' },
   juego10:  { emoji: '🐶', name: 'Buddy', color: '#3B82F6', imageSrc: '/mascotas/buddy-portrait.png' },

@@ -104,6 +104,20 @@ const EXPERIMENTOS: ExperimentoLab[] = [
 
     emojiResultado: '🎈',
 
+    narracion:
+      '¡Mira lo que pasa! Cuando mezclamos bicarbonato y vinagre hacen un montón de burbujas. ' +
+      'Esas burbujas son un gas que puede inflar un globo. ' +
+      '¡Ahora inténtalo tú!',
+
+    pregunta: {
+      texto: 'Uni explicó que las burbujas son un gas. ¿Cómo se llama ese gas?',
+      opciones: [
+        { texto: 'Dióxido de carbono', emoji: '💨', correcta: true  },
+        { texto: 'Vapor de agua',      emoji: '🌊', correcta: false },
+        { texto: 'Fuego',              emoji: '🔥', correcta: false }
+      ]
+    },
+
     explicacionCientifica: {
       FACIL:
         'El bicarbonato y el vinagre forman burbujas de un gas llamado dióxido de carbono. Ese gas infla el globo.',
@@ -159,6 +173,20 @@ const EXPERIMENTOS: ExperimentoLab[] = [
       '¡Se formaron dos capas que permanecen separadas!',
 
     emojiResultado: '🌋',
+
+    narracion:
+      '¡Esto te va a encantar! El aceite y el agua nunca se mezclan, son como enemigos. ' +
+      'Si los pones juntos el aceite siempre queda flotando arriba. ' +
+      'Si le agregas colorante las gotitas de color bailan entre las dos capas. ¡Parece una lámpara de lava!',
+
+    pregunta: {
+      texto: 'Según Uni, ¿por qué el aceite siempre queda arriba del agua?',
+      opciones: [
+        { texto: 'Porque es menos denso', emoji: '🪶', correcta: true  },
+        { texto: 'Porque es más pesado',  emoji: '🏋️', correcta: false },
+        { texto: 'Porque tiene color',    emoji: '🎨', correcta: false }
+      ]
+    },
 
     explicacionCientifica: {
       FACIL:
@@ -216,6 +244,20 @@ const EXPERIMENTOS: ExperimentoLab[] = [
 
     emojiResultado: '💎',
 
+    narracion:
+      '¡Observa este truco! Cuando pones sal en agua la sal desaparece... pero no se va. ' +
+      'Se esconde dentro del agua. ' +
+      'Si el agua se evapora poquito a poquito la sal aparece de nuevo como cristallitos brillantes. ¡Como magia!',
+
+    pregunta: {
+      texto: 'Uni explicó que la sal se disuelve. ¿Qué pasa si el agua se evapora?',
+      opciones: [
+        { texto: 'La sal vuelve como cristales', emoji: '💎', correcta: true  },
+        { texto: 'La sal desaparece para siempre', emoji: '👻', correcta: false },
+        { texto: 'Se convierte en aceite',         emoji: '🫗', correcta: false }
+      ]
+    },
+
     explicacionCientifica: {
       FACIL:
         'La sal se disuelve en el agua. Cuando el agua se evapora, la sal vuelve a juntarse y forma cristales.',
@@ -271,6 +313,20 @@ const EXPERIMENTOS: ExperimentoLab[] = [
       '¡El color se extendió por toda el agua!',
 
     emojiResultado: '🌈',
+
+    narracion:
+      '¡El color puede viajar! Si mezclas agua con colorante el color se esparce solito por todo el líquido. ' +
+      'Las gotitas de color se mueven entre las gotitas de agua hasta colorearla toda. ' +
+      '¡Pruébalo y verás cómo el agua cambia de color!',
+
+    pregunta: {
+      texto: 'Según Uni, ¿cómo se llama cuando el colorante se esparce solo por el agua?',
+      opciones: [
+        { texto: 'Difusión',    emoji: '🌊', correcta: true  },
+        { texto: 'Explosión',   emoji: '💥', correcta: false },
+        { texto: 'Evaporación', emoji: '☁️', correcta: false }
+      ]
+    },
 
     explicacionCientifica: {
       FACIL:

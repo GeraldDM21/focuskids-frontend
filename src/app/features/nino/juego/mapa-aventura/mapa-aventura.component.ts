@@ -22,6 +22,18 @@ const TIEMPO_MAX_MS = 8 * 60 * 1000; // CA-05: maximo 8 minutos
   template: `
     <div class="game-wrapper">
 
+      <!-- ── Fondo animado (persistente en todos los estados) ─────────────── -->
+      <div class="ma-grid" aria-hidden="true"></div>
+      <div class="ma-bg-orb ma-o1" aria-hidden="true"></div>
+      <div class="ma-bg-orb ma-o2" aria-hidden="true"></div>
+      <div class="ma-bg-orb ma-o3" aria-hidden="true"></div>
+      <div class="ma-bg" aria-hidden="true">
+        <span class="ma-p ma-p1">★</span><span class="ma-p ma-p2">⊕</span>
+        <span class="ma-p ma-p3">◎</span><span class="ma-p ma-p4">△</span>
+        <span class="ma-p ma-p5">⊗</span><span class="ma-p ma-p6">✦</span>
+        <span class="ma-p ma-p7">☆</span><span class="ma-p ma-p8">⊕</span>
+      </div>
+
       <!-- ══ INICIO ══════════════════════════════════════════ -->
       @if (estado === 'inicio') {
         <div class="pantalla-inicio">
@@ -215,8 +227,7 @@ const TIEMPO_MAX_MS = 8 * 60 * 1000; // CA-05: maximo 8 minutos
 
           <div class="resultados-card">
             <div class="fox-resultado-hero">
-              <div class="fox-resultado-ring"></div>
-              <div class="fox-resultado-face">🐶</div>
+              <img class="foxy-resultado-img" src="mascotas/Buddy-portrait.png" alt="Buddy">
               <div class="fox-resultado-trophy">{{ trofeoEmoji }}</div>
             </div>
 
@@ -242,7 +253,7 @@ const TIEMPO_MAX_MS = 8 * 60 * 1000; // CA-05: maximo 8 minutos
             </div>
 
             <div class="foxy-msg-final">
-              <div class="foxy-msg-avatar">🐶</div>
+              <img class="foxy-msg-avatar-img" src="mascotas/Buddy-portrait.png" alt="Buddy">
               <div class="foxy-msg-bubble">{{ mensajeFinal }}</div>
             </div>
 
@@ -443,17 +454,12 @@ const TIEMPO_MAX_MS = 8 * 60 * 1000; // CA-05: maximo 8 minutos
     }
 
     .fox-resultado-hero { position: relative; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px; width: 120px; height: 120px; }
-    .fox-resultado-ring {
-      position: absolute; inset: -6px; border-radius: 50%;
-      background: conic-gradient(#60a5fa, #34d399, #fbbf24, #f87171, #60a5fa);
-      animation: spinRing 5s linear infinite; filter: blur(1px);
-    }
-    .fox-resultado-face {
-      font-size: 88px; line-height: 1; position: relative; z-index: 1;
-      animation: bounce 2s ease-in-out infinite;
-      filter: drop-shadow(0 0 20px rgba(96,165,250,.7));
-      background: rgba(11,35,64,.5); border-radius: 50%;
-      width: 110px; height: 110px; display: flex; align-items: center; justify-content: center;
+    .foxy-resultado-img {
+      width:120px; height:auto;
+      filter:drop-shadow(0 0 20px rgba(96,165,250,.6));
+      animation:bounce 2s ease-in-out infinite;
+      -webkit-mask-image:radial-gradient(ellipse 82% 90% at 50% 52%, black 55%, transparent 100%);
+      mask-image:radial-gradient(ellipse 82% 90% at 50% 52%, black 55%, transparent 100%);
     }
     .fox-resultado-trophy { position: absolute; top: -10px; right: -10px; z-index: 2; font-size: 36px; animation: bounce 1.5s ease-in-out infinite .3s; }
     @keyframes spinRing { from{transform:rotate(0)} to{transform:rotate(360deg)} }
@@ -477,7 +483,7 @@ const TIEMPO_MAX_MS = 8 * 60 * 1000; // CA-05: maximo 8 minutos
     .score-lbl { font-size: 11px; color: #64748b; }
 
     .foxy-msg-final { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 20px; text-align: left; }
-    .foxy-msg-avatar { font-size: 36px; flex-shrink: 0; }
+    .foxy-msg-avatar-img { width:48px; height:auto; flex-shrink:0; filter:drop-shadow(0 0 8px rgba(96,165,250,.5)); -webkit-mask-image:radial-gradient(ellipse 82% 90% at 50% 52%, black 55%, transparent 100%); mask-image:radial-gradient(ellipse 82% 90% at 50% 52%, black 55%, transparent 100%); }
     .foxy-msg-bubble { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: 16px; padding: 12px 14px; font-size: 13.5px; color: #cbd5e1; line-height: 1.5; flex: 1; }
 
     .metricas-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 24px; }
@@ -495,6 +501,29 @@ const TIEMPO_MAX_MS = 8 * 60 * 1000; // CA-05: maximo 8 minutos
     .btn-volver:hover { background: rgba(255,255,255,.13); color: #f1f5f9; }
 
     @keyframes slideUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+
+    /* ── Grilla de coordenadas — distintivo de este juego ───────────────── */
+    .ma-grid {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background-image:
+        linear-gradient(rgba(96,165,250,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(96,165,250,.04) 1px, transparent 1px);
+      background-size: 60px 60px;
+      animation: maGridFade 20s ease-in-out infinite;
+    }
+    @keyframes maGridFade { 0%,100%{opacity:.6} 50%{opacity:1} }
+    /* ══ FONDO ANIMADO — MAPA AVENTURA ════════════════════════════════════ */
+    .ma-bg-orb { position: fixed; border-radius: 50%; filter: blur(90px); pointer-events: none; z-index: 0; animation: maOrbPulse 10s ease-in-out infinite; }
+    .ma-o1 { width: 500px; height: 500px; top: -160px; left: -110px; background: radial-gradient(circle, rgba(96,165,250,.28), transparent 70%); animation-delay: 0s; }
+    .ma-o2 { width: 370px; height: 370px; bottom: -130px; right: -90px; background: radial-gradient(circle, rgba(52,211,153,.22), transparent 70%); animation-delay: 4s; }
+    .ma-o3 { width: 270px; height: 270px; top: 40%; left: 58%; background: radial-gradient(circle, rgba(45,212,191,.18), transparent 70%); animation-delay: 8s; }
+    @keyframes maOrbPulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.1);} }
+    .ma-bg { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+    .ma-p { position: absolute; font-size: 20px; color: rgba(147,197,253,.2); animation: maPFloat var(--d,13s) ease-in-out infinite var(--dl,0s); }
+    @keyframes maPFloat { 0%,100%{transform:translateY(0) rotate(-2deg);opacity:.1;} 50%{transform:translateY(-22px) rotate(5deg);opacity:.25;} }
+    .ma-p1{top:7%;left:10%;--d:11s;--dl:0s;} .ma-p2{top:22%;left:87%;--d:14s;--dl:2s;} .ma-p3{top:57%;left:5%;--d:10s;--dl:4s;}
+    .ma-p4{top:74%;left:78%;--d:13s;--dl:1s;font-size:24px;} .ma-p5{top:38%;left:48%;--d:9s;--dl:5s;font-size:14px;}
+    .ma-p6{top:13%;left:63%;--d:16s;--dl:3s;font-size:16px;} .ma-p7{top:84%;left:31%;--d:12s;--dl:7s;} .ma-p8{top:47%;left:92%;--d:15s;--dl:6s;font-size:18px;}
   `]
 })
 export class MapaAventuraComponent implements OnInit, OnDestroy {

@@ -1,5 +1,16 @@
 <div class="juego-wrapper">
 
+  <!-- ── Fondo animado (persistente en todos los estados) ─────────────── -->
+  <div class="pt-orb pt-o1" aria-hidden="true"></div>
+  <div class="pt-orb pt-o2" aria-hidden="true"></div>
+  <div class="pt-orb pt-o3" aria-hidden="true"></div>
+  <div class="pt-bg" aria-hidden="true">
+    <span class="pt-p pt-p1">△</span><span class="pt-p pt-p2">▢</span>
+    <span class="pt-p pt-p3">⬡</span><span class="pt-p pt-p4">◆</span>
+    <span class="pt-p pt-p5">✦</span><span class="pt-p pt-p6">★</span>
+    <span class="pt-p pt-p7">✧</span><span class="pt-p pt-p8">◇</span>
+  </div>
+
   <!-- ══ PANTALLA INICIO ══════════════════════════════════════════════════ -->
   @if (estado === 'inicio') {
     <div class="pantalla-inicio">
@@ -45,7 +56,8 @@
 
         <div class="inicio-botones">
           <button class="btn-empezar" (click)="iniciarJuego(nivelActual)">🧩 ¡Empezar!</button>
-          <button class="btn-sonido" (click)="toggleSonido()">{{ sonidoActivo ? '🔊' : '🔇' }}</button>
+          <button class="btn-sonido" (click)="toggleSonido()" [title]="sonidoActivo ? 'Silenciar sonido' : 'Activar sonido'">{{ sonidoActivo ? '🔊' : '🔇' }}</button>
+          <button class="btn-voz" (click)="toggleVoz()" [title]="voiceEnabled ? 'Silenciar a Tigre' : 'Activar voz de Tigre'">{{ voiceEnabled ? '🗣️' : '🤐' }}</button>
         </div>
       </div>
     </div>
@@ -56,7 +68,7 @@
     <div class="pantalla-juego">
 
       <div class="juego-topbar">
-        <button class="btn-salir" (click)="volverInicio()">← Salir</button>
+        <button class="btn-salir" (click)="salirConResultados()">← Salir</button>
         <div class="timer-area">
           <div class="timer-bar-bg">
             <div class="timer-bar-fill" [style.width.%]="timerPorcentaje" [style.background]="timerColor"></div>
@@ -139,36 +151,60 @@
 
   <!-- ══ PANTALLA RESULTADO ════════════════════════════════════════════════ -->
   @if (estado === 'completado' || estado === 'tiempo-agotado') {
-    <div class="pantalla-resultado">
-      <div class="orb orb-1"></div><div class="orb orb-2"></div>
-      <div class="resultado-card">
-        <div class="res-icono">{{ estado === 'completado' ? '🎉' : '⏰' }}</div>
-        <div class="res-espacio"></div>
-        <h2 class="res-titulo">{{ estado === 'completado' ? '¡Lo lograste!' : '¡Se acabó el tiempo!' }}</h2>
-
-        @if (estado === 'tiempo-agotado' && fraseMotivaconalActual) {
-          <p class="frase-motivacional">{{ fraseMotivaconalActual }}</p>
+    <div class="pantalla-resultados">
+      @if (confettiActivo) {
+        <div class="confetti-container" aria-hidden="true">
+          @for (p of confettiPiezas; track p.id) {
+            <div class="confeti" [style.left.%]="p.left" [style.background]="p.color"
+              [style.animation-delay.s]="p.delay" [style.animation-duration.s]="p.dur"
+              [style.width.px]="p.size" [style.height.px]="p.size*1.6"></div>
+          }
+        </div>
+      }
+      <div class="resultados-card">
+        <div class="fox-resultado-hero">
+          <img class="foxy-resultado-img" src="mascotas/tigre-portrait.png" alt="Tigre">
+          <div class="fox-resultado-trophy">{{ estado === 'completado' ? '🎉' : '⏰' }}</div>
+        </div>
+        <h2 class="resultado-titulo">{{ estado === 'completado' ? '¡Lo lograste!' : '¡Se acabó el tiempo!' }}</h2>
+        <div class="estrellas">
+          <span class="estrella"        [class.estrella-on]="piezasColocadas >= slots.length * 0.4">⭐</span>
+          <span class="estrella grande" [class.estrella-on]="piezasColocadas >= slots.length * 0.7">⭐</span>
+          <span class="estrella"        [class.estrella-on]="piezasColocadas >= slots.length">⭐</span>
+        </div>
+        <div class="score-ring">
+          <svg viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="50" class="ring-bg"/>
+            <circle cx="60" cy="60" r="50" class="ring-fill"
+              [style.stroke-dasharray]="314"
+              [style.stroke-dashoffset]="314-(314*(piezasColocadas/(slots.length||1)))"/>
+          </svg>
+          <div class="score-texto">
+            <div class="score-num">{{ piezasColocadas }}/{{ slots.length }}</div>
+            <div class="score-lbl">piezas</div>
+          </div>
+        </div>
+        @if (subioNivel && nivelSugerido) {
+          <div class="ia-badge">🤖 Motor IA: nivel subido a <strong>{{ nivelSugerido }}</strong></div>
         }
         @if (estado === 'completado' && puntosBonus > 0) {
-          <div class="bonus-badge">⚡ +{{ puntosBonus }} puntos bonus por rapidez!</div>
+          <div class="ia-badge" style="color:#4ade80">⚡ +{{ puntosBonus }} puntos bonus por rapidez</div>
         }
-        @if (subioNivel && nivelSugerido) {
-          <div class="ia-badge">🤖 ¡Motor IA: nivel subido a <strong>{{ nivelSugerido }}</strong>!</div>
-        }
-
-        <div class="res-stats">
-          <div class="res-stat"><span class="rs-num verde">{{ piezasColocadas }}</span><span class="rs-label">Encajadas</span></div>
-          <div class="res-stat"><span class="rs-num celeste">{{ rotaciones }}</span><span class="rs-label">Rotaciones</span></div>
-          <div class="res-stat"><span class="rs-num amarillo">{{ fallidos }}</span><span class="rs-label">Fallidos</span></div>
+        <div class="foxy-msg-final">
+          <img class="foxy-msg-avatar" src="mascotas/tigre-portrait.png" alt="Tigre">
+          <div class="foxy-msg-bubble">{{ mascotMsg }}</div>
         </div>
-
-        <div class="res-botones">
+        <div class="metricas-row">
+          <div class="metrica"><div class="m-icon">🧩</div><div class="m-val verde">{{ piezasColocadas }}</div><div class="m-lbl">Encajadas</div></div>
+          <div class="metrica"><div class="m-icon">🔄</div><div class="m-val azul">{{ rotaciones }}</div><div class="m-lbl">Rotaciones</div></div>
+          <div class="metrica"><div class="m-icon">❌</div><div class="m-val rojo">{{ fallidos }}</div><div class="m-lbl">Fallidos</div></div>
+        </div>
+        <div class="btns-final">
           @if (subioNivel && nivelSugerido) {
             <button class="btn-ia" (click)="subirNivel()">⬆️ Jugar en {{ nivelSugerido }}</button>
           }
-          <button class="btn-reintentar" (click)="jugarDeNuevo()">🔄 Jugar de nuevo</button>
-          <button class="btn-cambiar"    (click)="volverInicio()">🎯 Cambiar nivel</button>
-          <button class="btn-volver"     (click)="volverLobby()">← Volver a juegos</button>
+          <button class="btn-repetir" (click)="jugarDeNuevo()">🔄 Jugar de nuevo</button>
+          <button class="btn-volver" (click)="volverLobby()">← Volver</button>
         </div>
       </div>
     </div>

@@ -1,68 +1,59 @@
 <div class="juego-wrapper">
 
+  <!-- ── Fondo animado (persistente en todos los estados) ─────────────── -->
+  <div class="fe-orb fe-o1" aria-hidden="true"></div>
+  <div class="fe-orb fe-o2" aria-hidden="true"></div>
+  <div class="fe-orb fe-o3" aria-hidden="true"></div>
+  <div class="fe-rings" aria-hidden="true">
+    <div class="fe-ring fe-r1"></div>
+    <div class="fe-ring fe-r2"></div>
+    <div class="fe-ring fe-r3"></div>
+    <div class="fe-ring fe-r4"></div>
+  </div>
+
   @if (estado === 'inicio') {
   <div class="pantalla-inicio">
+    <img class="bg-escena" src="/mascotas/leo-escena.png" alt="Escena de Leo en Foco Extremo">
+    <div class="inicio-velo"></div>
 
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
-    <div class="orb orb-3"></div>
+    <button type="button" class="btn-volver-inicio" (click)="volverLobby()">← Volver</button>
 
-    <div class="inicio-content">
-
-      <div class="mascota-area">
-        <div class="sparkles">
-          <span class="sp sp-1">✨</span>
-          <span class="sp sp-2">⭐</span>
-          <span class="sp sp-3">💫</span>
-          <span class="sp sp-4">✨</span>
+    <!-- Leo explica las instrucciones desde su burbuja -->
+    <div class="leo-habla">
+      <div class="habla-bubble">
+        <p class="habla-saludo">¡Hola! Soy <strong>Leo</strong> 🦁</p>
+        <p class="habla-intro">Para jugar Foco Extremo:</p>
+        <div class="habla-pasos">
+          <div class="habla-paso"><span class="h-ico">🎯</span><span>Verás un dibujo objetivo antes de empezar</span></div>
+          <div class="habla-paso"><span class="h-ico">👆</span><span>Toca o presiona espacio SOLO con ese dibujo</span></div>
+          <div class="habla-paso"><span class="h-ico">🚫</span><span>Si aparece otro dibujo, no toques nada</span></div>
+          <div class="habla-paso"><span class="h-ico">🐢</span><span>Si te equivocas mucho, iremos más despacio</span></div>
         </div>
-        <div class="mascota-ring">
-          <div class="mascota-avatar">🦄</div>
-        </div>
-        <div class="mascota-bubble">
-          ¡Hola! Soy <strong>Uni</strong> 🦄<br>
-          ¡Vamos a entrenar tu atención y tu autocontrol! 🎯
-        </div>
+        <p class="habla-animo">¡Vamos a entrenar tu atención! ✨</p>
       </div>
+      <div class="habla-tail"></div>
+    </div>
 
+    <!-- Panel derecho — título y botón -->
+    <div class="inicio-panel">
       <h1 class="titulo-juego">
-        <span class="titulo-parte1">Foco</span>
-        <span class="titulo-parte2"> Extremo</span>
+        <span class="titulo-grad">Foco</span><span class="titulo-blanco"> Extremo</span>
       </h1>
-      <p class="titulo-sub">Presiona solo cuando aparezca tu objetivo</p>
+      <p class="subtitulo-juego">Presiona solo cuando aparezca tu objetivo</p>
 
-      <div class="instrucciones-grid">
-        <div class="instruccion-card">
-          <span class="ic-num">1</span>
-          <span class="ic-emoji">🎯</span>
-          <span class="ic-texto">Verás un dibujo objetivo antes de empezar</span>
-        </div>
-        <div class="instruccion-card">
-          <span class="ic-num">2</span>
-          <span class="ic-emoji">👆</span>
-          <span class="ic-texto">Toca o presiona espacio SOLO con ese dibujo</span>
-        </div>
-        <div class="instruccion-card">
-          <span class="ic-num">3</span>
-          <span class="ic-emoji">🚫</span>
-          <span class="ic-texto">Si aparece otro dibujo, no toques nada</span>
-        </div>
-        <div class="instruccion-card">
-          <span class="ic-num">4</span>
-          <span class="ic-emoji">🐢</span>
-          <span class="ic-texto">Si te equivocas mucho, iremos más despacio</span>
-        </div>
-      </div>
+      <button class="btn-empezar" (click)="iniciarJuego('FACIL')">
+        ⚡ ¡Empezar!
+        <span class="btn-shine"></span>
+      </button>
 
-      <div class="inicio-botones">
-        <button class="btn-empezar" (click)="iniciarJuego('FACIL')">
-          ⚡ ¡Empezar!
-        </button>
-        <button class="btn-sonido" (click)="toggleSonido()" [title]="sonidoActivo ? 'Silenciar' : 'Activar sonido'">
+      <div class="volumen-footer">
+        <button class="btn-sonido" (click)="toggleSonido()" [title]="sonidoActivo ? 'Silenciar sonido' : 'Activar sonido'">
           {{ sonidoActivo ? '🔊' : '🔇' }}
         </button>
+        <button class="btn-voz" (click)="toggleVoz()" [title]="voiceEnabled ? 'Silenciar a Leo' : 'Activar voz de Leo'">
+          {{ voiceEnabled ? '🗣️' : '🤐' }}
+        </button>
       </div>
-
     </div>
   </div>
   }
@@ -71,7 +62,7 @@
   <div class="pantalla-juego">
 
     <div class="juego-topbar">
-      <button class="btn-salir" (click)="volverInicio()">← Salir</button>
+      <button class="btn-salir" (click)="salirConResultados()">← Salir</button>
 
       <div class="timer-area">
         <div class="timer-bar-bg">
@@ -134,62 +125,72 @@
   }
 
   @if (estado === 'completado' && resultado) {
-  <div class="pantalla-resultado">
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
-
-    <div class="resultado-card">
-      <div class="res-icono">🎉</div>
-      <div class="res-espacio"></div>
-      <h2 class="res-titulo">¡Sesión completada!</h2>
-
+  <div class="pantalla-resultados">
+      @if (confettiActivo) {
+        <div class="confetti-container" aria-hidden="true">
+          @for (p of confettiPiezas; track p.id) {
+            <div class="confeti" [style.left.%]="p.left" [style.background]="p.color"
+              [style.animation-delay.s]="p.delay" [style.animation-duration.s]="p.dur"
+              [style.width.px]="p.size" [style.height.px]="p.size*1.6"></div>
+          }
+        </div>
+      }
+    <div class="resultados-card">
+      <div class="fox-resultado-hero">
+        <img class="foxy-resultado-img" src="mascotas/leo-portrait.png" alt="Leo">
+        <div class="fox-resultado-trophy">🎉</div>
+      </div>
+      <h2 class="resultado-titulo">¡Sesión completada!</h2>
+      <div class="estrellas">
+        <span class="estrella"        [class.estrella-on]="resultado.indicePrecision >= 40">⭐</span>
+        <span class="estrella grande" [class.estrella-on]="resultado.indicePrecision >= 65">⭐</span>
+        <span class="estrella"        [class.estrella-on]="resultado.indicePrecision >= 85">⭐</span>
+      </div>
+      <div class="score-ring">
+        <svg viewBox="0 0 120 120">
+          <circle cx="60" cy="60" r="50" class="ring-bg"/>
+          <circle cx="60" cy="60" r="50" class="ring-fill"
+            [style.stroke-dasharray]="314"
+            [style.stroke-dashoffset]="314-(314*resultado.indicePrecision/100)"/>
+        </svg>
+        <div class="score-texto">
+          <div class="score-num">{{ resultado.indicePrecision }}%</div>
+          <div class="score-lbl">precisión</div>
+        </div>
+      </div>
       @if (seRedujoCadencia) {
-      <div class="ia-badge">
-        🤖 Motor IA: bajamos la velocidad para ayudarte a pensar mejor
-      </div>
+        <div class="ia-badge">🤖 Motor IA: bajamos la velocidad para ayudarte a pensar mejor</div>
       }
-
       @if (nivelSugerido) {
-      <div class="ia-badge">
-        🤖 ¡Motor IA: nivel sugerido <strong>{{ nivelSugerido }}</strong>!
-      </div>
+        <div class="ia-badge">🤖 Motor IA: nivel sugerido <strong>{{ nivelSugerido }}</strong></div>
       }
-
-      <div class="res-stats">
-        <div class="res-stat">
-          <span class="rs-num verde">{{ resultado.indicePrecision }}%</span>
-          <span class="rs-label">Precisión</span>
-        </div>
-        <div class="res-stat">
-          <span class="rs-num celeste">{{ resultado.indiceControlImpulsos }}%</span>
-          <span class="rs-label">Control de impulsos</span>
-        </div>
-        <div class="res-stat">
-          <span class="rs-num amarillo">{{ resultado.tiempoReaccionPromedioMs ?? '—' }}</span>
-          <span class="rs-label">Reacción (ms)</span>
-        </div>
+      <div class="foxy-msg-final">
+        <img class="foxy-msg-avatar" src="mascotas/leo-portrait.png" alt="Leo">
+        <div class="foxy-msg-bubble">{{ mascotMsg }}</div>
       </div>
-
-      <div class="res-detalle">
+      <div class="metricas-row">
+        <div class="metrica"><div class="m-icon">🎯</div><div class="m-val verde">{{ resultado.indicePrecision }}%</div><div class="m-lbl">Precisión</div></div>
+        <div class="metrica"><div class="m-icon">🧘</div><div class="m-val azul">{{ resultado.indiceControlImpulsos }}%</div><div class="m-lbl">Control</div></div>
+        <div class="metrica"><div class="m-icon">⚡</div><div class="m-val amarillo">{{ resultado.tiempoReaccionPromedioMs ?? '—' }}</div><div class="m-lbl">Reacción ms</div></div>
+      </div>
+      <div class="res-detalle" style="margin-bottom:20px; display:flex; flex-wrap:wrap; gap:6px; justify-content:center;">
         <span class="pw-badge pw-ok">✓ {{ resultado.aciertos }} aciertos</span>
         <span class="pw-badge pw-no">✗ {{ resultado.falsasAlarmas }} falsas alarmas</span>
         <span class="pw-badge pw-omision">· {{ resultado.omisiones }} omisiones</span>
       </div>
-
-      <div class="res-botones">
+      <div class="btns-final">
         @if (nivelSugerido) {
-        <button class="btn-ia" (click)="subirNivel()">⬆️ Jugar en {{ nivelSugerido }}</button>
+          <button class="btn-ia" (click)="subirNivel()">⬆️ Jugar en {{ nivelSugerido }}</button>
         }
-        <button class="btn-reintentar" (click)="jugarDeNuevo()">🔄 Jugar de nuevo</button>
-        <button class="btn-cambiar" (click)="volverInicio()">🎯 Elegir de nuevo</button>
-        <button class="btn-volver" (click)="volverLobby()">← Volver a juegos</button>
+        <button class="btn-repetir" (click)="jugarDeNuevo()">🔄 Jugar de nuevo</button>
+        <button class="btn-volver" (click)="volverLobby()">← Volver</button>
       </div>
     </div>
   </div>
   }
 
   @if (estado === 'jugando') {
-  <app-mascot game="foco" [mood]="mascotMood" [message]="mascotMsg"></app-mascot>
+  <app-mascot game="juego7" [mood]="mascotMood" [message]="mascotMsg"></app-mascot>
   }
 
 </div>

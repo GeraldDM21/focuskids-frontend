@@ -6,6 +6,7 @@ import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { DocenteService, AlumnoDocente, Asignacion } from '../docente.service';
 import { SesionJuego, Metrica } from '../../padre/padre.service';
+import { MisionService, MisionReclamada } from '../../../core/services/mision.service';
 import { FormsModule } from '@angular/forms';
 import { EvolucionChartComponent } from '../../../shared/components/evolucion-chart/evolucion-chart.component';
 import { CampanaNotificacionesComponent } from '../../../shared/components/campana-notificaciones/campana-notificaciones.component';
@@ -67,6 +68,16 @@ const JUEGO_ICO: Record<string, string> = {
   'Foco Extremo': '🎯',
   'Cascada Numérica': '🔢',
 };
+
+const MISIONES_DEF = [
+  { icono:'🚀', titulo:'¡Misión de Atención!',  categoria:'Atención'   },
+  { icono:'🔢', titulo:'¡Reto de Cálculo!',      categoria:'Cálculo'    },
+  { icono:'🧠', titulo:'¡Desafío de Memoria!',   categoria:'Memoria'    },
+  { icono:'📖', titulo:'¡Día de Lectura!',        categoria:'Lectura'    },
+  { icono:'📝', titulo:'¡Reto de Lenguaje!',      categoria:'Lenguaje'   },
+  { icono:'⚡', titulo:'¡Maratón del día!',       categoria:'Atención'   },
+  { icono:'🧩', titulo:'¡Reto de Percepción!',   categoria:'Percepción' },
+];
 
 @Component({
   selector: 'app-docente-dashboard',
@@ -359,6 +370,56 @@ const JUEGO_ICO: Record<string, string> = {
                   </div>
                 }
               </div>
+            }
+          </div>
+
+          <!-- Logros por alumno -->
+          <div class="logros-card">
+            <h3 class="card-title">🎖️ Logros por alumno</h3>
+
+            <!-- Selector de alumno -->
+            <div class="logros-pills">
+              @for (e of estudiantes; track e.id) {
+                <button class="logro-pill"
+                        [class.logro-pill-on]="alumnoLogrosSeleccionado?.id === e.id"
+                        (click)="verLogrosAlumno(e)">
+                  {{ e.avatar }} {{ e.nombre }}
+                </button>
+              }
+            </div>
+
+            <!-- Detalle del alumno seleccionado -->
+            @if (alumnoLogrosSeleccionado) {
+              @if (loadingLogros) {
+                <div class="mini-empty"><p>Cargando logros…</p></div>
+              } @else if (logrosAlumno.length === 0) {
+                <div class="mini-empty">
+                  <span style="font-size:32px">🎯</span>
+                  <p>{{ alumnoLogrosSeleccionado.nombre }} aún no ha reclamado logros.</p>
+                </div>
+              } @else {
+                <div class="logro-alumno-grid">
+                  @for (m of logrosAlumno; track m.id) {
+                    <div class="la-card">
+                      <div class="la-ico">{{ misionIco(m.misionIndex) }}</div>
+                      <div class="la-titulo">{{ misionTitulo(m.misionIndex) }}</div>
+                      <div class="la-categoria">{{ misionCategoria(m.misionIndex) }}</div>
+                      <div class="la-recompensa">{{ m.recompensa }}</div>
+                      <div class="la-fecha">{{ m.fecha | date:'dd MMM yyyy' }}</div>
+                    </div>
+                  }
+                </div>
+              }
+            } @else {
+              <div class="mini-empty">
+                <span style="font-size:32px">👆</span>
+                <p>Selecciona un alumno para ver sus logros.</p>
+              </div>
+            }
+          </div>
+
+        </div>
+      }
 
               <div class="rep-card">
                 <h3 class="card-title">Distribución de estados</h3>
@@ -1527,111 +1588,42 @@ const JUEGO_ICO: Record<string, string> = {
         color: #6b7280;
       }
 
-      /* ── Logros ── */
-      .logros-wrap {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-      }
-      .podio-card,
-      .logros-card {
-        background: white;
-        border-radius: 18px;
-        padding: 22px;
-        box-shadow: 0 2px 10px rgba(21, 128, 61, 0.07);
-      }
-      .podio {
-        display: flex;
-        align-items: flex-end;
-        justify-content: center;
-        gap: 20px;
-        padding: 20px 0 0;
-      }
-      .pod-col {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 6px;
-      }
-      .pod-av {
-        font-size: 38px;
-      }
-      .pod-av.large {
-        font-size: 52px;
-      }
-      .pod-name {
-        font-size: 13px;
-        font-weight: 800;
-        color: #334155;
-      }
-      .pod-xp {
-        font-size: 12px;
-        font-weight: 700;
-        color: #94a3b8;
-      }
-      .pod-xp.gold {
-        color: #d97706;
-      }
-      .pod-pedestal {
-        font-size: 28px;
-        margin-top: 4px;
-      }
-      .p1 {
-        font-size: 34px;
-      }
-      .logro-list {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-      }
-      .logro-row {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 12px 0;
-        border-bottom: 1px solid #f0fdf4;
-      }
-      .logro-row:last-child {
-        border-bottom: none;
-      }
-      .lo-ico {
-        font-size: 26px;
-        flex-shrink: 0;
-      }
-      .lo-body {
-        flex: 1;
-      }
-      .lo-nombre {
-        font-size: 13px;
-        font-weight: 800;
-        color: #334155;
-      }
-      .lo-desc {
-        font-size: 11.5px;
-        color: #94a3b8;
-        margin-top: 2px;
-      }
-      .lo-quien {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        flex-shrink: 0;
-      }
-      .lo-av {
-        font-size: 18px;
-      }
-      .lo-alumno {
-        font-size: 12px;
-        font-weight: 700;
-        color: #15803d;
-      }
-      .lo-fecha {
-        font-size: 11px;
-        color: #9ca3af;
-        flex-shrink: 0;
-        min-width: 60px;
-        text-align: right;
-      }
+    /* ── Logros ── */
+    .logros-wrap { display:flex; flex-direction:column; gap:16px; }
+    .podio-card, .logros-card { background:white; border-radius:18px; padding:22px; box-shadow:0 2px 10px rgba(21,128,61,.07); }
+    .logros-pills { display:flex; flex-wrap:wrap; gap:8px; margin:14px 0 18px; }
+    .logro-pill { background:#F3F0FF; color:#5B21B6; border:2px solid transparent; border-radius:20px;
+                  padding:6px 14px; font-size:13px; font-weight:600; cursor:pointer; transition:all .15s; font-family:inherit; }
+    .logro-pill:hover { border-color:#7C3AED; }
+    .logro-pill-on { background:linear-gradient(135deg,#4F46E5,#7C3AED); color:white; border-color:transparent; }
+    .logro-alumno-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px; margin-top:4px; }
+    .la-card { background:#F8F7FF; border-radius:14px; padding:16px 14px; display:flex; flex-direction:column;
+               align-items:center; gap:6px; text-align:center; border:1px solid #EDE9FE; }
+    .la-ico { font-size:2rem; }
+    .la-titulo { font-size:12px; font-weight:700; color:#1E1B4B; line-height:1.3; }
+    .la-categoria { font-size:10px; font-weight:600; color:#7C3AED; background:#EDE9FE; border-radius:8px; padding:2px 8px; }
+    .la-recompensa { font-size:12px; color:#374151; }
+    .la-fecha { font-size:11px; color:#94A3B8; }
+    .podio { display:flex; align-items:flex-end; justify-content:center; gap:20px; padding:20px 0 0; }
+    .pod-col { display:flex; flex-direction:column; align-items:center; gap:6px; }
+    .pod-av { font-size:38px; }
+    .pod-av.large { font-size:52px; }
+    .pod-name { font-size:13px; font-weight:800; color:#334155; }
+    .pod-xp { font-size:12px; font-weight:700; color:#94A3B8; }
+    .pod-xp.gold { color:#D97706; }
+    .pod-pedestal { font-size:28px; margin-top:4px; }
+    .p1 { font-size:34px; }
+    .logro-list { display:flex; flex-direction:column; gap:2px; }
+    .logro-row { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid #F0FDF4; }
+    .logro-row:last-child { border-bottom:none; }
+    .lo-ico { font-size:26px; flex-shrink:0; }
+    .lo-body { flex:1; }
+    .lo-nombre { font-size:13px; font-weight:800; color:#334155; }
+    .lo-desc { font-size:11.5px; color:#94A3B8; margin-top:2px; }
+    .lo-quien { display:flex; align-items:center; gap:6px; flex-shrink:0; }
+    .lo-av { font-size:18px; }
+    .lo-alumno { font-size:12px; font-weight:700; color:#15803D; }
+    .lo-fecha { font-size:11px; color:#9CA3AF; flex-shrink:0; min-width:60px; text-align:right; }
 
       /* ── Calendario ── */
       .cal-wrap {
@@ -1968,6 +1960,11 @@ export class DocenteDashboardComponent implements OnInit {
 
   logrosClase: LogroClase[] = [];
 
+  // Logros por alumno
+  alumnoLogrosSeleccionado: Estudiante | null = null;
+  logrosAlumno: MisionReclamada[] = [];
+  loadingLogros = false;
+
   // Asignaciones
   asignaciones: Asignacion[] = [];
   loadingAsig = false;
@@ -2010,6 +2007,7 @@ export class DocenteDashboardComponent implements OnInit {
     private router: Router,
     private cdr: ChangeDetectorRef,
     private docSvc: DocenteService,
+    private misionSvc: MisionService,
   ) {}
 
   irAProgreso(): void {
@@ -2342,6 +2340,24 @@ export class DocenteDashboardComponent implements OnInit {
   eventosDelDia(dia: number): EventoCal[] {
     return this.eventos.filter((e) => e.dia === dia);
   }
+
+  // ── Logros por alumno ──
+  verLogrosAlumno(e: Estudiante): void {
+    if (this.alumnoLogrosSeleccionado?.id === e.id) return;
+    this.alumnoLogrosSeleccionado = e;
+    this.logrosAlumno = [];
+    this.loadingLogros = true;
+    this.cdr.detectChanges();
+    this.misionSvc.getHistorial(e.id).pipe(catchError(() => of([]))).subscribe(logros => {
+      this.logrosAlumno = logros;
+      this.loadingLogros = false;
+      this.cdr.detectChanges();
+    });
+  }
+
+  misionIco(idx: number)       { return MISIONES_DEF[idx]?.icono    ?? '🎯'; }
+  misionTitulo(idx: number)    { return MISIONES_DEF[idx]?.titulo   ?? 'Misión completada'; }
+  misionCategoria(idx: number) { return MISIONES_DEF[idx]?.categoria ?? ''; }
 
   // ── Evolución (modal) ──
   verEvolucion(e: Estudiante): void {

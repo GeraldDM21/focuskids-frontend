@@ -4,6 +4,19 @@ export type NivelLab =
   | 'DIFICIL'
   | 'EXPERTO';
 
+export type FaseLab = 'ver' | 'hacer' | 'entender';
+
+export interface OpcionPregunta {
+  texto:   string;
+  emoji:   string;
+  correcta: boolean;
+}
+
+export interface PreguntaLab {
+  texto:   string;
+  opciones: OpcionPregunta[];
+}
+
 export type EstadoLab =
   | 'inicio'
   | 'cargando'
@@ -24,26 +37,17 @@ export interface IngredienteLab {
 
 export interface ExperimentoLab {
   id: string;
-
   titulo: string;
-
   objetivo: string;
-
   pista: string;
-
-  combinacionesCorrectas: Record<
-    NivelLab,
-    string[]
-  >;
-
+  combinacionesCorrectas: Record<NivelLab, string[]>;
   resultadoExito: string;
-
-  explicacionCientifica: Record<
-    NivelLab,
-    string
-  >;
-
+  explicacionCientifica: Record<NivelLab, string>;
   emojiResultado: string;
+  /** Lo que Uni narra en la fase VER (lenguaje de niño) */
+  narracion: string;
+  /** Pregunta de comprensión en la fase ENTENDER */
+  pregunta: PreguntaLab;
 }
 
 export interface ConfigLab {
