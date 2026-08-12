@@ -242,7 +242,8 @@
             <div class="voz-section">
               @if (!grabandoVoz && !transcripcionVoz && !enviandoVoz && !feedbackVoz) {
                 <button class="btn-voz-opcion" (click)="iniciarGrabacion()">
-                  🎤 Responder con voz
+                  <span class="opcion-letra">🎤</span>
+                  <span class="opcion-txt">Responder con voz</span>
                 </button>
                 @if (errorMicrofono) {
                   <p class="voz-error">⚠️ No se pudo acceder al micrófono. Usa las opciones de arriba.</p>
@@ -252,7 +253,7 @@
               @if (grabandoVoz) {
                 <div class="grabando-indicator">
                   <div class="mic-pulse">🎤</div>
-                  <span>Escuchando… di tu respuesta</span>
+                  <span class="grabando-txt">Escuchando… di tu respuesta</span>
                   <button class="btn-detener-mic" (click)="detenerGrabacion()">⏹ Detener</button>
                 </div>
               }
