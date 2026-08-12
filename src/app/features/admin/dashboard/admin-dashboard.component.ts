@@ -12,7 +12,7 @@ import { environment } from '../../../../environments/environment';
 
 interface Juego { id: number; nombre: string; tipo: string; descripcion?: string; activo?: boolean; }
 
-type Tab = 'dashboard' | 'usuarios' | 'juegos' | 'analiticas' | 'alertas' | 'reportes' | 'instituciones';
+type Tab = 'dashboard' | 'usuarios' | 'juegos' | 'analiticas' | 'alertas' | 'reportes';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -33,7 +33,7 @@ type Tab = 'dashboard' | 'usuarios' | 'juegos' | 'analiticas' | 'alertas' | 'rep
       <p class="sb-section">PANEL ADMIN</p>
       <button class="sb-item" [class.active]="tab()==='dashboard'"      (click)="setTab('dashboard')">      <mat-icon>dashboard</mat-icon>       Dashboard</button>
       <button class="sb-item" [class.active]="tab()==='usuarios'"       (click)="setTab('usuarios')">       <mat-icon>group</mat-icon>            Usuarios</button>
-      <button class="sb-item" [class.active]="tab()==='instituciones'"  (click)="setTab('instituciones')">  <mat-icon>account_balance</mat-icon>  Instituciones</button>
+
       <button class="sb-item" [class.active]="tab()==='juegos'"         (click)="irJuegos()">               <mat-icon>sports_esports</mat-icon>   Juegos</button>
       <p class="sb-section">SISTEMA</p>
       <button class="sb-item" [class.active]="tab()==='analiticas'"     (click)="setTab('analiticas')">     <mat-icon>analytics</mat-icon>        Analíticas</button>
@@ -62,7 +62,7 @@ type Tab = 'dashboard' | 'usuarios' | 'juegos' | 'analiticas' | 'alertas' | 'rep
     <div class="top-bar">
       <h1 class="page-title">{{ tabTitulo }}</h1>
       <div class="top-actions">
-        @if (tab === 'dashboard' || tab === 'usuarios') {
+        @if (tab() === 'dashboard' || tab() === 'usuarios') {
           <div class="search-wrap">
             <mat-icon class="search-ico">search</mat-icon>
             <input class="search-input" placeholder="Buscar usuarios..."
@@ -199,19 +199,6 @@ type Tab = 'dashboard' | 'usuarios' | 'juegos' | 'analiticas' | 'alertas' | 'rep
       <app-admin-usuarios />
     }
 
-    <!-- ══════════════════════════ INSTITUCIONES ══════════════════════════ -->
-    @if (tab() === 'instituciones') {
-      <div class="placeholder-card">
-        <div class="ph-ico">🏫</div>
-        <h2>Módulo de Instituciones</h2>
-        <p>Este módulo está en desarrollo. Permitirá gestionar las instituciones educativas vinculadas a la plataforma, asociar docentes y grupos de estudiantes.</p>
-        <div class="ph-info-grid">
-          <div class="ph-info-item"><span class="ph-info-lbl">Docentes registrados</span><span class="ph-info-val">{{ docentes() }}</span></div>
-          <div class="ph-info-item"><span class="ph-info-lbl">Padres/Tutores</span><span class="ph-info-val">{{ padres() }}</span></div>
-          <div class="ph-info-item"><span class="ph-info-lbl">Niños en plataforma</span><span class="ph-info-val">{{ ninos().length }}</span></div>
-        </div>
-      </div>
-    }
 
     <!-- ══════════════════════════ JUEGOS ══════════════════════════ -->
     @if (tab() === 'juegos') {
@@ -283,7 +270,7 @@ type Tab = 'dashboard' | 'usuarios' | 'juegos' | 'analiticas' | 'alertas' | 'rep
               <svg viewBox="0 0 80 80">
                 <circle cx="40" cy="40" r="30" fill="none" stroke="#F1F5F9" stroke-width="12"/>
                 <circle cx="40" cy="40" r="30" fill="none" stroke="#22C55E" stroke-width="12"
-                  stroke-dasharray="{{ donutActivos() }} {{ donutTotal() }}"
+                  [attr.stroke-dasharray]="donutActivos() + ' ' + donutTotal()"
                   stroke-dashoffset="0" transform="rotate(-90 40 40)"/>
               </svg>
               <div class="donut-label">
@@ -580,16 +567,6 @@ type Tab = 'dashboard' | 'usuarios' | 'juegos' | 'analiticas' | 'alertas' | 'rep
     .dl-row { display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600; color:#334155; }
     .dl-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
 
-    /* ── PLACEHOLDER ── */
-    .placeholder-card { background:white; border-radius:18px; padding:48px; text-align:center; box-shadow:0 2px 12px rgba(79,70,229,.07); }
-    .ph-ico { font-size:4rem; margin-bottom:16px; }
-    .placeholder-card h2 { font-size:20px; font-weight:800; color:#1E1B4B; margin-bottom:10px; }
-    .placeholder-card p { color:#64748B; font-size:14px; max-width:480px; margin:0 auto 24px; line-height:1.6; }
-    .ph-info-grid { display:flex; justify-content:center; gap:32px; }
-    .ph-info-item { display:flex; flex-direction:column; align-items:center; gap:4px; }
-    .ph-info-lbl { font-size:12px; color:#94A3B8; font-weight:600; }
-    .ph-info-val { font-size:24px; font-weight:800; color:#4F46E5; }
-
     /* ── REPORTES ── */
     .reportes-wrap { display:flex; flex-direction:column; gap:20px; }
 
@@ -690,7 +667,7 @@ export class AdminDashboardComponent implements OnInit {
     const m: Record<Tab, string> = {
       dashboard: 'Panel de Administración', usuarios: 'Gestión de Usuarios',
       juegos: 'Juegos', analiticas: 'Analíticas', alertas: 'Alertas',
-      reportes: 'Reportes', instituciones: 'Instituciones',
+      reportes: 'Reportes',
     };
     return m[this.tab()];
   }
