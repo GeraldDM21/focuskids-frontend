@@ -34,10 +34,12 @@ import {
 import {
   EstadoLab,
   ExperimentoLab,
+  FaseLab,
   FinalizarLabRequest,
   IngredienteLab,
   LabResultadoResponse,
   NivelLab,
+  OpcionPregunta,
   RegistrarIntentoRequest
 } from './lab-ciencias.model';
 
@@ -62,6 +64,7 @@ export class LabCienciasComponent
   implements OnInit, OnDestroy {
 
   estado: EstadoLab = 'inicio';
+  faseActual: FaseLab = 'ver';
 
   nivelActual: NivelLab = 'FACIL';
 
@@ -180,6 +183,10 @@ export class LabCienciasComponent
   puntaje = 0;
 
   nivelSugerido: NivelLab | null = null;
+
+  // Fase ENTENDER
+  respuestaSeleccionada: OpcionPregunta | null = null;
+  preguntaCorrecta = false;
 
   resultadoFinal:
     LabResultadoResponse | null = null;
@@ -390,6 +397,9 @@ export class LabCienciasComponent
 
     this.reiniciarEstadisticas();
 
+    // Animar inmediatamente — no esperar al backend
+    this.animarCarga();
+
     this.service
       .iniciarSesion(
         this.perfilId,
@@ -400,12 +410,8 @@ export class LabCienciasComponent
       )
       .subscribe({
         next: response => {
-          this.sesionId =
-            response.sesionId;
-
-          this.sesionJuegoService.comenzarTracking(response.sesionId);  // CA-04
-
-          this.animarCarga();
+          this.sesionId = response.sesionId;
+          this.sesionJuegoService.comenzarTracking(response.sesionId);
         },
 
         error: error => {
@@ -413,13 +419,8 @@ export class LabCienciasComponent
             'Error al iniciar Lab de Ciencias:',
             error
           );
-
+          // El juego ya arrancó — solo marcamos que no habrá tracking
           this.sesionId = null;
-
-          this.errorApi =
-            'No se pudo conectar con el backend. Verifica que Spring Boot esté ejecutándose.';
-
-          this.estado = 'inicio';
         }
       });
   }
@@ -506,24 +507,62 @@ export class LabCienciasComponent
   }
 
   private prepararExperimento(): void {
-    this.seleccionados = [];
-
-    this.resultadoVisible = false;
-
-    this.resultadoExitoso = false;
-
-    this.mensajeResultado = '';
-
-    this.explicacionActual = '';
-
-    this.emojiResultado = '🧪';
-
+    this.seleccionados       = [];
+    this.resultadoVisible    = false;
+    this.resultadoExitoso    = false;
+    this.mensajeResultado    = '';
+    this.explicacionActual   = '';
+    this.emojiResultado      = '🧪';
     this.intentosExperimento = 0;
-
-    this.inicioExperimentoMs =
-      Date.now();
-
+    this.inicioExperimentoMs = Date.now();
+    // Siempre arranca en VER para que el niño entienda antes de hacer
+    this.faseActual              = 'ver';
+    this.respuestaSeleccionada   = null;
+    this.preguntaCorrecta        = false;
     this.sesionJuegoService.marcarElementoAparece();  // CA-08
+    // Uni narra automáticamente al entrar en VER
+    setTimeout(() => this.narrarExperimento(), 600);
+    this.cdr.detectChanges();
+  }
+
+  /** Uni narra la explicación en la fase VER */
+  narrarExperimento(): void {
+    if (this.experimentoActual) {
+      this.hablar(this.experimentoActual.narracion);
+    }
+  }
+
+  /** El niño pasa de VER → HACER */
+  avanzarAHacer(): void {
+    window.speechSynthesis?.cancel();
+    this.faseActual = 'hacer';
+    this.setMascot('thinking', '¡Ahora tú! Selecciona los ingredientes que usamos.');
+    this.cdr.detectChanges();
+  }
+
+  /** Responde la pregunta de comprensión en fase ENTENDER */
+  responderPregunta(opcion: OpcionPregunta): void {
+    if (this.respuestaSeleccionada) return;
+    this.respuestaSeleccionada = opcion;
+    this.preguntaCorrecta      = opcion.correcta;
+    if (opcion.correcta) {
+      this.puntaje += 50;
+      this.playSuccess();
+      this.setMascot('celebrate', '¡Muy bien! Entendiste el experimento. ¡Eres un científico! 🌟');
+    } else {
+      this.setMascot('encourage', '¡No pasa nada! Lee la respuesta correcta. ¡Cada vez aprendes más!');
+    }
+    this.cdr.detectChanges();
+  }
+
+  /** Emoji de un ingrediente por id (para la vista previa en VER) */
+  getEmojiIngrediente(id: string): string {
+    return this.ingredientes.find(i => i.id === id)?.emoji ?? '🧪';
+  }
+
+  /** Slots visuales para la fase HACER */
+  get slotsArray(): number[] {
+    return Array.from({ length: this.cantidadIngredientesRequerida }, (_, i) => i);
   }
 
   get experimentoActual():
@@ -688,7 +727,6 @@ export class LabCienciasComponent
     if (
       !this.puedeMezclar
       || !this.experimentoActual
-      || this.sesionId === null
     ) {
       return;
     }
@@ -776,32 +814,23 @@ export class LabCienciasComponent
           tiempoIntento
         );
 
-        this.service
-          .registrarIntento(
-            this.sesionId!,
-            request
-          )
-          .pipe(
-            takeUntil(
-              this.destruir$
+        // Solo registrar si el backend ya respondió con sesionId
+        if (this.sesionId !== null) {
+          this.service
+            .registrarIntento(
+              this.sesionId,
+              request
             )
-          )
-          .subscribe({
-            next: response => {
-              this.nivelSugerido =
-                response.nivelSugerido;
-            },
-
-            error: error => {
-              console.error(
-                'Error al registrar intento:',
-                error.error ?? error
-              );
-
-              this.errorApi =
-                'El resultado se mostró, pero el intento no pudo guardarse.';
-            }
-          });
+            .pipe(takeUntil(this.destruir$))
+            .subscribe({
+              next: response => {
+                this.nivelSugerido = response.nivelSugerido;
+              },
+              error: error => {
+                console.error('Error al registrar intento:', error.error ?? error);
+              }
+            });
+        }
 
         this.cdr.detectChanges();
       }, 550);
@@ -811,115 +840,58 @@ export class LabCienciasComponent
     exito: boolean,
     tiempoDescubrimiento: number
   ): void {
-    const experimento =
-      this.experimentoActual;
-
-    if (!experimento) {
-      return;
-    }
-
-    this.resultadoVisible = true;
-    this.resultadoExitoso = exito;
+    const experimento = this.experimentoActual;
+    if (!experimento) return;
 
     if (exito) {
+      // ── ÉXITO: pasar a fase ENTENDER ──────────────────────────────────
       this.hipotesisCorrectas++;
       this.experimentosCompletados++;
-
-      this.tiemposDescubrimiento.push(
-        tiempoDescubrimiento
-      );
-
-      this.mensajeResultado =
-        experimento.resultadoExito;
-
-      this.emojiResultado =
-        experimento.emojiResultado;
-
-      this.explicacionActual =
-        experimento
-          .explicacionCientifica[
-          this.nivelActual
-          ];
-
-      this.puntaje += Math.max(
-        100,
-        500 -
-        (
-          this.intentosExperimento - 1
-        ) * 80
-      );
-
+      this.tiemposDescubrimiento.push(tiempoDescubrimiento);
+      this.emojiResultado    = experimento.emojiResultado;
+      this.explicacionActual = experimento.explicacionCientifica[this.nivelActual];
+      this.puntaje += Math.max(100, 500 - (this.intentosExperimento - 1) * 80);
       this.playSuccess();
-
-      this.setMascot(
-        'celebrate',
-        '¡Hipótesis correcta! Observa el resultado y lee la explicación científica.'
-      );
-
-      this.hablar(
-        this.explicacionActual
-      );
-
+      this.faseActual            = 'entender';
+      this.respuestaSeleccionada = null;
+      this.preguntaCorrecta      = false;
+      this.setMascot('celebrate', '¡Mezcla perfecta! Ahora responde una pregunta.');
+      // Uni lee la explicación y luego la pregunta en voz alta
+      setTimeout(() => {
+        const textoCompleto =
+          this.explicacionActual +
+          '... Ahora demuestra que lo entendiste. ' +
+          experimento.pregunta.texto;
+        this.hablar(textoCompleto);
+      }, 500);
       return;
     }
 
+    // ── FALLO: métricas internas, Uni guía suavemente, sin overlay ────
     this.hipotesisIncorrectas++;
-
-    this.mensajeResultado =
-      'La mezcla no produjo el efecto esperado. Cambia uno de los ingredientes y vuelve a probar.';
-
-    this.emojiResultado = '💨';
-
-    this.explicacionActual =
-      'Un resultado que no funciona también aporta evidencia: ahora sabes que esta pareja no cumple la regla.';
-
     this.playError();
-
-    this.setMascot(
-      'encourage',
-      '¡Buen intento! En ciencia, cada fallo ayuda a descartar una hipótesis.'
-    );
+    const mensajes = [
+      '¡Casi! Prueba con otro ingrediente.',
+      '¡Buen intento! Cambia uno y vuelve a intentar.',
+      '💡 Mira la pista de Uni y prueba de nuevo.',
+    ];
+    this.setMascot('encourage', mensajes[Math.min(this.intentosExperimento - 1, 2)]);
+    // Limpiar selección suavemente después de 1.2 s
+    setTimeout(() => {
+      this.seleccionados = [];
+      this.cdr.detectChanges();
+    }, 1200);
   }
 
+  /** Llamado desde fase ENTENDER tras responder la pregunta */
   continuar(): void {
-    if (!this.resultadoExitoso) {
-
-      this.seleccionados = [];
-
-      this.resultadoVisible = false;
-      this.resultadoExitoso = false;
-
-      this.mensajeResultado = '';
-      this.explicacionActual = '';
-      this.emojiResultado = '🧪';
-
-      this.setMascot(
-        'thinking',
-        'Cambia los ingredientes y prueba una hipótesis diferente.'
-      );
-
-      this.cdr.detectChanges();
-
-      return;
-    }
-
-    if (
-      this.experimentoActualIndex + 1
-      < this.experimentos.length
-    ) {
+    if (this.experimentoActualIndex + 1 < this.experimentos.length) {
       this.experimentoActualIndex++;
-
       this.prepararExperimento();
-
-      this.setMascot(
-        'thinking',
-        'Nuevo experimento: observa las pistas y prueba una combinación diferente.'
-      );
-
-      return;
+      this.setMascot('thinking', '¡Nuevo experimento! Mira bien y escucha a Uni.');
+    } else {
+      this.finalizarJuego();
     }
-
-    this.finalizarJuego();
   }
 
   private finalizarJuego(): void {
