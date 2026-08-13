@@ -755,7 +755,6 @@ const MISIONES_DEF = [
       </div>
     </div>
   }
-</div>
   `,
   styles: [
     `
@@ -2077,10 +2076,12 @@ export class DocenteDashboardComponent implements OnInit {
   ];
 
   constructor(
-    public auth: AuthService,
-    private router: Router,
-    private cdr: ChangeDetectorRef,
-    private docSvc: DocenteService,
+    public  auth:      AuthService,
+    private router:    Router,
+    private cdr:       ChangeDetectorRef,
+    private docSvc:    DocenteService,
+    private misionSvc: MisionService,
+    private nivelSvc:  NivelAsignadoService,
   ) {}
 
   irAProgreso(): void {

@@ -41,6 +41,10 @@ const NIVELES = [
         </button>
       </div>
 
+      <!-- ══ FILTROS ══ -->
+      <div class="filtros-card">
+        <div class="filtros-row">
+
       <div class="filtro-group">
         <label class="filtro-label">Nivel</label>
         <select class="filtro-input" [(ngModel)]="filtroNivel" (change)="buscar()">
@@ -83,97 +87,6 @@ const NIVELES = [
     }
   </div>
 
-  <!-- ══ LISTA (CA-01 / CA-04) ══ -->
-  @if (loading) {
-    <div class="loader-wrap"><div class="spinner"></div></div>
-  } @else if (sesiones.length === 0) {
-    <div class="empty-state">
-      <span class="empty-ico">🔍</span>
-      <p>No se encontraron sesiones con los filtros actuales.</p>
-      @if (hayFiltrosActivos) {
-        <button class="btn-limpiar-empty" (click)="limpiarFiltros()">Limpiar filtros</button>
-      }
-    </div>
-  } @else {
-    <div class="sesiones-list">
-      @for (s of sesiones; track s.id) {
-        <div class="sesion-card" [class.expandida]="expandidaId === s.id">
-          <div class="sesion-row" (click)="toggleExpandir(s)">
-            <div class="sr-fecha">
-              <div class="sr-fecha-dia">{{ formatFecha(s.inicio) }}</div>
-              <div class="sr-juego">{{ s.juego?.nombre ?? '—' }}</div>
-            </div>
-            <div class="sr-nivel">
-              <span class="nivel-badge" [class]="'nivel-' + (s.nivel?.nivel || '').toLowerCase()">
-                {{ s.nivel?.nivel ?? '—' }}
-              </span>
-            </div>
-            <div class="sr-metric">
-              <div class="sr-metric-val">{{ s.porcentajeAciertos != null ? (s.porcentajeAciertos + '%') : '—' }}</div>
-              <div class="sr-metric-lbl">Aciertos</div>
-            </div>
-            <div class="sr-metric">
-              <div class="sr-metric-val">{{ formatMs(s.tiempoRespuestaPromedioMs) }}</div>
-              <div class="sr-metric-lbl">T. respuesta</div>
-            </div>
-            <div class="sr-metric">
-              <div class="sr-metric-val">{{ formatDuracion(s.duracionSesionSegundos) }}</div>
-              <div class="sr-metric-lbl">Duración</div>
-            </div>
-            <div class="sr-estado" [class.ok]="s.completada" [class.inc]="!s.completada">
-              {{ s.completada ? '✓ Completa' : '✗ Incompleta' }}
-            </div>
-            <div class="sr-chevron">{{ expandidaId === s.id ? '▲' : '▼' }}</div>
-          </div>
-
-          <div class="filtro-group">
-            <label class="filtro-label">Nivel</label>
-            <select class="filtro-input" [(ngModel)]="filtroNivel" (change)="buscar()">
-              <option value="">— Todos —</option>
-              @for (n of niveles; track n.val) {
-                <option [value]="n.val">{{ n.lbl }}</option>
-              }
-            </select>
-          </div>
-
-          <div class="filtro-group">
-            <label class="filtro-label">Desde</label>
-            <input
-              class="filtro-input"
-              type="text"
-              placeholder="DD/MM/AAAA"
-              maxlength="10"
-              [(ngModel)]="filtroFechaDesde"
-              (input)="onFechaInput()"
-            />
-          </div>
-
-          <div class="filtro-group">
-            <label class="filtro-label">Hasta</label>
-            <input
-              class="filtro-input"
-              type="text"
-              placeholder="DD/MM/AAAA"
-              maxlength="10"
-              [(ngModel)]="filtroFechaHasta"
-              (input)="onFechaInput()"
-            />
-          </div>
-
-          <div class="filtro-group filtro-group-btn">
-            <button class="btn-limpiar" (click)="limpiarFiltros()">✕ Limpiar</button>
-          </div>
-        </div>
-
-        @if (totalElements > 0) {
-          <div class="filtro-meta">
-            {{ totalElements }} sesion{{ totalElements !== 1 ? 'es' : '' }} encontrada{{
-              totalElements !== 1 ? 's' : ''
-            }}
-            · Página {{ paginaActual + 1 }} de {{ totalPaginas }}
-          </div>
-        }
-      </div>
 
       <!-- ══ LISTA (CA-01 / CA-04) ══ -->
       @if (loading) {
