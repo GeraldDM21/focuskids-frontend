@@ -6,11 +6,12 @@ import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import {
   DocenteService, AlumnoDocente, Asignacion,
-  EventoCalendarioItem, EventoCalendarioRequest, DocenteProfileUpdate,
+  EventoCalendarioItem, EventoCalendarioRequest, DocenteProfileUpdate, JuegoCatalogo,
 } from '../docente.service';
 import { SesionJuego, Metrica } from '../../padre/padre.service';
 import { FormsModule } from '@angular/forms';
 import { EvolucionChartComponent } from '../../../shared/components/evolucion-chart/evolucion-chart.component';
+import { FechaHoraPickerComponent } from './fecha-hora-picker.component';
 
 interface Estudiante {
   id: number; nombre: string; avatar: string; edad: number;
@@ -54,7 +55,7 @@ const JUEGO_ICO: Record<string, string> = {
 @Component({
   selector: 'app-docente-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, EvolucionChartComponent],
+  imports: [CommonModule, FormsModule, EvolucionChartComponent, FechaHoraPickerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
 <div class="root">
@@ -114,7 +115,7 @@ const JUEGO_ICO: Record<string, string> = {
           <div class="empty-state">
             <div style="font-size:56px">👨‍🎓</div>
             <h2>Aún no tenés alumnos asignados</h2>
-            <p>Para ver datos aquí, un padre debe asignar el perfil de su hijo a tu cuenta de docente.<br>El campo <strong>docente_id</strong> en <code>perfil_nino</code> debe apuntar a tu usuario.</p>
+            <p>Cuando un padre vincule el perfil de su hijo a tu cuenta, lo vas a ver aquí automáticamente.<br>Por ahora no hay nada que hacer de tu parte: solo espera a que te asignen un estudiante.</p>
           </div>
         }
 
@@ -265,7 +266,28 @@ const JUEGO_ICO: Record<string, string> = {
           @if (showFormAsig) {
             <div class="asig-form-card">
               <h3 class="card-title">Nueva asignación</h3>
-              <p class="asig-note">Se distribuirá automáticamente a todos los alumnos activos de tu clase ({{ estudiantes.length }}).</p>
+
+              @if (errorAsig) {
+                <div class="cfg-error">{{ errorAsig }}</div>
+              }
+
+              <div class="form-field" style="margin-bottom:14px">
+                <label>Asignar a *</label>
+                <select [(ngModel)]="formAsigPerfilId">
+                  <option [ngValue]="null">👨‍🎓 Toda la clase ({{ estudiantes.length }} alumnos)</option>
+                  @for (e of estudiantes; track e.id) {
+                    <option [ngValue]="e.id">{{ e.nombre }}</option>
+                  }
+                </select>
+              </div>
+              <p class="asig-note" style="margin-top:0">
+                @if (formAsigPerfilId == null) {
+                  Se distribuirá automáticamente a todos los alumnos activos de tu clase ({{ estudiantes.length }}).
+                } @else {
+                  Se asignará únicamente a {{ estudianteNombre(formAsigPerfilId) }}.
+                }
+              </p>
+
               <div class="form-grid">
                 <div class="form-field">
                   <label>Título *</label>
@@ -275,7 +297,7 @@ const JUEGO_ICO: Record<string, string> = {
                   <label>Juego</label>
                   <select [(ngModel)]="formJuegoId" (ngModelChange)="setJuego($event)">
                     <option [ngValue]="null">Sin juego específico</option>
-                    @for (j of JUEGOS_LISTA; track j.id) {
+                    @for (j of juegosCatalogo; track j.id) {
                       <option [ngValue]="j.id">{{ j.nombre }}</option>
                     }
                   </select>
@@ -286,7 +308,7 @@ const JUEGO_ICO: Record<string, string> = {
                 </div>
                 <div class="form-field">
                   <label>Fecha límite *</label>
-                  <input type="text" placeholder="DD/MM/AAAA" maxlength="10" [(ngModel)]="formAsig.fechaLimite" />
+                  <app-fecha-hora-picker [fecha]="formAsig.fechaLimite" (fechaChange)="formAsig.fechaLimite = $event" [mostrarHora]="false"></app-fecha-hora-picker>
                 </div>
                 <div class="form-field span2">
                   <label>Descripción</label>
@@ -334,7 +356,7 @@ const JUEGO_ICO: Record<string, string> = {
                   }
                   <div class="asig-meta">
                     <span class="asig-chip">🎯 {{ a.minimoSesiones }} sesiones</span>
-                    <span class="asig-chip">👨‍🎓 {{ estudiantes.length }} alumnos</span>
+                    <span class="asig-chip">👨‍🎓 {{ a.alumnoNombre ?? ((a.cantidadAlumnos ?? estudiantes.length) + ' alumnos') }}</span>
                   </div>
                   <div class="asig-fecha">📅 Límite: {{ a.fechaLimite | date:'dd/MM/yyyy' }}</div>
                 </div>
@@ -438,7 +460,7 @@ const JUEGO_ICO: Record<string, string> = {
                       @for (ev of eventosDelDia(celda.fecha); track ev.origen + '-' + ev.id) {
                         <div class="ev-chip" [class.ev-asig]="ev.origen==='ASIGNACION'" [class.ev-cita]="ev.tipo==='CITA'" [class.ev-rec]="ev.tipo==='RECORDATORIO'"
                              (click)="abrirEditarEvento(ev, $event)">
-                          {{ ev.hora ? (ev.hora.substring(0,5) + ' ') : '' }}{{ ev.titulo }}
+                          {{ ev.hora ? (ev.hora.substring(0,5) + ' ') : '' }}{{ ev.titulo }}{{ ev.perfilNombre ? ' · ' + ev.perfilNombre : '' }}
                         </div>
                       }
                     }
@@ -457,35 +479,20 @@ const JUEGO_ICO: Record<string, string> = {
             <h3 class="cfg-title">👤 Mi perfil docente</h3>
             <div class="cfg-avatar">{{ inicial }}</div>
 
-            @if (errorPerfil) {
-              <div class="cfg-error">{{ errorPerfil }}</div>
-            }
             @if (perfilGuardadoOk) {
               <div class="cfg-ok">✓ Perfil actualizado correctamente.</div>
             }
+            @if (errorCargaPerfil) {
+              <div class="cfg-error">{{ errorCargaPerfil }}</div>
+            }
 
-            <div class="form-grid">
-              <div class="form-field">
-                <label>Nombre *</label>
-                <input [(ngModel)]="formPerfil.nombre" placeholder="Tu nombre completo" />
-              </div>
-              <div class="form-field">
-                <label>Correo *</label>
-                <input type="email" [(ngModel)]="formPerfil.email" placeholder="correo@ejemplo.com" />
-              </div>
-              <div class="form-field">
-                <label>Institución</label>
-                <input [(ngModel)]="formPerfil.institucion" placeholder="Nombre del centro educativo" />
-              </div>
-              <div class="form-field">
-                <label>Grado / Grupo</label>
-                <input [(ngModel)]="formPerfil.gradoGrupo" placeholder="Ej: 3° B" />
-              </div>
-            </div>
+            <div class="cfg-field"><label>Nombre</label><div class="cfg-val">{{ docenteName || '—' }}</div></div>
+            <div class="cfg-field"><label>Correo</label><div class="cfg-val">{{ docenteEmail || '—' }}</div></div>
+            <div class="cfg-field"><label>Institución</label><div class="cfg-val">{{ institucion || '—' }}</div></div>
+            <div class="cfg-field"><label>Grado / Grupo</label><div class="cfg-val">{{ gradoGrupo || '—' }}</div></div>
+
             <div class="form-actions">
-              <button class="btn-add" [disabled]="guardandoPerfil || !formPerfil.nombre || !formPerfil.email" (click)="guardarPerfil()">
-                {{ guardandoPerfil ? 'Guardando...' : '💾 Guardar cambios' }}
-              </button>
+              <button class="btn-add" (click)="abrirEditarPerfil()">✏️ Editar perfil</button>
             </div>
           </div>
           <div class="cfg-card">
@@ -522,6 +529,52 @@ const JUEGO_ICO: Record<string, string> = {
     </div>
   }
 
+  <!-- ══ MODAL EDITAR PERFIL DOCENTE ══ -->
+  @if (mostrarModalPerfil) {
+    <div class="overlay" (click)="cerrarEditarPerfil()">
+      <div class="modal modal-evento" (click)="$event.stopPropagation()">
+        <div class="modal-evo-header">
+          <h2 class="modal-title" style="margin:0">✏️ Editar perfil</h2>
+          <button class="modal-close" (click)="cerrarEditarPerfil()">×</button>
+        </div>
+
+        @if (errorPerfil) {
+          <div class="cfg-error">{{ errorPerfil }}</div>
+        }
+
+        <div class="form-grid">
+          <div class="form-field span2">
+            <label>Nombre *</label>
+            <input [(ngModel)]="formPerfil.nombre" (blur)="tocadoPerfil.nombre = true; validarNombrePerfil()"
+                   [class.input-err]="tocadoPerfil.nombre && erroresPerfil.nombre" placeholder="Tu nombre completo" />
+            @if (tocadoPerfil.nombre && erroresPerfil.nombre) { <span class="field-err">{{ erroresPerfil.nombre }}</span> }
+          </div>
+          <div class="form-field span2">
+            <label>Correo *</label>
+            <input type="email" [(ngModel)]="formPerfil.email" (blur)="tocadoPerfil.email = true; validarEmailPerfil()"
+                   [class.input-err]="tocadoPerfil.email && erroresPerfil.email" placeholder="correo@ejemplo.com" />
+            @if (tocadoPerfil.email && erroresPerfil.email) { <span class="field-err">{{ erroresPerfil.email }}</span> }
+          </div>
+          <div class="form-field">
+            <label>Institución</label>
+            <input [(ngModel)]="formPerfil.institucion" placeholder="Nombre del centro educativo" />
+          </div>
+          <div class="form-field">
+            <label>Grado / Grupo</label>
+            <input [(ngModel)]="formPerfil.gradoGrupo" placeholder="Ej: 3° B" />
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn-cancel" (click)="cerrarEditarPerfil()">Cancelar</button>
+          <button class="btn-add" [disabled]="guardandoPerfil" (click)="guardarPerfil()">
+            {{ guardandoPerfil ? 'Guardando...' : '💾 Guardar cambios' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
   <!-- ══ MODAL CITA / RECORDATORIO / MOVER FECHA DE ASIGNACIÓN ══ -->
   @if (mostrarModalEvento) {
     <div class="overlay" (click)="cerrarModalEvento()">
@@ -533,11 +586,15 @@ const JUEGO_ICO: Record<string, string> = {
           <button class="modal-close" (click)="cerrarModalEvento()">×</button>
         </div>
 
+        @if (errorEvento) {
+          <div class="cfg-error">{{ errorEvento }}</div>
+        }
+
         @if (modalEsAsignacion) {
           <p class="asig-note"><strong>{{ formEvento.titulo }}</strong><br>Esta fecha aplica para toda la clase.</p>
           <div class="form-field">
             <label>Nueva fecha límite *</label>
-            <input type="date" [(ngModel)]="formEvento.fecha" />
+            <app-fecha-hora-picker [fecha]="formEvento.fecha" (fechaChange)="formEvento.fecha = $event" [mostrarHora]="false"></app-fecha-hora-picker>
           </div>
         } @else {
           <div class="form-grid">
@@ -561,13 +618,12 @@ const JUEGO_ICO: Record<string, string> = {
                 }
               </select>
             </div>
-            <div class="form-field">
-              <label>Fecha *</label>
-              <input type="date" [(ngModel)]="formEvento.fecha" />
-            </div>
-            <div class="form-field">
-              <label>Hora (opcional)</label>
-              <input type="time" [(ngModel)]="formEvento.hora" />
+            <div class="form-field span2">
+              <label>Fecha {{ formEvento.tipo === 'CITA' ? '' : '(y hora opcional)' }} *</label>
+              <app-fecha-hora-picker
+                [fecha]="formEvento.fecha" (fechaChange)="formEvento.fecha = $event"
+                [hora]="formEvento.hora" (horaChange)="formEvento.hora = $event ?? ''"
+                [horasOcupadas]="horasOcupadasEvento"></app-fecha-hora-picker>
             </div>
             <div class="form-field span2">
               <label>Descripción</label>
@@ -742,6 +798,8 @@ const JUEGO_ICO: Record<string, string> = {
     .form-field input, .form-field select, .form-field textarea { border:1.5px solid #E5E7EB; border-radius:10px; padding:9px 12px; font-size:13.5px; color:#1F2937; background:white; outline:none; font-family:inherit; }
     .form-field input:focus, .form-field select:focus, .form-field textarea:focus { border-color:#86EFAC; box-shadow:0 0 0 3px rgba(134,239,172,.15); }
     .form-field textarea { resize:vertical; }
+    .form-field input.input-err, .form-field select.input-err { border-color:#FCA5A5; background:#FEF2F2; }
+    .field-err { font-size:11px; font-weight:600; color:#DC2626; margin-top:2px; }
     .form-actions { display:flex; gap:10px; justify-content:flex-end; }
     .asig-meta { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
     .asig-chip { background:#F0FDF4; color:#15803D; border-radius:20px; padding:4px 10px; font-size:11px; font-weight:700; }
@@ -865,13 +923,12 @@ export class DocenteDashboardComponent implements OnInit {
   savingAsig     = false;
   docenteUid     = 0;
   formJuegoId:   number | null = null;
+  formAsigPerfilId: number | null = null;
+  errorAsig      = '';
   formAsig: Asignacion = { titulo:'', descripcion:'', minimoSesiones:1, fechaLimite:'', juego:null };
 
-  readonly JUEGOS_LISTA = [
-    { id:1, nombre:'Espejo Mental' }, { id:2, nombre:'Historia Viva' },
-    { id:3, nombre:'Palabras Ocultas' }, { id:4, nombre:'Piezas en Tiempo' },
-    { id:5, nombre:'Foco Extremo' }, { id:6, nombre:'Cascada Numérica' },
-  ];
+  /** Catálogo completo de juegos (GET /api/juegos), para el selector de asignaciones. */
+  juegosCatalogo: JuegoCatalogo[] = [];
 
   // Calendario (real: citas/recordatorios propios + asignaciones de la clase)
   calMes = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
@@ -881,14 +938,27 @@ export class DocenteDashboardComponent implements OnInit {
   mostrarModalEvento = false;
   modalEsAsignacion  = false;
   guardandoEvento    = false;
+  errorEvento        = '';
   formEvento: FormEvento = { id:null, tipo:'CITA', titulo:'', descripcion:'', fecha:'', hora:'', perfilId:null };
 
+  /** Horas ya ocupadas por otra CITA el mismo día (para bloquearlas en el selector). */
+  get horasOcupadasEvento(): string[] {
+    if (!this.formEvento.fecha) return [];
+    return this.calEventos
+      .filter(e => e.origen === 'EVENTO' && e.tipo === 'CITA' && e.fecha === this.formEvento.fecha && e.id !== this.formEvento.id && e.hora)
+      .map(e => e.hora!.substring(0, 5));
+  }
+
   // Configuración — perfil del docente (auto-servicio)
-  docenteEmail    = '';
+  docenteEmail      = '';
   formPerfil: DocenteProfileUpdate = { nombre:'', email:'', institucion:'', gradoGrupo:'' };
-  guardandoPerfil  = false;
-  perfilGuardadoOk = false;
-  errorPerfil      = '';
+  guardandoPerfil   = false;
+  perfilGuardadoOk  = false;
+  errorPerfil       = '';
+  errorCargaPerfil  = '';
+  mostrarModalPerfil = false;
+  erroresPerfil: { nombre?: string; email?: string } = {};
+  tocadoPerfil:  { nombre?: boolean; email?: boolean } = {};
 
   constructor(
     public  auth:    AuthService,
@@ -908,6 +978,14 @@ export class DocenteDashboardComponent implements OnInit {
     this.loadAsignaciones(user.usuarioId);
     this.loadPerfilDocente(user.usuarioId);
     this.cargarCalendario();
+    this.docSvc.getJuegos().pipe(catchError(() => of([] as JuegoCatalogo[]))).subscribe(lista => {
+      this.juegosCatalogo = lista.slice().sort((a, b) => a.nombre.localeCompare(b.nombre));
+      this.cdr.detectChanges();
+    });
+  }
+
+  estudianteNombre(id: number | null): string {
+    return this.estudiantes.find(e => e.id === id)?.nombre ?? '';
   }
 
   private loadAlumnos(uid: number): void {
@@ -1021,6 +1099,7 @@ export class DocenteDashboardComponent implements OnInit {
 
   abrirNuevoEvento(fecha?: string): void {
     this.modalEsAsignacion = false;
+    this.errorEvento = '';
     this.formEvento = { id: null, tipo: 'CITA', titulo: '', descripcion: '', fecha: fecha ?? this.hoyISO(), hora: '', perfilId: null };
     this.mostrarModalEvento = true;
     this.cdr.detectChanges();
@@ -1028,6 +1107,7 @@ export class DocenteDashboardComponent implements OnInit {
 
   abrirEditarEvento(ev: EventoCalendarioItem, event: MouseEvent): void {
     event.stopPropagation();
+    this.errorEvento = '';
     if (ev.origen === 'ASIGNACION') {
       this.modalEsAsignacion = true;
       this.formEvento = { id: ev.id, tipo: 'CITA', titulo: ev.titulo, descripcion: ev.descripcion ?? '', fecha: ev.fecha, hora: '', perfilId: null };
@@ -1050,17 +1130,23 @@ export class DocenteDashboardComponent implements OnInit {
   cerrarModalEvento(): void {
     this.mostrarModalEvento = false;
     this.guardandoEvento = false;
+    this.errorEvento = '';
     this.cdr.detectChanges();
   }
 
   guardarEvento(): void {
     if (!this.formEvento.fecha) return;
     this.guardandoEvento = true;
+    this.errorEvento = '';
 
     if (this.modalEsAsignacion && this.formEvento.id) {
       this.docSvc.moverFechaAsignacion(this.formEvento.id, this.formEvento.fecha).subscribe({
         next: () => { this.cerrarModalEvento(); this.cargarCalendario(); this.loadAsignaciones(this.docenteUid); },
-        error: () => { this.guardandoEvento = false; this.cdr.detectChanges(); }
+        error: (err) => {
+          this.guardandoEvento = false;
+          this.errorEvento = err?.error?.error || 'No se pudo mover la fecha.';
+          this.cdr.detectChanges();
+        }
       });
       return;
     }
@@ -1080,7 +1166,11 @@ export class DocenteDashboardComponent implements OnInit {
 
     req$.subscribe({
       next: () => { this.cerrarModalEvento(); this.cargarCalendario(); },
-      error: () => { this.guardandoEvento = false; this.cdr.detectChanges(); }
+      error: (err) => {
+        this.guardandoEvento = false;
+        this.errorEvento = err?.error?.error || 'No se pudo guardar el evento.';
+        this.cdr.detectChanges();
+      }
     });
   }
 
@@ -1096,8 +1186,9 @@ export class DocenteDashboardComponent implements OnInit {
   // ── Configuración: perfil del docente ─────────────────────────────────────
 
   private loadPerfilDocente(uid: number): void {
-    this.docSvc.getPerfilDocente(uid).pipe(catchError(() => of(null))).subscribe(info => {
-      if (!info) return;
+    this.errorCargaPerfil = '';
+    this.docSvc.getPerfilDocente(uid).pipe(catchError(err => { this.errorCargaPerfil = err?.error?.error || 'No se pudo cargar tu perfil. Intenta recargar la página.'; return of(null); })).subscribe(info => {
+      if (!info) { this.cdr.detectChanges(); return; }
       this.institucion  = info.institucion ?? '';
       this.gradoGrupo   = info.gradoGrupo ?? '';
       this.docenteEmail = info.usuario?.email ?? '';
@@ -1112,8 +1203,46 @@ export class DocenteDashboardComponent implements OnInit {
     });
   }
 
+  abrirEditarPerfil(): void {
+    this.formPerfil = {
+      nombre: this.docenteName ?? '',
+      email: this.docenteEmail ?? '',
+      institucion: this.institucion ?? '',
+      gradoGrupo: this.gradoGrupo ?? '',
+    };
+    this.erroresPerfil = {};
+    this.tocadoPerfil  = {};
+    this.errorPerfil   = '';
+    this.mostrarModalPerfil = true;
+    this.cdr.detectChanges();
+  }
+
+  cerrarEditarPerfil(): void {
+    this.mostrarModalPerfil = false;
+    this.guardandoPerfil = false;
+    this.cdr.detectChanges();
+  }
+
+  validarNombrePerfil(): void {
+    const v = (this.formPerfil.nombre || '').trim();
+    this.erroresPerfil.nombre = !v ? 'El nombre es requerido.' : v.length < 2 ? 'Debe tener al menos 2 caracteres.' : undefined;
+  }
+
+  validarEmailPerfil(): void {
+    const v = (this.formPerfil.email || '').trim();
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    this.erroresPerfil.email = !v ? 'El correo es requerido.' : !re.test(v) ? 'Ingresa un correo válido (ej: nombre@dominio.com).' : undefined;
+  }
+
+  private perfilFormValido(): boolean {
+    this.validarNombrePerfil();
+    this.validarEmailPerfil();
+    this.tocadoPerfil = { nombre: true, email: true };
+    return !this.erroresPerfil.nombre && !this.erroresPerfil.email;
+  }
+
   guardarPerfil(): void {
-    if (!this.docenteUid || !this.formPerfil.nombre || !this.formPerfil.email) return;
+    if (!this.docenteUid || !this.perfilFormValido()) { this.cdr.detectChanges(); return; }
     this.guardandoPerfil  = true;
     this.perfilGuardadoOk = false;
     this.errorPerfil      = '';
@@ -1125,6 +1254,7 @@ export class DocenteDashboardComponent implements OnInit {
         this.docenteEmail = info.usuario?.email ?? this.formPerfil.email!;
         this.institucion  = info.institucion ?? '';
         this.gradoGrupo   = info.gradoGrupo ?? '';
+        this.mostrarModalPerfil = false;
         this.cdr.detectChanges();
         setTimeout(() => { this.perfilGuardadoOk = false; this.cdr.detectChanges(); }, 3000);
       },
@@ -1136,23 +1266,20 @@ export class DocenteDashboardComponent implements OnInit {
     });
   }
 
-  /** Convierte DD/MM/AAAA → YYYY-MM-DD para el backend (ISO 8601). */
-  private parseFechaISO(s: string): string {
-    if (!s || !/^\d{2}\/\d{2}\/\d{4}$/.test(s)) return s;
-    const [dd, mm, yyyy] = s.split('/');
-    return `${yyyy}-${mm}-${dd}`;
-  }
-
   crearAsig(): void {
     if (!this.formAsig.titulo || !this.formAsig.fechaLimite) return;
     this.savingAsig = true;
-    const asigPayload = { ...this.formAsig, fechaLimite: this.parseFechaISO(this.formAsig.fechaLimite) };
-    this.docSvc.crearAsignacion(this.docenteUid, asigPayload).subscribe({
+    this.errorAsig  = '';
+    this.docSvc.crearAsignacion(this.docenteUid, this.formAsig, this.formAsigPerfilId).subscribe({
       next: () => {
         this.cancelarAsig();
         this.loadAsignaciones(this.docenteUid);
       },
-      error: () => { this.savingAsig = false; this.cdr.detectChanges(); }
+      error: (err) => {
+        this.savingAsig = false;
+        this.errorAsig = err?.error?.error || 'No se pudo crear la asignación.';
+        this.cdr.detectChanges();
+      }
     });
   }
 
@@ -1164,14 +1291,16 @@ export class DocenteDashboardComponent implements OnInit {
   cancelarAsig(): void {
     this.showFormAsig = false;
     this.savingAsig   = false;
+    this.errorAsig    = '';
     this.formJuegoId  = null;
+    this.formAsigPerfilId = null;
     this.formAsig     = { titulo:'', descripcion:'', minimoSesiones:1, fechaLimite:'', juego:null };
     this.cdr.detectChanges();
   }
 
   setJuego(id: number | null): void {
     if (!id) { this.formAsig.juego = null; return; }
-    const j = this.JUEGOS_LISTA.find(x => x.id === id);
+    const j = this.juegosCatalogo.find(x => x.id === id);
     this.formAsig.juego = j ? { id: j.id, nombre: j.nombre } : null;
   }
 

@@ -35,7 +35,12 @@ export interface AlertaRegresion {
 export interface Notificacion {
   id:      number;
   tipo:    string;
+  titulo?: string | null;
   mensaje: string;
+  descripcion?:   string | null;
+  fechaEvento?:   string | null; // YYYY-MM-DD
+  horaEvento?:    string | null; // HH:mm:ss
+  contactoEmail?: string | null;
   leida:   boolean;
   fecha:   string;
 }

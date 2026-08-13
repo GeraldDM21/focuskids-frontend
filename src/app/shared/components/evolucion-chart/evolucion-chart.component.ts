@@ -4,11 +4,13 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { catchError, of } from 'rxjs';
 import Chart from 'chart.js/auto';
 
 import { PadreService, SesionJuego } from '../../../features/padre/padre.service';
 import { puntosDeTendencia } from '../../utils/regresion-lineal.util';
+import { environment } from '../../../../environments/environment';
 
 type RangoTiempo = 'semana' | 'mes' | '3meses' | 'todo';
 
@@ -45,7 +47,7 @@ const COLOR_DEFAULT = '#6366F1';
   } @else if (juegosDisponibles.length === 0) {
     <div class="evo-empty">
       <span style="font-size:36px">📊</span>
-      <p>Aún no hay sesiones registradas para generar gráficas de evolución.</p>
+      <p>No se pudo cargar la lista de juegos. Intenta recargar la página.</p>
     </div>
   } @else {
 
@@ -70,11 +72,24 @@ const COLOR_DEFAULT = '#6366F1';
       </div>
     </div>
 
-    <!-- ── CA-04: mensaje de mínimo de sesiones ── -->
+    <!-- ── CA-04: barra de progreso hacia el mínimo de sesiones ── -->
     @if (sesionesFiltradas.length < MIN_SESIONES) {
-      <div class="evo-empty">
-        <span style="font-size:36px">📈</span>
-        <p>Necesitas al menos 3 sesiones para ver la gráfica de evolución.</p>
+      <div class="evo-progreso">
+        <span style="font-size:32px">📈</span>
+        <p class="evo-progreso-titulo">
+          {{ sesionesFiltradas.length }} de {{ MIN_SESIONES }} sesiones de <strong>{{ nombreJuegoSeleccionado }}</strong>
+          @if (rangoSeleccionado !== 'todo') { en el rango seleccionado }
+        </p>
+        <div class="evo-progreso-track">
+          <div class="evo-progreso-fill" [style.width.%]="(sesionesFiltradas.length / MIN_SESIONES) * 100"></div>
+        </div>
+        <p class="evo-progreso-sub">
+          @if (sesionesFiltradas.length === 0) {
+            Aún no hay sesiones de este juego {{ rangoSeleccionado !== 'todo' ? 'en este rango' : '' }}.
+          } @else {
+            Faltan {{ MIN_SESIONES - sesionesFiltradas.length }} sesión{{ (MIN_SESIONES - sesionesFiltradas.length) !== 1 ? 'es' : '' }} para desbloquear la gráfica.
+          }
+        </p>
       </div>
     } @else {
 
@@ -119,6 +134,13 @@ const COLOR_DEFAULT = '#6366F1';
     .evo-empty { background:white; border-radius:16px; padding:28px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:10px; box-shadow:0 2px 10px rgba(91,33,182,.06); }
     .evo-empty p { color:#64748B; font-size:13.5px; }
 
+    .evo-progreso { background:white; border-radius:16px; padding:28px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:8px; box-shadow:0 2px 10px rgba(91,33,182,.06); }
+    .evo-progreso-titulo { color:#334155; font-size:13.5px; font-weight:600; }
+    .evo-progreso-titulo strong { color:#1E1B4B; }
+    .evo-progreso-track { width:100%; max-width:320px; height:10px; background:#F3F0FF; border-radius:100px; overflow:hidden; margin-top:4px; }
+    .evo-progreso-fill { height:100%; background:linear-gradient(90deg,#7C3AED,#A78BFA); border-radius:100px; transition:width .5s ease; }
+    .evo-progreso-sub { color:#94A3B8; font-size:12.5px; }
+
     .evo-controls { display:flex; gap:14px; flex-wrap:wrap; }
     .evo-field { display:flex; flex-direction:column; gap:5px; min-width:180px; }
     .evo-field label { font-size:12px; font-weight:700; color:#64748B; }
@@ -145,12 +167,29 @@ export class EvolucionChartComponent implements OnChanges, AfterViewInit, OnDest
 
   loading = true;
   todasLasSesiones: SesionJuego[] = [];
-  juegosDisponibles: JuegoOpcion[] = [];
+
+  /** Catálogo completo de juegos (GET /api/juegos) — se carga una sola vez, no depende del perfil. */
+  private catalogoJuegos: JuegoOpcion[] = [];
 
   juegoSeleccionadoId: number | null = null;
   rangoSeleccionado: RangoTiempo = 'todo';
 
   sesionesFiltradas: SesionJuego[] = [];
+
+  /** Lista para el selector: el catálogo completo (12 juegos); si por algún motivo no cargó,
+   *  cae de vuelta a derivar la lista solo de los juegos que el niño ya jugó. */
+  get juegosDisponibles(): JuegoOpcion[] {
+    if (this.catalogoJuegos.length > 0) return this.catalogoJuegos;
+    const mapaJuegos = new Map<number, string>();
+    for (const s of this.todasLasSesiones) mapaJuegos.set(s.juego.id, s.juego.nombre);
+    return Array.from(mapaJuegos.entries())
+      .map(([id, nombre]) => ({ id, nombre }))
+      .sort((a, b) => a.nombre.localeCompare(b.nombre));
+  }
+
+  get nombreJuegoSeleccionado(): string {
+    return this.juegosDisponibles.find(j => j.id === this.juegoSeleccionadoId)?.nombre ?? '';
+  }
 
   get conDatosTiempo(): SesionJuego[] {
     return this.sesionesFiltradas.filter(s => s.tiempoRespuestaPromedioMs != null);
@@ -162,8 +201,19 @@ export class EvolucionChartComponent implements OnChanges, AfterViewInit, OnDest
 
   constructor(
     private padreService: PadreService,
+    private http: HttpClient,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) {
+    this.http.get<{ id: number; nombre: string }[]>(`${environment.apiUrl}/juegos`).pipe(
+      catchError(() => of([] as { id: number; nombre: string }[]))
+    ).subscribe(lista => {
+      this.catalogoJuegos = lista
+        .map(j => ({ id: j.id, nombre: j.nombre }))
+        .sort((a, b) => a.nombre.localeCompare(b.nombre));
+      this.seleccionarJuegoPorDefecto();
+      this.cdr.detectChanges();
+    });
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['perfilId'] && this.perfilId) {
@@ -181,8 +231,17 @@ export class EvolucionChartComponent implements OnChanges, AfterViewInit, OnDest
     this.chartTiempo?.destroy();
   }
 
+  private seleccionarJuegoPorDefecto(): void {
+    if (this.juegoSeleccionadoId == null && this.juegosDisponibles.length > 0) {
+      this.juegoSeleccionadoId = this.juegosDisponibles[0].id;
+      this.aplicarFiltros();
+    }
+  }
+
   private cargarSesiones(): void {
     this.loading = true;
+    // Nuevo perfil: reiniciamos la selección para que se recalcule con los juegos de este niño.
+    this.juegoSeleccionadoId = null;
     this.cdr.detectChanges();
 
     this.padreService.getSesiones(this.perfilId).pipe(
@@ -195,17 +254,7 @@ export class EvolucionChartComponent implements OnChanges, AfterViewInit, OnDest
         s.completada === true && s.porcentajeAciertos != null
       );
 
-      const mapaJuegos = new Map<number, string>();
-      for (const s of this.todasLasSesiones) {
-        mapaJuegos.set(s.juego.id, s.juego.nombre);
-      }
-      this.juegosDisponibles = Array.from(mapaJuegos.entries())
-        .map(([id, nombre]) => ({ id, nombre }))
-        .sort((a, b) => a.nombre.localeCompare(b.nombre));
-
-      if (this.juegosDisponibles.length > 0 && this.juegoSeleccionadoId == null) {
-        this.juegoSeleccionadoId = this.juegosDisponibles[0].id;
-      }
+      this.seleccionarJuegoPorDefecto();
 
       this.loading = false;
       this.aplicarFiltros();
