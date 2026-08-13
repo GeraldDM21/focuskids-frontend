@@ -166,6 +166,7 @@ const MISIONES_DEF = [
           </div>
         </header>
 
+        @if (loading || tab === 'clase' || tab === 'reportes') {
         <div class="content">
           @if (loading) {
             <div class="loader"><div class="spinner"></div></div>
@@ -335,6 +336,17 @@ const MISIONES_DEF = [
 
           <!-- ══ REPORTES ══ -->
           @if (!loading && tab === 'reportes') {
+            @if (estudiantes.length === 0) {
+              <div class="empty-state">
+                <div style="font-size:56px">📊</div>
+                <h2>Sin datos de rendimiento</h2>
+                <p>
+                  Aún no tenés alumnos asignados.<br />
+                  Para ver reportes aquí, un padre debe asignar el perfil de su hijo a tu cuenta de docente.
+                </p>
+              </div>
+            }
+            @if (estudiantes.length > 0) {
             <div class="rep-wrap">
               <div class="rep-intro">
                 <div class="rep-stat">
@@ -387,10 +399,12 @@ const MISIONES_DEF = [
                 }
               </div>
             </div>
-          }
+            }
+            <!-- /estudiantes.length > 0 -->
 
-          <!-- Logros por alumno -->
-          <div class="logros-card">
+            <!-- Logros por alumno -->
+            @if (estudiantes.length > 0) {
+            <div class="logros-card">
             <h3 class="card-title">🎖️ Logros por alumno</h3>
 
             <!-- Selector de alumno -->
@@ -432,9 +446,15 @@ const MISIONES_DEF = [
                 <p>Selecciona un alumno para ver sus logros.</p>
               </div>
             }
-          </div>
+            </div>
+            }
+            <!-- /logros por alumno -->
+          }
+          <!-- /tab reportes -->
 
         </div>
+        }
+        <!-- /content -->
 
       <!-- ══ CALENDARIO ══ -->
       @if (!loading && tab === 'calendario') {
@@ -572,12 +592,11 @@ const MISIONES_DEF = [
                     </div>
                     <div class="form-field">
                       <label>Fecha límite *</label>
-                      <input
-                        type="text"
-                        placeholder="DD/MM/AAAA"
-                        maxlength="10"
-                        [(ngModel)]="formAsig.fechaLimite"
-                      />
+                      <app-fecha-hora-picker
+                        [fecha]="formAsig.fechaLimite"
+                        (fechaChange)="formAsig.fechaLimite = $event"
+                        [mostrarHora]="false"
+                      ></app-fecha-hora-picker>
                     </div>
                     <div class="form-field span2">
                       <label>Descripción</label>
@@ -900,9 +919,6 @@ const MISIONES_DEF = [
   `,
   styles: [
     `
-      *,
-      *::before,
-
       .root {
         display: flex;
         height: 100vh;
@@ -2336,7 +2352,6 @@ export class DocenteDashboardComponent implements OnInit {
 
   crearAsig(): void {
     if (!this.formAsig.titulo || !this.formAsig.fechaLimite) return;
-    this.savingAsig = true;
     this.savingAsig = true;
     this.errorAsig = '';
     this.docSvc.crearAsignacion(this.docenteUid, this.formAsig, this.formAsigPerfilId).subscribe({
