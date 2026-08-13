@@ -11,6 +11,7 @@ import { PadreService, SesionJuego, Metrica, AlertaRegresion, Notificacion } fro
 import { DocenteService } from '../../docente/docente.service';
 import { EvolucionChartComponent } from '../../../shared/components/evolucion-chart/evolucion-chart.component';
 import { NivelAsignadoService, JuegoResumen, NivelBloqueable } from '../../../core/services/nivel-asignado.service';
+import { CampanaNotificacionesComponent } from '../../../shared/components/campana-notificaciones/campana-notificaciones.component';
 
 const AVATAR_MAP: Record<string, string> = {
   fox:'🦊', frog:'🐸', lion:'🦁', panda:'🐼', koala:'🐨',
@@ -38,7 +39,7 @@ interface DiaActividad     { dia: string; valor: number; }
 @Component({
   selector: 'app-padre-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, EvolucionChartComponent],
+  imports: [CommonModule, FormsModule, EvolucionChartComponent, CampanaNotificacionesComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
 <div class="root">
@@ -93,7 +94,10 @@ interface DiaActividad     { dia: string; valor: number; }
         @if (tab === 'hijos') {
           <button class="btn-new-perfil" (click)="openCreate()">+ Nuevo perfil</button>
         }
-        <button class="icon-btn" title="Notificaciones" (click)="setNotif()">🔔</button>
+        <app-campana-notificaciones
+          [usuarioId]="auth.user()?.usuarioId ?? 0"
+          [notificacionesActivas]="notificacionesInAppActivas"
+          historialBasePath="/padre/historial" />
         <button class="icon-btn" title="Cerrar sesión" (click)="auth.logout()">⎋</button>
       </div>
     </header>
@@ -440,6 +444,19 @@ interface DiaActividad     { dia: string; valor: number; }
               </button>
             </div>
             @if (guardandoResumen) {
+              <p class="config-note" style="margin-top:8px">Guardando...</p>
+            }
+            <div class="toggle-row" style="margin-top:16px">
+              <div class="toggle-info">
+                <div class="toggle-label">Notificaciones in-app</div>
+                <div class="toggle-desc">Muestra el badge de la campana cuando la IA detecta una regresión. Las alertas se siguen registrando aunque esté apagado.</div>
+              </div>
+              <button class="toggle-btn" [class.toggle-on]="notificacionesInAppActivas"
+                      (click)="cambiarNotificacionesInApp()" [disabled]="guardandoNotifInApp">
+                <span class="toggle-thumb"></span>
+              </button>
+            </div>
+            @if (guardandoNotifInApp) {
               <p class="config-note" style="margin-top:8px">Guardando...</p>
             }
           </div>
@@ -929,6 +946,9 @@ export class PadreDashboardComponent implements OnInit {
   // Config padre
   preferenciaResumenSemanal = true;
   guardandoResumen          = false;
+  // CA-05 (Notificaciones in-app): controla si el badge de la campana se muestra.
+  notificacionesInAppActivas = true;
+  guardandoNotifInApp        = false;
 
   constructor(
     public  auth:                AuthService,
@@ -952,7 +972,10 @@ export class PadreDashboardComponent implements OnInit {
         this.docentesList = d; this.cdr.detectChanges();
       });
       this.padreService.getConfiguracionPadre(user.usuarioId).pipe(catchError(() => of(null))).subscribe(cfg => {
-        if (cfg) this.preferenciaResumenSemanal = cfg.preferenciaResumenSemanal;
+        if (cfg) {
+          this.preferenciaResumenSemanal = cfg.preferenciaResumenSemanal;
+          this.notificacionesInAppActivas = cfg.notificacionesInAppActivas;
+        }
         this.cdr.detectChanges();
       });
     }
@@ -1270,6 +1293,19 @@ export class PadreDashboardComponent implements OnInit {
     this.padreService.toggleResumenSemanal(uid, nuevo).subscribe({
       next: () => { this.preferenciaResumenSemanal = nuevo; this.guardandoResumen = false; this.cdr.detectChanges(); },
       error: () => { this.guardandoResumen = false; this.cdr.detectChanges(); }
+    });
+  }
+
+  // CA-05 (Notificaciones in-app): las alertas se siguen registrando en BD,
+  // esto solo controla si el badge de la campana se muestra.
+  cambiarNotificacionesInApp(): void {
+    const uid = this.auth.user()?.usuarioId;
+    if (!uid) return;
+    const nuevo = !this.notificacionesInAppActivas;
+    this.guardandoNotifInApp = true;
+    this.padreService.toggleNotificacionesInApp(uid, nuevo).subscribe({
+      next: () => { this.notificacionesInAppActivas = nuevo; this.guardandoNotifInApp = false; this.cdr.detectChanges(); },
+      error: () => { this.guardandoNotifInApp = false; this.cdr.detectChanges(); }
     });
   }
 
