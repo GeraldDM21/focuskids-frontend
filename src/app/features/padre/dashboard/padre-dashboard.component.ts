@@ -7,7 +7,7 @@ import { catchError } from 'rxjs/operators';
 import { AuthService } from '../../../core/services/auth.service';
 import { ChildProfileService } from '../perfiles/child-profile.service';
 import { ChildProfile, ChildProfileRequest, AVATAR_EMOJIS } from '../perfiles/child-profile.model';
-import { PadreService, SesionJuego, Metrica, AlertaRegresion, Notificacion } from '../padre.service';
+import { PadreService, SesionJuego, Metrica, AlertaRegresion, Notificacion, PerfilPadre, PerfilPadreUpdate } from '../padre.service';
 import { DocenteService } from '../../docente/docente.service';
 import { EvolucionChartComponent } from '../../../shared/components/evolucion-chart/evolucion-chart.component';
 
@@ -313,7 +313,7 @@ interface DiaActividad     { dia: string; valor: number; }
                 </div>
               </div>
               <div class="sesiones-list">
-                @for (s of sesionesOrdenadas; track s.id) {
+                @for (s of sesionesPaginadas; track s.id) {
                   <div class="sesion-row" [class.sesion-ok]="s.completada" [class.sesion-inc]="!s.completada">
                     <div class="sr-ico">{{ juegoIco(s.juego.nombre) }}</div>
                     <div class="sr-info">
@@ -328,6 +328,16 @@ interface DiaActividad     { dia: string; valor: number; }
                   </div>
                 }
               </div>
+
+              @if (totalPaginasActividad > 1) {
+                <div class="paginacion">
+                  <button class="pg-btn pg-flecha" [disabled]="paginaActividad === 1" (click)="irAPaginaActividad(paginaActividad - 1)">‹</button>
+                  @for (p of paginasActividad; track p) {
+                    <button class="pg-btn" [class.pg-activa]="p === paginaActividad" (click)="irAPaginaActividad(p)">{{ p }}</button>
+                  }
+                  <button class="pg-btn pg-flecha" [disabled]="paginaActividad === totalPaginasActividad" (click)="irAPaginaActividad(paginaActividad + 1)">›</button>
+                </div>
+              }
             </div>
           }
         } @else {
@@ -408,9 +418,32 @@ interface DiaActividad     { dia: string; valor: number; }
         <div class="config-wrap">
           <div class="config-card">
             <h3 class="config-title">👤 Mi cuenta</h3>
-            <div class="config-field"><label>Nombre</label><div class="config-val">{{ parentName }}</div></div>
-            <div class="config-field"><label>Rol</label><div class="config-val">Padre / Tutor</div></div>
-            <p class="config-note">Para cambiar contraseña o correo, contacta al administrador.</p>
+            @if (errorPerfil) { <div class="form-error">{{ errorPerfil }}</div> }
+            @if (perfilGuardadoOk) { <div class="config-ok">✓ Perfil actualizado correctamente.</div> }
+            <div class="form-group">
+              <label>Nombre</label>
+              <input class="form-input" type="text" [(ngModel)]="formPerfil.nombre" placeholder="Tu nombre completo" maxlength="150"/>
+            </div>
+            <div class="form-group">
+              <label>Correo</label>
+              <input class="form-input" type="email" [(ngModel)]="formPerfil.email" placeholder="correo@ejemplo.com"/>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Teléfono</label>
+                <input class="form-input" type="tel" [(ngModel)]="formPerfil.telefono" placeholder="Ej: 8888-8888"/>
+              </div>
+              <div class="form-group">
+                <label>Relación con el niño</label>
+                <input class="form-input" type="text" [(ngModel)]="formPerfil.relacionConNino" placeholder="Ej: Madre, Padre, Tutor"/>
+              </div>
+            </div>
+            <div class="config-actions">
+              <button class="btn-primary" [disabled]="guardandoPerfil" (click)="guardarPerfil()">
+                {{ guardandoPerfil ? 'Guardando...' : 'Guardar cambios' }}
+              </button>
+            </div>
+            <p class="config-note">Para cambiar la contraseña, contacta al administrador.</p>
           </div>
           <div class="config-card">
             <h3 class="config-title">👨‍👧‍👦 Hijos registrados</h3>
@@ -709,6 +742,17 @@ interface DiaActividad     { dia: string; valor: number; }
     .sr-estado.ok  { background:#F0FDF4; color:#16A34A; }
     .sr-estado.inc { background:#F8FAFC; color:#94A3B8; }
 
+    .paginacion { display:flex; align-items:center; justify-content:center; gap:6px; flex-wrap:wrap; margin-top:6px; }
+    .pg-btn {
+      min-width:32px; height:32px; padding:0 6px; border-radius:9px; border:1.5px solid #E4DEFF;
+      background:white; color:#5B21B6; font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit;
+      transition:all .15s;
+    }
+    .pg-btn:hover:not(:disabled) { background:#EDE9FE; }
+    .pg-btn:disabled { color:#CBD5E1; border-color:#F1F5F9; cursor:default; }
+    .pg-btn.pg-activa { background:#5B21B6; border-color:#5B21B6; color:white; }
+    .pg-flecha { font-size:15px; font-weight:900; }
+
     /* ── NOTIFICACIONES ── */
     .notif-wrap   { display:flex; flex-direction:column; gap:14px; }
     .notif-header { display:flex; align-items:center; justify-content:space-between; }
@@ -734,6 +778,8 @@ interface DiaActividad     { dia: string; valor: number; }
     .config-field label { font-size:12px; font-weight:700; color:#64748B; }
     .config-val { background:#F3F0FF; border-radius:10px; padding:10px 14px; font-size:14px; font-weight:600; color:#1E1B4B; }
     .config-note { font-size:12px; color:#94A3B8; }
+    .config-ok { background:#F0FDF4; color:#16A34A; border-radius:10px; padding:10px 14px; font-size:13px; font-weight:700; margin-bottom:16px; }
+    .config-actions { display:flex; justify-content:flex-end; margin:4px 0 14px; }
     .config-hijos { display:flex; flex-direction:column; gap:10px; }
     .config-hijo { display:flex; align-items:center; gap:10px; padding:10px; background:#F8F7FF; border-radius:12px; font-size:14px; }
     .ch-nombre { font-weight:700; color:#1E1B4B; flex:1; }
@@ -845,6 +891,10 @@ export class PadreDashboardComponent implements OnInit {
   sesiones:       SesionJuego[]    = [];
   metricas:       Metrica[]         = [];
   alertas:        AlertaRegresion[] = [];
+
+  // Paginación del historial de sesiones (pestaña Actividad)
+  readonly SESIONES_POR_PAGINA = 10;
+  paginaActividad = 1;
   notificaciones: Notificacion[]    = [];
 
   // Stats derivados
@@ -868,6 +918,12 @@ export class PadreDashboardComponent implements OnInit {
   // Config padre
   preferenciaResumenSemanal = true;
   guardandoResumen          = false;
+
+  // Perfil del padre (auto-servicio)
+  formPerfil: PerfilPadreUpdate = { nombre:'', email:'', telefono:'', relacionConNino:'' };
+  guardandoPerfil    = false;
+  perfilGuardadoOk   = false;
+  errorPerfil        = '';
 
   constructor(
     public  auth:                AuthService,
@@ -893,7 +949,45 @@ export class PadreDashboardComponent implements OnInit {
         if (cfg) this.preferenciaResumenSemanal = cfg.preferenciaResumenSemanal;
         this.cdr.detectChanges();
       });
+      this.loadPerfilPadre(user.usuarioId);
     }
+  }
+
+  private loadPerfilPadre(uid: number): void {
+    this.padreService.getPerfilPadre(uid).pipe(catchError(() => of(null))).subscribe((p: PerfilPadre | null) => {
+      if (p) {
+        this.formPerfil = {
+          nombre: p.nombre, email: p.email,
+          telefono: p.telefono, relacionConNino: p.relacionConNino
+        };
+      }
+      this.cdr.detectChanges();
+    });
+  }
+
+  guardarPerfil(): void {
+    const uid = this.auth.user()?.usuarioId;
+    if (!uid) return;
+    this.errorPerfil = '';
+    this.perfilGuardadoOk = false;
+    this.guardandoPerfil = true;
+    this.padreService.actualizarPerfilPadre(uid, this.formPerfil).subscribe({
+      next: (p: PerfilPadre) => {
+        this.formPerfil = {
+          nombre: p.nombre, email: p.email,
+          telefono: p.telefono, relacionConNino: p.relacionConNino
+        };
+        this.parentName = p.nombre || this.parentName;
+        this.guardandoPerfil = false;
+        this.perfilGuardadoOk = true;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.errorPerfil = err?.error?.error || 'No se pudo guardar el perfil. Intenta de nuevo.';
+        this.guardandoPerfil = false;
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   private loadPerfiles(uid: number): void {
@@ -922,6 +1016,7 @@ export class PadreDashboardComponent implements OnInit {
       this.sesiones = sesiones;
       this.metricas = metricas;
       this.alertas  = alertas;
+      this.paginaActividad = 1;
       this.calcularStats();
       this.loadingDatos = false;
       this.cdr.detectChanges();
@@ -1199,6 +1294,24 @@ export class PadreDashboardComponent implements OnInit {
 
   get sesionesOrdenadas(): SesionJuego[] {
     return [...this.sesiones].sort((a, b) => new Date(b.inicio).getTime() - new Date(a.inicio).getTime());
+  }
+
+  // Historial de sesiones paginado (máx. 10 por página; el historial completo
+  // sigue disponible aparte con "Ver historial detallado").
+  get totalPaginasActividad(): number {
+    return Math.max(1, Math.ceil(this.sesiones.length / this.SESIONES_POR_PAGINA));
+  }
+  get paginasActividad(): number[] {
+    return Array.from({ length: this.totalPaginasActividad }, (_, i) => i + 1);
+  }
+  get sesionesPaginadas(): SesionJuego[] {
+    const inicio = (this.paginaActividad - 1) * this.SESIONES_POR_PAGINA;
+    return this.sesionesOrdenadas.slice(inicio, inicio + this.SESIONES_POR_PAGINA);
+  }
+  irAPaginaActividad(pagina: number): void {
+    if (pagina < 1 || pagina > this.totalPaginasActividad) return;
+    this.paginaActividad = pagina;
+    this.cdr.detectChanges();
   }
   get notifNoLeidas(): number { return this.notificaciones.filter(n => !n.leida).length; }
   get xpPct():         number { return Math.round((this.xpActual / this.xpMax) * 100); }
