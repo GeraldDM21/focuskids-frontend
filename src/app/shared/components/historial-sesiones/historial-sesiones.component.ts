@@ -69,9 +69,10 @@ const NIVELES = [
 
       <div class="filtro-group">
         <label class="filtro-label">Estado</label>
-        <button class="btn-toggle" [class.activo]="soloCompletadas" (click)="toggleCompletadas()">
-          {{ soloCompletadas ? '✓ Solo completadas' : 'Todas las sesiones' }}
-        </button>
+        <select class="filtro-input" [(ngModel)]="soloCompletadas" (change)="buscar()">
+          <option [ngValue]="true">✓ Solo completadas</option>
+          <option [ngValue]="false">Todas las sesiones</option>
+        </select>
       </div>
 
       <div class="filtro-group filtro-group-btn">
