@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { SopaLetrasService } from './sopa-letras.service';
 import { ChildProfileService } from '../../../padre/perfiles/child-profile.service';
 import { SopaLetrasConfig, PalabraColocada, Tema, Nivel } from './sopa-letras.model';
@@ -138,10 +138,17 @@ export class SopaLetrasComponent implements OnInit, OnDestroy {
     private sopaLetrasService: SopaLetrasService,
     private childProfileService: ChildProfileService,
     private router: Router,
+    private route: ActivatedRoute,
     private sesionJuegoService: SesionJuegoService,
   ) {}
 
   ngOnInit(): void {
+    // Leer el tema asignado por el maestro desde query params
+    const temaParam = this.route.snapshot.queryParamMap.get('tema') as Tema | null;
+    if (temaParam && ['CIENCIAS', 'GEOGRAFIA', 'MATEMATICAS'].includes(temaParam)) {
+      this.temaSeleccionado = temaParam;
+    }
+
     this.childProfileService.activeProfile$.subscribe(state => {
       if (!state.profileId) {
         this.router.navigate(['/padre/perfiles/selector']);

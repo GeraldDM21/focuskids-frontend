@@ -25,7 +25,7 @@
           <p class="habla-saludo">¡Hola! Soy <strong>Pandi</strong> 🐼</p>
           <p class="habla-intro">Para jugar Sopa de Letras:</p>
           <div class="habla-pasos">
-            <div class="habla-paso"><span class="h-ico">🎯</span><span>Elige un tema de vocabulario</span></div>
+            <div class="habla-paso"><span class="h-ico">🎯</span><span>Tu maestra eligió el tema por ti</span></div>
             <div class="habla-paso"><span class="h-ico">👆</span><span>Arrastra las letras para seleccionarlas</span></div>
             <div class="habla-paso"><span class="h-ico">⚡</span><span>¡Si eres rápido, sube la dificultad!</span></div>
           </div>
@@ -40,19 +40,6 @@
           <span class="titulo-parte1">Sopa de </span><span class="titulo-parte2">Letras</span>
         </h1>
         <p class="titulo-sub">Arrastra las letras para encontrar las palabras</p>
-
-        <!-- Selección de tema -->
-        <div class="tema-seccion">
-          <p class="tema-label">¿De qué tema quieres jugar?</p>
-          <div class="temas-row">
-            @for (tema of temas; track tema.id) {
-              <button class="tema-btn" [class.activo]="temaSeleccionado === tema.id" (click)="seleccionarTema(tema.id)">
-                <span class="tema-emoji">{{ tema.emoji }}</span>
-                <span>{{ tema.label }}</span>
-              </button>
-            }
-          </div>
-        </div>
 
         <!-- Botón jugar -->
         <div class="inicio-botones">

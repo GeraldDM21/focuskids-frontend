@@ -31,6 +31,7 @@ export interface Asignacion {
   perfilId?: number | null;
   /** Al listar: nombres de los alumnos enlazados a esta asignación (null/vacío = toda la clase). */
   alumnosAsignados?: string[] | null;
+  tema?: string | null;
 }
 
 export interface AsignacionPerfil {
