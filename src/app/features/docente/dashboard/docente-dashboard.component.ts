@@ -179,9 +179,9 @@ const MISIONES_DEF = [
                 <div style="font-size:56px">👨‍🎓</div>
                 <h2>Aún no tenés alumnos asignados</h2>
                 <p>
-                  Para ver datos aquí, un padre debe asignar el perfil de su hijo a tu cuenta de
-                  docente.<br />El campo <strong>docente_id</strong> en
-                  <code>perfil_nino</code> debe apuntar a tu usuario.
+                  Cuando un padre vincule el perfil de su hijo a tu cuenta, lo vas a ver aquí
+                  automáticamente.<br />Por ahora no hay nada que hacer de tu parte: solo espera
+                  a que te asignen un estudiante.
                 </p>
               </div>
             }
