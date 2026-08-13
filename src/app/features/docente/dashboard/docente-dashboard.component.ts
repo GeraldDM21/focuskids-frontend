@@ -4,7 +4,10 @@ import { AuthService } from '../../../core/services/auth.service';
 import { Router } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { DocenteService, AlumnoDocente, Asignacion } from '../docente.service';
+import {
+  DocenteService, AlumnoDocente, Asignacion,
+  EventoCalendarioItem, EventoCalendarioRequest, DocenteProfileUpdate,
+} from '../docente.service';
 import { SesionJuego, Metrica } from '../../padre/padre.service';
 import { MisionService, MisionReclamada } from '../../../core/services/mision.service';
 import { FormsModule } from '@angular/forms';
@@ -40,11 +43,19 @@ interface LogroClase {
   avatarAlu: string;
   fecha: string;
 }
-interface EventoCal {
-  dia: number;
+interface FormEvento {
+  id: number | null;
+  tipo: 'CITA' | 'RECORDATORIO';
   titulo: string;
-  tipo: 'asig' | 'reporte' | 'reunion';
-  hora: string;
+  descripcion: string;
+  fecha: string;   // YYYY-MM-DD
+  hora: string;    // HH:mm
+  perfilId: number | null;
+}
+interface CeldaCalendario {
+  dia: number | null;
+  fecha: string | null;
+  esHoy: boolean;
 }
 
 const AVATAR_MAP: Record<string, string> = {
@@ -426,49 +437,100 @@ const MISIONES_DEF = [
         </div>
       }
 
-              <div class="rep-card">
-                <h3 class="card-title">Distribución de estados</h3>
-                <div class="dist-row">
-                  <div class="dist-item dist-ex">
-                    <div class="dist-num">{{ cuentaEstado('Excelente') }}</div>
-                    <div class="dist-lbl">🌟 Excelente</div>
-                    <div class="dist-bar">
-                      <div
-                        class="dist-fill"
-                        [style.width.%]="(cuentaEstado('Excelente') / estudiantes.length) * 100"
-                        style="background:#16A34A"
-                      ></div>
-                    </div>
+      <!-- ══ CALENDARIO ══ -->
+      @if (!loading && tab === 'calendario') {
+        <div class="cal-wrap">
+          <div class="cal-card">
+            <div class="cal-header">
+              <div class="cal-nav">
+                <button class="cal-nav-btn" (click)="cambiarMes(-1)">‹</button>
+                <h3 class="card-title cal-mes-titulo">{{ nombreMesActual }}</h3>
+                <button class="cal-nav-btn" (click)="cambiarMes(1)">›</button>
+              </div>
+              <div class="cal-legend">
+                <span class="leg asig-col">📋 Asignación</span>
+                <span class="leg cita-col">🗓️ Cita</span>
+                <span class="leg rec-col">🔔 Recordatorio</span>
+              </div>
+              <button class="btn-add" (click)="abrirNuevoEvento()">+ Nuevo</button>
+            </div>
+
+            @if (calLoading) {
+              <div class="loader"><div class="spinner"></div></div>
+            } @else {
+              <div class="dias-header">
+                @for (d of ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom']; track d) {
+                  <div class="dia-hdr">{{ d }}</div>
+                }
+              </div>
+              <div class="dias-grid">
+                @for (celda of diasMesActual; track $index) {
+                  <div class="dia-cel" [class.dia-hoy]="celda.esHoy" [class.dia-vacio]="!celda.fecha" [class.dia-click]="!!celda.fecha"
+                       (click)="celda.fecha ? abrirNuevoEvento(celda.fecha) : null">
+                    @if (celda.fecha) {
+                      <span class="dia-num">{{ celda.dia }}</span>
+                      @for (ev of eventosDelDia(celda.fecha); track ev.origen + '-' + ev.id) {
+                        <div class="ev-chip" [class.ev-asig]="ev.origen==='ASIGNACION'" [class.ev-cita]="ev.tipo==='CITA'" [class.ev-rec]="ev.tipo==='RECORDATORIO'"
+                             (click)="abrirEditarEvento(ev, $event)">
+                          {{ ev.hora ? (ev.hora.substring(0,5) + ' ') : '' }}{{ ev.titulo }}
+                        </div>
+                      }
+                    }
                   </div>
-                  <div class="dist-item dist-mb">
-                    <div class="dist-num">{{ cuentaEstado('Muy bien') }}</div>
-                    <div class="dist-lbl">😊 Muy bien</div>
-                    <div class="dist-bar">
-                      <div
-                        class="dist-fill"
-                        [style.width.%]="(cuentaEstado('Muy bien') / estudiantes.length) * 100"
-                        style="background:#D97706"
-                      ></div>
-                    </div>
-                  </div>
-                  <div class="dist-item dist-na">
-                    <div class="dist-num">{{ cuentaEstado('Necesita ayuda') }}</div>
-                    <div class="dist-lbl">🆘 Necesita ayuda</div>
-                    <div class="dist-bar">
-                      <div
-                        class="dist-fill"
-                        [style.width.%]="
-                          (cuentaEstado('Necesita ayuda') / estudiantes.length) * 100
-                        "
-                        style="background:#DC2626"
-                      ></div>
-                    </div>
-                  </div>
-                </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- ══ CONFIGURACIÓN ══ -->
+      @if (!loading && tab === 'config') {
+        <div class="cfg-wrap">
+          <div class="cfg-card">
+            <h3 class="cfg-title">👤 Mi perfil docente</h3>
+            <div class="cfg-avatar">{{ inicial }}</div>
+
+            @if (errorPerfil) {
+              <div class="cfg-error">{{ errorPerfil }}</div>
+            }
+            @if (perfilGuardadoOk) {
+              <div class="cfg-ok">✓ Perfil actualizado correctamente.</div>
+            }
+
+            <div class="form-grid">
+              <div class="form-field">
+                <label>Nombre *</label>
+                <input [(ngModel)]="formPerfil.nombre" placeholder="Tu nombre completo" />
+              </div>
+              <div class="form-field">
+                <label>Correo *</label>
+                <input type="email" [(ngModel)]="formPerfil.email" placeholder="correo@ejemplo.com" />
+              </div>
+              <div class="form-field">
+                <label>Institución</label>
+                <input [(ngModel)]="formPerfil.institucion" placeholder="Nombre del centro educativo" />
+              </div>
+              <div class="form-field">
+                <label>Grado / Grupo</label>
+                <input [(ngModel)]="formPerfil.gradoGrupo" placeholder="Ej: 3° B" />
               </div>
             </div>
-          }
-
+            <div class="form-actions">
+              <button class="btn-add" [disabled]="guardandoPerfil || !formPerfil.nombre || !formPerfil.email" (click)="guardarPerfil()">
+                {{ guardandoPerfil ? 'Guardando...' : '💾 Guardar cambios' }}
+              </button>
+            </div>
+          </div>
+          <div class="cfg-card">
+            <h3 class="cfg-title">👨‍🎓 Mi clase</h3>
+            <div class="cfg-alumnos">
+              @for (e of estudiantes; track e.id) {
+                <div class="cfg-alumno">
+                  <span>{{ e.avatar }}</span>
+                  <span class="ca-nombre">{{ e.nombre }}</span>
+                  <span class="ca-edad">{{ e.edad }} años</span>
+                  <span class="ca-est" [class.est-ok]="e.activo" [class.est-no]="!e.activo">{{ e.activo ? 'Activo' : 'Inactivo' }}</span>
           <!-- ══ ASIGNACIONES ══ -->
           @if (!loading && tab === 'asignaciones') {
             <div class="asig-wrap">
@@ -821,6 +883,76 @@ const MISIONES_DEF = [
       </div>
     </div>
   }
+
+  <!-- ══ MODAL CITA / RECORDATORIO / MOVER FECHA DE ASIGNACIÓN ══ -->
+  @if (mostrarModalEvento) {
+    <div class="overlay" (click)="cerrarModalEvento()">
+      <div class="modal modal-evento" (click)="$event.stopPropagation()">
+        <div class="modal-evo-header">
+          <h2 class="modal-title" style="margin:0">
+            {{ modalEsAsignacion ? '📋 Mover fecha de la asignación' : (formEvento.id ? '✏️ Editar evento' : '+ Nuevo evento') }}
+          </h2>
+          <button class="modal-close" (click)="cerrarModalEvento()">×</button>
+        </div>
+
+        @if (modalEsAsignacion) {
+          <p class="asig-note"><strong>{{ formEvento.titulo }}</strong><br>Esta fecha aplica para toda la clase.</p>
+          <div class="form-field">
+            <label>Nueva fecha límite *</label>
+            <input type="date" [(ngModel)]="formEvento.fecha" />
+          </div>
+        } @else {
+          <div class="form-grid">
+            <div class="form-field span2">
+              <label>Título *</label>
+              <input [(ngModel)]="formEvento.titulo" placeholder="Ej: Reunión con padres de familia" />
+            </div>
+            <div class="form-field">
+              <label>Tipo *</label>
+              <select [(ngModel)]="formEvento.tipo">
+                <option value="CITA">🗓️ Cita</option>
+                <option value="RECORDATORIO">🔔 Recordatorio</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label>Alumno (opcional)</label>
+              <select [(ngModel)]="formEvento.perfilId">
+                <option [ngValue]="null">General</option>
+                @for (e of estudiantes; track e.id) {
+                  <option [ngValue]="e.id">{{ e.nombre }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-field">
+              <label>Fecha *</label>
+              <input type="date" [(ngModel)]="formEvento.fecha" />
+            </div>
+            <div class="form-field">
+              <label>Hora (opcional)</label>
+              <input type="time" [(ngModel)]="formEvento.hora" />
+            </div>
+            <div class="form-field span2">
+              <label>Descripción</label>
+              <textarea [(ngModel)]="formEvento.descripcion" rows="3" placeholder="Detalles opcionales..."></textarea>
+            </div>
+          </div>
+        }
+
+        <div class="form-actions">
+          @if (formEvento.id && !modalEsAsignacion) {
+            <button class="btn-del-evento" (click)="eliminarEventoModal()">🗑 Eliminar</button>
+          }
+          <button class="btn-cancel" (click)="cerrarModalEvento()">Cancelar</button>
+          <button class="btn-add"
+            [disabled]="guardandoEvento || !formEvento.fecha || (!modalEsAsignacion && !formEvento.titulo)"
+            (click)="guardarEvento()">
+            {{ guardandoEvento ? 'Guardando...' : 'Guardar' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>
   `,
   styles: [
     `
@@ -1687,255 +1819,56 @@ const MISIONES_DEF = [
     .lo-alumno { font-size:12px; font-weight:700; color:#15803D; }
     .lo-fecha { font-size:11px; color:#9CA3AF; flex-shrink:0; min-width:60px; text-align:right; }
 
-      /* ── Calendario ── */
-      .cal-wrap {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-      }
-      .cal-card {
-        background: white;
-        border-radius: 18px;
-        padding: 22px;
-        box-shadow: 0 2px 10px rgba(21, 128, 61, 0.07);
-      }
-      .cal-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 16px;
-      }
-      .cal-legend {
-        display: flex;
-        gap: 14px;
-      }
-      .leg {
-        font-size: 11.5px;
-        font-weight: 700;
-        padding: 4px 10px;
-        border-radius: 20px;
-      }
-      .asig-col {
-        background: #ede9fe;
-        color: #5b21b6;
-      }
-      .rep-col {
-        background: #fef9c3;
-        color: #92400e;
-      }
-      .reu-col {
-        background: #dcfce7;
-        color: #14532d;
-      }
-      .dias-header {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        gap: 4px;
-        margin-bottom: 6px;
-      }
-      .dia-hdr {
-        text-align: center;
-        font-size: 11px;
-        font-weight: 700;
-        color: #94a3b8;
-        padding: 6px 0;
-      }
-      .dias-grid {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        gap: 4px;
-      }
-      .dia-cel {
-        min-height: 72px;
-        background: #f9fafb;
-        border-radius: 10px;
-        padding: 6px;
-        display: flex;
-        flex-direction: column;
-        gap: 3px;
-      }
-      .dia-cel.dia-hoy {
-        background: #f0fdf4;
-        border: 1.5px solid #86efac;
-      }
-      .dia-cel.dia-vacio {
-        background: transparent;
-      }
-      .dia-num {
-        font-size: 12px;
-        font-weight: 800;
-        color: #374151;
-      }
-      .dia-hoy .dia-num {
-        color: #15803d;
-      }
-      .ev-chip {
-        font-size: 9.5px;
-        font-weight: 700;
-        border-radius: 6px;
-        padding: 2px 5px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .ev-asig {
-        background: #ede9fe;
-        color: #5b21b6;
-      }
-      .ev-rep {
-        background: #fef9c3;
-        color: #92400e;
-      }
-      .ev-reu {
-        background: #dcfce7;
-        color: #14532d;
-      }
+    /* ── Calendario ── */
+    .cal-wrap { display:flex; flex-direction:column; gap:16px; }
+    .cal-card { background:white; border-radius:18px; padding:22px; box-shadow:0 2px 10px rgba(21,128,61,.07); }
+    .cal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; gap:12px; flex-wrap:wrap; }
+    .cal-nav { display:flex; align-items:center; gap:10px; }
+    .cal-nav-btn { width:28px; height:28px; border-radius:8px; border:1.5px solid #D1FAE5; background:white; color:#15803D; font-size:16px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+    .cal-nav-btn:hover { background:#F0FDF4; }
+    .cal-mes-titulo { text-transform:capitalize; min-width:150px; text-align:center; }
+    .cal-legend { display:flex; gap:14px; }
+    .leg { font-size:11.5px; font-weight:700; padding:4px 10px; border-radius:20px; }
+    .asig-col { background:#EDE9FE; color:#5B21B6; }
+    .cita-col { background:#DBEAFE; color:#1D4ED8; }
+    .rec-col  { background:#FEF9C3; color:#92400E; }
+    .dias-header { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-bottom:6px; }
+    .dia-hdr { text-align:center; font-size:11px; font-weight:700; color:#94A3B8; padding:6px 0; }
+    .dias-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
+    .dia-cel { min-height:72px; background:#F9FAFB; border-radius:10px; padding:6px; display:flex; flex-direction:column; gap:3px; }
+    .dia-cel.dia-click { cursor:pointer; transition:background .15s; }
+    .dia-cel.dia-click:hover { background:#F0FDF4; }
+    .dia-cel.dia-hoy { background:#F0FDF4; border:1.5px solid #86EFAC; }
+    .dia-cel.dia-vacio { background:transparent; }
+    .dia-num { font-size:12px; font-weight:800; color:#374151; }
+    .dia-hoy .dia-num { color:#15803D; }
+    .ev-chip { font-size:9.5px; font-weight:700; border-radius:6px; padding:2px 5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer; }
+    .ev-chip:hover { filter:brightness(.95); }
+    .ev-asig { background:#EDE9FE; color:#5B21B6; }
+    .ev-cita { background:#DBEAFE; color:#1D4ED8; }
+    .ev-rec  { background:#FEF9C3; color:#92400E; }
+    .modal-evento { width:100%; max-width:480px; }
+    .btn-del-evento { background:#FEE2E2; color:#B91C1C; border:none; border-radius:10px; padding:8px 16px; font-size:13px; font-weight:700; cursor:pointer; margin-right:auto; }
+    .btn-del-evento:hover { background:#FECACA; }
 
-      /* ── Configuración ── */
-      .cfg-wrap {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-        max-width: 540px;
-      }
-      .cfg-card {
-        background: white;
-        border-radius: 16px;
-        padding: 22px;
-        box-shadow: 0 2px 10px rgba(21, 128, 61, 0.07);
-      }
-      .cfg-title {
-        font-size: 14px;
-        font-weight: 800;
-        color: #14532d;
-        margin-bottom: 16px;
-      }
-      .cfg-avatar {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        background: #f59e0b;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 26px;
-        font-weight: 800;
-        color: white;
-        margin-bottom: 16px;
-      }
-      .cfg-field {
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-        margin-bottom: 14px;
-      }
-      .cfg-field label {
-        font-size: 12px;
-        font-weight: 700;
-        color: #6b7280;
-      }
-      .cfg-val {
-        background: #f0fdf4;
-        border-radius: 10px;
-        padding: 10px 14px;
-        font-size: 14px;
-        font-weight: 600;
-        color: #14532d;
-      }
-      .cfg-note {
-        font-size: 12px;
-        color: #94a3b8;
-      }
-      .toggle-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-      }
-      .toggle-info {
-        flex: 1;
-      }
-      .toggle-label {
-        font-size: 13.5px;
-        font-weight: 700;
-        color: #1e1b4b;
-        margin-bottom: 3px;
-      }
-      .toggle-desc {
-        font-size: 11.5px;
-        color: #64748b;
-      }
-      .toggle-btn {
-        width: 48px;
-        height: 26px;
-        border-radius: 13px;
-        background: #cbd5e1;
-        border: none;
-        cursor: pointer;
-        position: relative;
-        transition: background 0.2s;
-        flex-shrink: 0;
-        padding: 0;
-      }
-      .toggle-btn.toggle-on {
-        background: #7c3aed;
-      }
-      .toggle-btn:disabled {
-        opacity: 0.55;
-        cursor: not-allowed;
-      }
-      .toggle-thumb {
-        position: absolute;
-        top: 3px;
-        left: 3px;
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        background: white;
-        transition: left 0.2s;
-        display: block;
-        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
-      }
-      .toggle-btn.toggle-on .toggle-thumb {
-        left: 25px;
-      }
-      .cfg-alumnos {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-      }
-      .cfg-alumno {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 10px;
-        background: #f0fdf4;
-        border-radius: 12px;
-        font-size: 14px;
-      }
-      .ca-nombre {
-        flex: 1;
-        font-weight: 700;
-        color: #14532d;
-      }
-      .ca-edad {
-        font-size: 12px;
-        color: #6b7280;
-      }
-      .ca-est {
-        font-size: 10px;
-        font-weight: 800;
-        padding: 3px 10px;
-        border-radius: 20px;
-      }
-      .est-ok {
-        background: #dcfce7;
-        color: #15803d;
-      }
-      .est-no {
-        background: #fee2e2;
-        color: #b91c1c;
-      }
+    /* ── Configuración ── */
+    .cfg-wrap { display:flex; flex-direction:column; gap:16px; max-width:540px; }
+    .cfg-card { background:white; border-radius:16px; padding:22px; box-shadow:0 2px 10px rgba(21,128,61,.07); }
+    .cfg-title { font-size:14px; font-weight:800; color:#14532D; margin-bottom:16px; }
+    .cfg-avatar { width:60px; height:60px; border-radius:50%; background:#F59E0B; display:flex; align-items:center; justify-content:center; font-size:26px; font-weight:800; color:white; margin-bottom:16px; }
+    .cfg-field { display:flex; flex-direction:column; gap:5px; margin-bottom:14px; }
+    .cfg-field label { font-size:12px; font-weight:700; color:#6B7280; }
+    .cfg-val { background:#F0FDF4; border-radius:10px; padding:10px 14px; font-size:14px; font-weight:600; color:#14532D; }
+    .cfg-note { font-size:12px; color:#94A3B8; }
+    .cfg-error { background:#FEF2F2; color:#B91C1C; border:1.5px solid #FECACA; border-radius:10px; padding:10px 14px; font-size:12.5px; font-weight:600; margin-bottom:14px; }
+    .cfg-ok    { background:#F0FDF4; color:#15803D; border:1.5px solid #86EFAC; border-radius:10px; padding:10px 14px; font-size:12.5px; font-weight:700; margin-bottom:14px; }
+    .cfg-alumnos { display:flex; flex-direction:column; gap:8px; }
+    .cfg-alumno { display:flex; align-items:center; gap:10px; padding:10px; background:#F0FDF4; border-radius:12px; font-size:14px; }
+    .ca-nombre { flex:1; font-weight:700; color:#14532D; }
+    .ca-edad { font-size:12px; color:#6B7280; }
+    .ca-est { font-size:10px; font-weight:800; padding:3px 10px; border-radius:20px; }
+    .est-ok { background:#DCFCE7; color:#15803D; }
+    .est-no { background:#FEE2E2; color:#B91C1C; }
 
       /* ── Evolución (modal) ── */
       .btn-evolucion {
@@ -2063,18 +1996,22 @@ export class DocenteDashboardComponent implements OnInit {
     { id: 6, nombre: 'Cascada Numérica' },
   ];
 
-  // Julio 2026 — empieza miércoles (relleno con 0s al inicio)
-  readonly diasMes = [
-    0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
-    26, 27, 28, 29, 30, 31,
-  ];
+  // Calendario (real: citas/recordatorios propios + asignaciones de la clase)
+  calMes = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  calEventos: EventoCalendarioItem[] = [];
+  calLoading = false;
 
-  readonly eventos: EventoCal[] = [
-    { dia: 22, titulo: 'Asig. Atención', tipo: 'asig', hora: '8:00' },
-    { dia: 25, titulo: 'Reporte semanal', tipo: 'reporte', hora: '12:00' },
-    { dia: 27, titulo: 'Reunión padres', tipo: 'reunion', hora: '16:00' },
-    { dia: 30, titulo: 'Asig. Lectura', tipo: 'asig', hora: '8:00' },
-  ];
+  mostrarModalEvento = false;
+  modalEsAsignacion  = false;
+  guardandoEvento    = false;
+  formEvento: FormEvento = { id:null, tipo:'CITA', titulo:'', descripcion:'', fecha:'', hora:'', perfilId:null };
+
+  // Configuración — perfil del docente (auto-servicio)
+  docenteEmail    = '';
+  formPerfil: DocenteProfileUpdate = { nombre:'', email:'', institucion:'', gradoGrupo:'' };
+  guardandoPerfil  = false;
+  perfilGuardadoOk = false;
+  errorPerfil      = '';
 
   constructor(
     public  auth:      AuthService,
@@ -2126,6 +2063,9 @@ export class DocenteDashboardComponent implements OnInit {
         this.cdr.detectChanges();
       },
     });
+
+    this.loadPerfilDocente(user.usuarioId);
+    this.cargarCalendario();
   }
 
   private loadAlumnos(uid: number): void {
@@ -2220,6 +2160,172 @@ export class DocenteDashboardComponent implements OnInit {
         this.loadingAsig = false;
         this.cdr.detectChanges();
       });
+  }
+
+  // ── Calendario ──────────────────────────────────────────────────────────
+
+  private fechaISO(d: Date): string {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
+  private hoyISO(): string { return this.fechaISO(new Date()); }
+
+  cargarCalendario(): void {
+    if (!this.docenteUid) return;
+    this.calLoading = true;
+    const anio = this.calMes.getFullYear();
+    const mes  = this.calMes.getMonth();
+    const desde = this.fechaISO(new Date(anio, mes, 1));
+    const hasta = this.fechaISO(new Date(anio, mes + 1, 0)); // último día del mes
+    this.docSvc.getCalendario(this.docenteUid, desde, hasta).pipe(catchError(() => of([]))).subscribe(items => {
+      this.calEventos = items;
+      this.calLoading = false;
+      this.cdr.detectChanges();
+    });
+  }
+
+  cambiarMes(delta: number): void {
+    this.calMes = new Date(this.calMes.getFullYear(), this.calMes.getMonth() + delta, 1);
+    this.cargarCalendario();
+  }
+
+  get nombreMesActual(): string {
+    const s = this.calMes.toLocaleDateString('es-CR', { month: 'long', year: 'numeric' });
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+
+  get diasMesActual(): CeldaCalendario[] {
+    const anio = this.calMes.getFullYear();
+    const mes  = this.calMes.getMonth();
+    const primerDia  = new Date(anio, mes, 1);
+    const ultimoDia  = new Date(anio, mes + 1, 0).getDate();
+    const offset     = (primerDia.getDay() + 6) % 7; // lunes=0 ... domingo=6
+    const hoyStr     = this.hoyISO();
+
+    const celdas: CeldaCalendario[] = [];
+    for (let i = 0; i < offset; i++) celdas.push({ dia: null, fecha: null, esHoy: false });
+    for (let dia = 1; dia <= ultimoDia; dia++) {
+      const fecha = this.fechaISO(new Date(anio, mes, dia));
+      celdas.push({ dia, fecha, esHoy: fecha === hoyStr });
+    }
+    return celdas;
+  }
+
+  abrirNuevoEvento(fecha?: string): void {
+    this.modalEsAsignacion = false;
+    this.formEvento = { id: null, tipo: 'CITA', titulo: '', descripcion: '', fecha: fecha ?? this.hoyISO(), hora: '', perfilId: null };
+    this.mostrarModalEvento = true;
+    this.cdr.detectChanges();
+  }
+
+  abrirEditarEvento(ev: EventoCalendarioItem, event: MouseEvent): void {
+    event.stopPropagation();
+    if (ev.origen === 'ASIGNACION') {
+      this.modalEsAsignacion = true;
+      this.formEvento = { id: ev.id, tipo: 'CITA', titulo: ev.titulo, descripcion: ev.descripcion ?? '', fecha: ev.fecha, hora: '', perfilId: null };
+    } else {
+      this.modalEsAsignacion = false;
+      this.formEvento = {
+        id: ev.id,
+        tipo: ev.tipo === 'RECORDATORIO' ? 'RECORDATORIO' : 'CITA',
+        titulo: ev.titulo,
+        descripcion: ev.descripcion ?? '',
+        fecha: ev.fecha,
+        hora: ev.hora ? ev.hora.substring(0, 5) : '',
+        perfilId: ev.perfilId ?? null,
+      };
+    }
+    this.mostrarModalEvento = true;
+    this.cdr.detectChanges();
+  }
+
+  cerrarModalEvento(): void {
+    this.mostrarModalEvento = false;
+    this.guardandoEvento = false;
+    this.cdr.detectChanges();
+  }
+
+  guardarEvento(): void {
+    if (!this.formEvento.fecha) return;
+    this.guardandoEvento = true;
+
+    if (this.modalEsAsignacion && this.formEvento.id) {
+      this.docSvc.moverFechaAsignacion(this.formEvento.id, this.formEvento.fecha).subscribe({
+        next: () => { this.cerrarModalEvento(); this.cargarCalendario(); this.loadAsignaciones(this.docenteUid); },
+        error: () => { this.guardandoEvento = false; this.cdr.detectChanges(); }
+      });
+      return;
+    }
+
+    const payload: EventoCalendarioRequest = {
+      perfilId: this.formEvento.perfilId,
+      tipo: this.formEvento.tipo,
+      titulo: this.formEvento.titulo,
+      descripcion: this.formEvento.descripcion || null,
+      fecha: this.formEvento.fecha,
+      hora: this.formEvento.hora || null,
+    };
+
+    const req$ = this.formEvento.id
+      ? this.docSvc.editarEventoCalendario(this.formEvento.id, payload)
+      : this.docSvc.crearEventoCalendario(this.docenteUid, payload);
+
+    req$.subscribe({
+      next: () => { this.cerrarModalEvento(); this.cargarCalendario(); },
+      error: () => { this.guardandoEvento = false; this.cdr.detectChanges(); }
+    });
+  }
+
+  eliminarEventoModal(): void {
+    if (!this.formEvento.id) return;
+    if (!confirm('¿Eliminar este evento del calendario?')) return;
+    this.docSvc.eliminarEventoCalendario(this.formEvento.id).subscribe(() => {
+      this.cerrarModalEvento();
+      this.cargarCalendario();
+    });
+  }
+
+  // ── Configuración: perfil del docente ─────────────────────────────────────
+
+  private loadPerfilDocente(uid: number): void {
+    this.docSvc.getPerfilDocente(uid).pipe(catchError(() => of(null))).subscribe(info => {
+      if (!info) return;
+      this.institucion  = info.institucion ?? '';
+      this.gradoGrupo   = info.gradoGrupo ?? '';
+      this.docenteEmail = info.usuario?.email ?? '';
+      this.docenteName  = info.usuario?.nombre ?? this.docenteName;
+      this.formPerfil = {
+        nombre: info.usuario?.nombre ?? '',
+        email: info.usuario?.email ?? '',
+        institucion: info.institucion ?? '',
+        gradoGrupo: info.gradoGrupo ?? '',
+      };
+      this.cdr.detectChanges();
+    });
+  }
+
+  guardarPerfil(): void {
+    if (!this.docenteUid || !this.formPerfil.nombre || !this.formPerfil.email) return;
+    this.guardandoPerfil  = true;
+    this.perfilGuardadoOk = false;
+    this.errorPerfil      = '';
+    this.docSvc.actualizarPerfilDocente(this.docenteUid, this.formPerfil).subscribe({
+      next: (info) => {
+        this.guardandoPerfil  = false;
+        this.perfilGuardadoOk = true;
+        this.docenteName  = info.usuario?.nombre ?? this.formPerfil.nombre!;
+        this.docenteEmail = info.usuario?.email ?? this.formPerfil.email!;
+        this.institucion  = info.institucion ?? '';
+        this.gradoGrupo   = info.gradoGrupo ?? '';
+        this.cdr.detectChanges();
+        setTimeout(() => { this.perfilGuardadoOk = false; this.cdr.detectChanges(); }, 3000);
+      },
+      error: (err) => {
+        this.guardandoPerfil = false;
+        this.errorPerfil = err?.error?.error || 'No se pudo guardar el perfil.';
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   /** Convierte DD/MM/AAAA → YYYY-MM-DD para el backend (ISO 8601). */
@@ -2393,13 +2499,10 @@ export class DocenteDashboardComponent implements OnInit {
     return m[this.tab] ?? 'FocusKids';
   }
   get topSub(): string {
-    const m: Record<string, string> = {
-      clase: `${this.activos} estudiantes activos · Semana del 20-26 jul 2026`,
-      reportes: 'Rendimiento general de la clase',
-      asignaciones: 'Tareas asignadas',
-      logros: 'Reconocimientos de la clase',
-      calendario: 'Julio 2026',
-      config: 'Perfil docente',
+    const m: Record<string,string> = {
+      clase:`${this.activos} estudiantes activos · Semana del 20-26 jul 2026`,
+      reportes:'Rendimiento general de la clase', asignaciones:'Tareas asignadas',
+      logros:'Reconocimientos de la clase', calendario: this.nombreMesActual, config:'Perfil docente'
     };
     return m[this.tab] ?? '';
   }
@@ -2414,9 +2517,7 @@ export class DocenteDashboardComponent implements OnInit {
     return this.estudiantes.filter((e) => e.estado === estado).length;
   }
 
-  eventosDelDia(dia: number): EventoCal[] {
-    return this.eventos.filter((e) => e.dia === dia);
-  }
+  eventosDelDia(fecha: string): EventoCalendarioItem[] { return this.calEventos.filter(e => e.fecha === fecha); }
 
   // ── Logros por alumno ──
   verLogrosAlumno(e: Estudiante): void {

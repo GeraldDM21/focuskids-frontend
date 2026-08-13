@@ -46,6 +46,36 @@ export interface ResumenCalificacion {
   total: number;
 }
 
+// ── Calendario ───────────────────────────────────────────────────────────
+export interface EventoCalendarioItem {
+  id: number;
+  origen: 'EVENTO' | 'ASIGNACION';
+  tipo: 'CITA' | 'RECORDATORIO' | 'ASIGNACION';
+  titulo: string;
+  descripcion?: string | null;
+  fecha: string;          // YYYY-MM-DD
+  hora?: string | null;   // HH:mm:ss, null = todo el día
+  perfilId?: number | null;
+  perfilNombre?: string | null;
+}
+
+export interface EventoCalendarioRequest {
+  perfilId?: number | null;
+  tipo: 'CITA' | 'RECORDATORIO';
+  titulo: string;
+  descripcion?: string | null;
+  fecha: string;           // YYYY-MM-DD
+  hora?: string | null;    // HH:mm
+}
+
+// ── Perfil docente (auto-servicio) ─────────────────────────────────────────
+export interface DocenteProfileUpdate {
+  nombre?: string;
+  email?: string;
+  institucion?: string;
+  gradoGrupo?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class DocenteService {
   private readonly api = environment.apiUrl;
@@ -124,5 +154,33 @@ export class DocenteService {
       `${this.api}/docente/notificaciones-in-app?usuarioId=${usuarioId}`,
       { activo },
     );
+  }
+
+  // ── Calendario (citas / recordatorios + asignaciones combinadas) ─────────
+  getCalendario(docenteUsuarioId: number, desde: string, hasta: string) {
+    return this.http.get<EventoCalendarioItem[]>(`${this.api}/calendario/docente/${docenteUsuarioId}`, {
+      params: { desde, hasta }
+    });
+  }
+  crearEventoCalendario(docenteUsuarioId: number, data: EventoCalendarioRequest) {
+    return this.http.post<any>(`${this.api}/calendario/docente/${docenteUsuarioId}`, data);
+  }
+  editarEventoCalendario(id: number, data: EventoCalendarioRequest) {
+    return this.http.put<any>(`${this.api}/calendario/evento/${id}`, data);
+  }
+  eliminarEventoCalendario(id: number) {
+    return this.http.delete<void>(`${this.api}/calendario/evento/${id}`);
+  }
+  /** Mueve la fecha límite de una asignación (editable directo desde el calendario). */
+  moverFechaAsignacion(asignacionId: number, fechaLimite: string) {
+    return this.http.patch<any>(`${this.api}/asignaciones/${asignacionId}/fecha`, { fechaLimite });
+  }
+
+  // ── Perfil del docente (auto-servicio) ────────────────────────────────────
+  getPerfilDocente(usuarioId: number) {
+    return this.http.get<DocenteInfo>(`${this.api}/docente/perfil`, { params: { usuarioId } });
+  }
+  actualizarPerfilDocente(usuarioId: number, data: DocenteProfileUpdate) {
+    return this.http.put<DocenteInfo>(`${this.api}/docente/perfil`, data, { params: { usuarioId } });
   }
 }

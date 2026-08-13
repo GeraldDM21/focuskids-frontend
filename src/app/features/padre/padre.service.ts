@@ -43,6 +43,21 @@ export interface Notificacion {
   sesionesResaltadas?: string | null;
 }
 
+export interface PerfilPadre {
+  padreId:         number;
+  nombre:          string;
+  email:           string;
+  telefono:        string;
+  relacionConNino: string;
+}
+
+export interface PerfilPadreUpdate {
+  nombre?:          string;
+  email?:           string;
+  telefono?:        string;
+  relacionConNino?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class PadreService {
   private readonly api = environment.apiUrl;
@@ -96,5 +111,13 @@ export class PadreService {
       `${this.api}/padre/notificaciones-in-app?usuarioId=${usuarioId}`,
       { activo },
     );
+  }
+
+  // ── Perfil del padre (auto-servicio) ──────────────────────────────────────
+  getPerfilPadre(usuarioId: number) {
+    return this.http.get<PerfilPadre>(`${this.api}/padre/perfil`, { params: { usuarioId } });
+  }
+  actualizarPerfilPadre(usuarioId: number, data: PerfilPadreUpdate) {
+    return this.http.put<PerfilPadre>(`${this.api}/padre/perfil`, data, { params: { usuarioId } });
   }
 }
