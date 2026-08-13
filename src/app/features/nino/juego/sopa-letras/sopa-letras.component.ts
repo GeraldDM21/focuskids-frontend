@@ -6,6 +6,7 @@ import { ChildProfileService } from '../../../padre/perfiles/child-profile.servi
 import { SopaLetrasConfig, PalabraColocada, Tema, Nivel } from './sopa-letras.model';
 import { MascotComponent, MascotMood } from '../../../../shared/components/mascot/mascot.component';
 import { SesionJuegoService } from '../../../../core/services/sesion-juego.service';
+import { sinEmojis as sinEmojisUtil } from '../../../../shared/utils/tts-texto.util';
 
 type Estado = 'inicio' | 'jugando' | 'completado' | 'tiempo-agotado';
 
@@ -424,7 +425,7 @@ export class SopaLetrasComponent implements OnInit, OnDestroy {
   }
 
   private sinEmojis(texto: string): string {
-    return texto.replace(/[\u{1F300}-\u{1FFFF}]/gu, '').trim();
+    return sinEmojisUtil(texto);
   }
 
   // Voz en español usando Web Speech API (como el "bien hecho" de Espejo Mental)

@@ -7,6 +7,7 @@ import { GameFeedbackService, NivelVolumen } from '../../../../shared/game-feedb
 import { ChildProfileService } from '../../../padre/perfiles/child-profile.service';
 import { MascotComponent } from '../../../../shared/components/mascot/mascot.component';
 import { SesionJuegoService } from '../../../../core/services/sesion-juego.service';
+import { sinEmojis } from '../../../../shared/utils/tts-texto.util';
 
 type Estado = 'inicio' | 'cuenta' | 'mostrando' | 'input' | 'feedback' | 'resultados';
 type Mood   = 'idle' | 'thinking' | 'excited' | 'celebrate' | 'encourage';
@@ -229,7 +230,7 @@ export class EspejoMentalComponent implements OnInit, OnDestroy {
     return new Promise(resolve => {
       try {
         window.speechSynthesis.cancel();
-        const utt = new SpeechSynthesisUtterance(texto);
+        const utt = new SpeechSynthesisUtterance(sinEmojis(texto));
         if (this.foxyVoice) {
           utt.voice = this.foxyVoice;
           utt.lang  = this.foxyVoice.lang;

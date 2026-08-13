@@ -7,6 +7,7 @@ import { ChildProfileService } from '../../../padre/perfiles/child-profile.servi
 import { PiezaData, SlotData, Nivel } from './piezas-tiempo.model';
 import { MascotComponent, MascotMood } from '../../../../shared/components/mascot/mascot.component';
 import { SesionJuegoService } from '../../../../core/services/sesion-juego.service';
+import { sinEmojis as sinEmojisUtil } from '../../../../shared/utils/tts-texto.util';
 
 type Estado = 'inicio' | 'jugando' | 'completado' | 'tiempo-agotado';
 
@@ -573,7 +574,7 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
   }
 
   private sinEmojis(texto: string): string {
-    return texto.replace(/[\u{1F300}-\u{1FFFF}]/gu, '').trim();
+    return sinEmojisUtil(texto);
   }
 
   private speak(texto: string): void {

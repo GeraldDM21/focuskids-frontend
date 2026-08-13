@@ -76,9 +76,10 @@ const NIVELES = [
 
       <div class="filtro-group">
         <label class="filtro-label">Estado</label>
-        <button class="btn-toggle" [class.activo]="soloCompletadas" (click)="toggleCompletadas()">
-          {{ soloCompletadas ? '✓ Solo completadas' : 'Todas las sesiones' }}
-        </button>
+        <select class="filtro-input" [(ngModel)]="soloCompletadas" (change)="buscar()">
+          <option [ngValue]="true">✓ Solo completadas</option>
+          <option [ngValue]="false">Todas las sesiones</option>
+        </select>
       </div>
 
       <div class="filtro-group filtro-group-btn">
@@ -903,12 +904,8 @@ export class HistorialSesionesComponent implements OnInit {
       page: this.paginaActual,
       juegoId: this.filtroJuegoId,
       nivel: this.filtroNivel || undefined,
-      fechaDesde: this.parseFecha(this.filtroFechaDesde)
-        ? this.parseFecha(this.filtroFechaDesde) + 'T00:00:00'
-        : undefined,
-      fechaHasta: this.parseFecha(this.filtroFechaHasta)
-        ? this.parseFecha(this.filtroFechaHasta) + 'T23:59:59'
-        : undefined,
+      fechaDesde: this.parseFecha(this.filtroFechaDesde) ? this.parseFecha(this.filtroFechaDesde) + 'T00:00:00' : undefined,
+      fechaHasta: this.parseFecha(this.filtroFechaHasta) ? this.parseFecha(this.filtroFechaHasta) + 'T23:59:59' : undefined,
       soloCompletadas: this.soloCompletadas ? true : undefined,
     };
 

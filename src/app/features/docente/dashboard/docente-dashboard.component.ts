@@ -9,6 +9,7 @@ import { SesionJuego, Metrica } from '../../padre/padre.service';
 import { MisionService, MisionReclamada } from '../../../core/services/mision.service';
 import { FormsModule } from '@angular/forms';
 import { EvolucionChartComponent } from '../../../shared/components/evolucion-chart/evolucion-chart.component';
+import { NivelAsignadoService, JuegoResumen, NivelBloqueable } from '../../../core/services/nivel-asignado.service';
 import { CampanaNotificacionesComponent } from '../../../shared/components/campana-notificaciones/campana-notificaciones.component';
 
 interface Estudiante {
@@ -760,6 +761,50 @@ const MISIONES_DEF = [
         </div>
       }
     </div>
+  <!-- ══ MODAL NIVELES BLOQUEADOS ══ -->
+  @if (alumnoEnNiveles) {
+    <div class="overlay" (click)="cerrarNiveles()">
+      <div class="modal modal-niveles" (click)="$event.stopPropagation()">
+        <div class="modal-evo-header">
+          <h2 class="modal-title" style="margin:0">
+            🔒 Niveles de {{ alumnoEnNiveles.nombre }}
+          </h2>
+          <button class="modal-close" (click)="cerrarNiveles()">×</button>
+        </div>
+        <p class="niveles-hint">
+          Fija el nivel de cada juego para que {{ alumnoEnNiveles.nombre }} solo pueda jugar
+          en esa dificultad. Elegí "Sin restricción" para que vuelva a adaptarse automáticamente.
+        </p>
+        @if (loadingNiveles) {
+          <p class="niveles-hint">Cargando…</p>
+        } @else {
+          <table class="tabla-niveles">
+            <thead>
+              <tr><th>JUEGO</th><th>NIVEL ASIGNADO</th></tr>
+            </thead>
+            <tbody>
+              @for (j of juegosParaNiveles; track j.id) {
+                <tr>
+                  <td>{{ j.nombre }}</td>
+                  <td>
+                    <select
+                      [disabled]="savingNivelJuegoId === j.id"
+                      [ngModel]="nivelesAsignados[j.id] || ''"
+                      (ngModelChange)="cambiarNivel(j.id, $event)">
+                      <option value="">Sin restricción</option>
+                      @for (n of NIVELES_BLOQUEABLES; track n) {
+                        <option [value]="n">{{ n === 'FACIL' ? 'Fácil' : n === 'MEDIO' ? 'Medio' : 'Difícil' }}</option>
+                      }
+                    </select>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+    </div>
+  }
   `,
   styles: [
     `
@@ -1958,6 +2003,15 @@ export class DocenteDashboardComponent implements OnInit {
   // Modal de evolución (gráficas)
   alumnoEnEvolucion: Estudiante | null = null;
 
+  // Modal de niveles bloqueados (CA: el niño solo juega el nivel que le fijó
+  // el docente/padre; ver NivelAsignadoService)
+  alumnoEnNiveles: Estudiante | null = null;
+  juegosParaNiveles: JuegoResumen[] = [];
+  nivelesAsignados: Record<number, NivelBloqueable> = {};
+  loadingNiveles = false;
+  savingNivelJuegoId: number | null = null;
+  readonly NIVELES_BLOQUEABLES: NivelBloqueable[] = ['FACIL', 'MEDIO', 'DIFICIL'];
+
   logrosClase: LogroClase[] = [];
 
   // Logros por alumno
@@ -2003,11 +2057,12 @@ export class DocenteDashboardComponent implements OnInit {
   ];
 
   constructor(
-    public auth: AuthService,
-    private router: Router,
-    private cdr: ChangeDetectorRef,
-    private docSvc: DocenteService,
+    public  auth:      AuthService,
+    private router:    Router,
+    private cdr:       ChangeDetectorRef,
+    private docSvc:    DocenteService,
     private misionSvc: MisionService,
+    private nivelSvc:  NivelAsignadoService,
   ) {}
 
   irAProgreso(): void {
@@ -2370,5 +2425,47 @@ export class DocenteDashboardComponent implements OnInit {
 
   verHistorialDetallado(e: Estudiante): void {
     this.router.navigate(['/docente/historial', e.id], { queryParams: { nombre: e.nombre } });
+  }
+
+  // ── Niveles bloqueados por juego (modal) ──
+  verNiveles(e: Estudiante): void {
+    this.alumnoEnNiveles = e;
+    this.loadingNiveles = true;
+    this.nivelesAsignados = {};
+    forkJoin({
+      juegos: this.nivelSvc.listarJuegos().pipe(catchError(() => of([]))),
+      asignados: this.nivelSvc.listarPorPerfil(e.id).pipe(catchError(() => of([]))),
+    }).subscribe(({ juegos, asignados }) => {
+      this.juegosParaNiveles = juegos;
+      asignados.forEach(a => { this.nivelesAsignados[a.juego.id] = a.nivel; });
+      this.loadingNiveles = false;
+      this.cdr.detectChanges();
+    });
+  }
+
+  cerrarNiveles(): void {
+    this.alumnoEnNiveles = null;
+  }
+
+  cambiarNivel(juegoId: number, nivel: NivelBloqueable | ''): void {
+    if (!this.alumnoEnNiveles) return;
+    const perfilId = this.alumnoEnNiveles.id;
+    this.savingNivelJuegoId = juegoId;
+
+    const alTerminar = () => {
+      if (nivel) {
+        this.nivelesAsignados[juegoId] = nivel;
+      } else {
+        delete this.nivelesAsignados[juegoId];
+      }
+      this.savingNivelJuegoId = null;
+      this.cdr.detectChanges();
+    };
+
+    if (nivel) {
+      this.nivelSvc.asignar(perfilId, juegoId, nivel).pipe(catchError(() => of(null))).subscribe(alTerminar);
+    } else {
+      this.nivelSvc.quitar(perfilId, juegoId).pipe(catchError(() => of(null))).subscribe(alTerminar);
+    }
   }
 }

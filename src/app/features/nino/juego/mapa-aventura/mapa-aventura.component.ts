@@ -5,19 +5,23 @@ import { SesionJuegoService } from '../../../../core/services/sesion-juego.servi
 import { ChildProfileService } from '../../../padre/perfiles/child-profile.service';
 import { Juego, NivelDificultad } from '../../../../core/models/juego.model';
 import { MascotComponent, MascotMood } from '../../../../shared/components/mascot/mascot.component';
-import { BolsaPaises, Dificultad, Pais, PAISES, Pregunta, TipoPregunta, generarPregunta, siguienteDificultad } from './mapa-aventura.model';
+import { MapaLeafletComponent } from './mapa-leaflet.component';
+import {
+  BolsaPaises, Dificultad, Pais, Pregunta, TipoPregunta,
+  cargarPaises, generarPregunta,
+} from './mapa-aventura.model';
+import { sinEmojis as sinEmojisUtil } from '../../../../shared/utils/tts-texto.util';
 
-// 'resultados' se conecta en el Paso 4.
-type Estado = 'inicio' | 'jugando' | 'resultados';
+type Estado = 'inicio' | 'seleccion-modo' | 'seleccion-dificultad' | 'jugando' | 'resultados';
 interface ConfettiPiece { id: number; left: number; color: string; delay: number; dur: number; size: number; }
 
 const MAX_PREGUNTAS = 10;
-const TIEMPO_MAX_MS = 8 * 60 * 1000; // CA-05: maximo 8 minutos
+const TIEMPO_MAX_MS = 8 * 60 * 1000; // maximo 8 minutos
 
 @Component({
   selector: 'app-mapa-aventura',
   standalone: true,
-  imports: [CommonModule, MascotComponent],
+  imports: [CommonModule, MascotComponent, MapaLeafletComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="game-wrapper">
@@ -42,14 +46,13 @@ const TIEMPO_MAX_MS = 8 * 60 * 1000; // CA-05: maximo 8 minutos
 
           <button type="button" class="btn-volver-inicio" (click)="volver()">← Volver</button>
 
-          <!-- Buddy explica las instrucciones desde su burbuja -->
           <div class="buddy-habla">
             <div class="habla-bubble">
               <p class="habla-saludo">¡Hola! Soy <strong>Buddy</strong> 🐶</p>
               <p class="habla-intro">Para jugar Mapa Aventura:</p>
               <div class="habla-pasos">
-                <div class="habla-paso"><span class="h-ico">🗺️</span><span>Explora el mapa y toca los países</span></div>
-                <div class="habla-paso"><span class="h-ico">❓</span><span>Responde dónde está o su capital</span></div>
+                <div class="habla-paso"><span class="h-ico">🗺️</span><span>Mira el mapa real y observa la zona marcada</span></div>
+                <div class="habla-paso"><span class="h-ico">✅</span><span>Elige la respuesta correcta entre 4 opciones</span></div>
                 <div class="habla-paso"><span class="h-ico">⏱️</span><span>10 preguntas en 8 minutos</span></div>
               </div>
               <p class="habla-animo">¡Vamos a explorar! ✨</p>
@@ -57,14 +60,13 @@ const TIEMPO_MAX_MS = 8 * 60 * 1000; // CA-05: maximo 8 minutos
             <div class="habla-tail"></div>
           </div>
 
-          <!-- Panel derecho — título y botón -->
           <div class="inicio-panel">
             <h1 class="titulo-juego">
               <span class="titulo-grad">Mapa</span><span class="titulo-blanco"> Aventura</span>
             </h1>
-            <p class="subtitulo-juego">Explora el mapa y responde preguntas sobre países del mundo</p>
+            <p class="subtitulo-juego">Explora el mapa real del mundo y responde sobre países y capitales</p>
 
-            <button class="btn-empezar" (click)="iniciarJuego()">
+            <button class="btn-empezar" (click)="empezar()">
               <span>🧭</span> ¡Empezar!
               <span class="btn-shine"></span>
             </button>
@@ -72,6 +74,79 @@ const TIEMPO_MAX_MS = 8 * 60 * 1000; // CA-05: maximo 8 minutos
             <div class="volumen-footer">
               <button class="btn-voz" (click)="toggleVoz()" [title]="voiceEnabled ? 'Silenciar a Buddy' : 'Activar voz de Buddy'">
                 {{ voiceEnabled ? '🔊' : '🔇' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ══ SELECCIÓN DE MODO ══════════════════════════════ -->
+      @if (estado === 'seleccion-modo') {
+        <div class="pantalla-inicio">
+          <img class="bg-escena" src="mascotas/buddy-escena.png" alt="Mapa del mundo de Buddy">
+          <div class="inicio-velo"></div>
+
+          <button type="button" class="btn-volver-inicio" (click)="estado = 'inicio'">← Volver</button>
+
+          <div class="buddy-habla">
+            <div class="habla-bubble">
+              <p class="habla-saludo">🐶 ¿Qué quieres practicar?</p>
+              <p class="habla-intro">Elige un modo para empezar</p>
+            </div>
+            <div class="habla-tail"></div>
+          </div>
+
+          <div class="inicio-panel">
+            <h1 class="titulo-juego"><span class="titulo-blanco">Elige un modo</span></h1>
+            <div class="opciones-grandes">
+              <button class="opcion-grande" (click)="elegirModo(MODO_PAIS)">
+                <span class="og-ico">🌎</span>
+                <span class="og-titulo">Países</span>
+                <span class="og-desc">Adivina qué país está marcado en el mapa</span>
+              </button>
+              <button class="opcion-grande" (click)="elegirModo(MODO_CAPITAL)">
+                <span class="og-ico">🏛️</span>
+                <span class="og-titulo">Capitales</span>
+                <span class="og-desc">Adivina la capital de cada país</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ══ SELECCIÓN DE DIFICULTAD ═════════════════════════ -->
+      @if (estado === 'seleccion-dificultad') {
+        <div class="pantalla-inicio">
+          <img class="bg-escena" src="mascotas/buddy-escena.png" alt="Mapa del mundo de Buddy">
+          <div class="inicio-velo"></div>
+
+          <button type="button" class="btn-volver-inicio" (click)="estado = 'seleccion-modo'">← Volver</button>
+
+          <div class="buddy-habla">
+            <div class="habla-bubble">
+              <p class="habla-saludo">🐶 ¿Qué nivel quieres jugar?</p>
+              <p class="habla-intro">El nivel se mantiene igual toda la partida</p>
+            </div>
+            <div class="habla-tail"></div>
+          </div>
+
+          <div class="inicio-panel">
+            <h1 class="titulo-juego"><span class="titulo-blanco">Elige la dificultad</span></h1>
+            <div class="opciones-grandes opciones-tres">
+              <button class="opcion-grande nivel-facil" (click)="elegirDificultad('FACIL')">
+                <span class="og-ico">🌱</span>
+                <span class="og-titulo">Fácil</span>
+                <span class="og-desc">Países muy conocidos</span>
+              </button>
+              <button class="opcion-grande nivel-medio" (click)="elegirDificultad('MEDIO')">
+                <span class="og-ico">⭐</span>
+                <span class="og-titulo">Medio</span>
+                <span class="og-desc">Un poco más difícil</span>
+              </button>
+              <button class="opcion-grande nivel-dificil" (click)="elegirDificultad('DIFICIL')">
+                <span class="og-ico">🏆</span>
+                <span class="og-titulo">Difícil</span>
+                <span class="og-desc">Para expertos en geografía</span>
               </button>
             </div>
           </div>
@@ -115,98 +190,39 @@ const TIEMPO_MAX_MS = 8 * 60 * 1000; // CA-05: maximo 8 minutos
 
           <app-mascot [game]="'juego10'" [mood]="mascotMood" [message]="mascotMsg"></app-mascot>
 
-          <div class="pregunta-box" [class.pregunta-correcta]="resultado === 'correcto'" [class.pregunta-incorrecta]="resultado === 'incorrecto'">
-            {{ tituloPregunta }}
+          <div class="pregunta-row">
+            <div class="pregunta-box" [class.pregunta-correcta]="resultado === 'correcto'" [class.pregunta-incorrecta]="resultado === 'incorrecto'">
+              {{ tituloPregunta }}
+            </div>
+            <button class="btn-repetir-audio" (click)="repetirPregunta()" title="Escuchar la pregunta de nuevo">🔊</button>
           </div>
 
-          <!-- Mapa SVG estilizado -->
-          <div class="mapa-wrap">
-            <svg viewBox="0 0 1000 500" class="mapa-svg" preserveAspectRatio="xMidYMid meet">
-              <defs>
-                <radialGradient id="oceano" cx="50%" cy="40%" r="75%">
-                  <stop offset="0%" stop-color="#1e5f8c"/>
-                  <stop offset="100%" stop-color="#0c3a5e"/>
-                </radialGradient>
-              </defs>
-              <rect x="0" y="0" width="1000" height="500" fill="url(#oceano)"/>
+          <!-- Mapa real (Leaflet), zoom automático a la zona del país objetivo -->
+          <app-mapa-leaflet [pais]="preguntaActual?.pais ?? null" [modo]="modoElegido ?? MODO_PAIS"></app-mapa-leaflet>
 
-              <!-- Lineas de cuadricula estilo mapa antiguo -->
-              @for (i of [1,2,3,4,5,6,7]; track i) {
-                <line [attr.x1]="i*125" y1="0" [attr.x2]="i*125" y2="500" stroke="rgba(255,255,255,.06)" stroke-width="1" stroke-dasharray="4 6"/>
-              }
-              @for (i of [1,2,3]; track i) {
-                <line x1="0" [attr.y1]="i*125" x2="1000" [attr.y2]="i*125" stroke="rgba(255,255,255,.06)" stroke-width="1" stroke-dasharray="4 6"/>
-              }
-
-              <!-- Continentes estilizados (silueta decorativa, no politica) -->
-              <g fill="#3f8f5f" opacity=".85">
-                <ellipse cx="185" cy="140" rx="130" ry="95"/>
-                <ellipse cx="270" cy="230" rx="90" ry="80"/>
-                <ellipse cx="150" cy="260" rx="80" ry="70"/>
-              </g>
-              <g fill="#4fae70" opacity=".85">
-                <ellipse cx="290" cy="520" rx="0" ry="0"/>
-                <ellipse cx="300" cy="480" rx="95" ry="70"/>
-                <ellipse cx="320" cy="580" rx="70" ry="80"/>
-                <ellipse cx="290" cy="650" rx="60" ry="70"/>
-              </g>
-              <g fill="#5aa845" opacity=".85">
-                <ellipse cx="510" cy="150" rx="80" ry="65"/>
-                <ellipse cx="570" cy="120" rx="65" ry="55"/>
-              </g>
-              <g fill="#c99a4d" opacity=".85">
-                <ellipse cx="540" cy="330" rx="90" ry="80"/>
-                <ellipse cx="590" cy="420" rx="75" ry="70"/>
-                <ellipse cx="560" cy="480" rx="60" ry="55"/>
-              </g>
-              <g fill="#4f9e8f" opacity=".85">
-                <ellipse cx="720" cy="160" rx="110" ry="90"/>
-                <ellipse cx="830" cy="130" rx="90" ry="70"/>
-                <ellipse cx="900" cy="220" rx="80" ry="90"/>
-                <ellipse cx="760" cy="280" rx="85" ry="70"/>
-              </g>
-              <g fill="#c9834d" opacity=".85">
-                <ellipse cx="900" cy="620" rx="80" ry="55"/>
-                <ellipse cx="970" cy="660" rx="45" ry="35"/>
-              </g>
-
-              <!-- Brujula decorativa -->
-              <g transform="translate(920,60)" opacity=".5">
-                <circle r="34" fill="none" stroke="#fbbf24" stroke-width="2"/>
-                <line x1="0" y1="-28" x2="0" y2="28" stroke="#fbbf24" stroke-width="1.5"/>
-                <line x1="-28" y1="0" x2="28" y2="0" stroke="#fbbf24" stroke-width="1.5"/>
-                <text x="0" y="-36" text-anchor="middle" fill="#fbbf24" font-size="14" font-weight="900">N</text>
-              </g>
-
-              <!-- Pines de paises -->
-              @for (pais of PAISES; track pais.id) {
-                <g class="pin-group"
-                   [class.pin-resaltado]="esPaisResaltado(pais)"
-                   [class.pin-correcto]="pinResultado[pais.id] === 'correcto'"
-                   [class.pin-incorrecto]="pinResultado[pais.id] === 'incorrecto'"
-                   [class.pin-clickable]="preguntaActual?.tipo === 'UBICACION' && !respondido"
-                   [attr.transform]="'translate(' + (pais.x*10) + ',' + (pais.y*5) + ')'"
-                   (click)="clicPin(pais, $event)">
-                  <circle class="pin-halo" r="16"/>
-                  <circle class="pin-punto" r="8"/>
-                  <text class="pin-label" y="-16" text-anchor="middle">{{ pais.nombre }}</text>
-                </g>
-              }
-            </svg>
-          </div>
-
-          <!-- Opciones de capital (solo tipo CAPITAL) -->
-          @if (preguntaActual?.tipo === 'CAPITAL') {
+          <!-- Opciones de respuesta (país o capital, siempre 4 opciones) -->
+          @if (preguntaActual) {
             <div class="opciones-grid">
-              @for (op of preguntaActual!.opciones!; track op) {
+              @for (op of preguntaActual.opciones; track op) {
                 <button class="opcion-btn"
-                  [class.correcta]="respondido && op === preguntaActual!.pais.capital"
-                  [class.incorrecta]="respondido && op === opcionElegida && op !== preguntaActual!.pais.capital"
+                  [class.correcta]="respondido && op === respuestaCorrectaTexto"
+                  [class.incorrecta]="respondido && op === opcionElegida && op !== respuestaCorrectaTexto"
                   [disabled]="respondido"
                   (click)="clicOpcion(op, $event)">
                   {{ op }}
                 </button>
               }
+            </div>
+          }
+
+          <!-- Revelación: bandera + dato curioso, sirve de apoyo tanto si acertó como si falló -->
+          @if (respondido && preguntaActual) {
+            <div class="reveal-card" [class.reveal-correcta]="resultado === 'correcto'" [class.reveal-incorrecta]="resultado === 'incorrecto'">
+              <img class="reveal-bandera" [src]="'https://flagcdn.com/w160/' + $any(preguntaActual.pais).cca2 + '.png'" [alt]="'Bandera de ' + preguntaActual.pais.nombre">
+              <div class="reveal-texto">
+                <div class="reveal-nombre">{{ preguntaActual.pais.nombre }} <span class="reveal-capital">· {{ preguntaActual.pais.capital }}</span></div>
+                <div class="reveal-dato">{{ preguntaActual.pais.datoCurioso }}</div>
+              </div>
             </div>
           }
 
@@ -285,15 +301,12 @@ const TIEMPO_MAX_MS = 8 * 60 * 1000; // CA-05: maximo 8 minutos
       color: white; overflow: hidden; position: relative;
     }
 
-    /* ══ INICIO — cinematográfico (mismo patrón que Espejo Mental / Laberinto / Maratón Mental / Piezas en Tiempo) ══ */
+    /* ══ INICIO / SELECCIÓN — cinematográfico ══ */
     .pantalla-inicio { min-height: 100vh; width: 100%; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
 
     .bg-escena {
       position: absolute; inset: 0; width: 100%; height: 100%;
       object-fit: cover; object-position: center center; z-index: 0;
-      /* Valores verificados renderizando la transformación real sobre la imagen
-         (mismo método usado para Michi/Koby/Tigre): Buddy, centrado en la imagen
-         original, queda de cuerpo completo y despejado del panel. */
       transform-origin: 115% 48%;
       animation: bgZoomBuddy 24s ease-in-out infinite alternate;
     }
@@ -322,7 +335,6 @@ const TIEMPO_MAX_MS = 8 * 60 * 1000; // CA-05: maximo 8 minutos
     }
     .btn-volver-inicio:hover { transform: translateY(-2px); background: rgba(255,255,255,.12); }
 
-    /* Burbuja de Buddy con instrucciones */
     .buddy-habla {
       position: absolute; left: 4%; bottom: 6%; z-index: 3;
       width: 300px; display: flex; flex-direction: column-reverse; align-items: flex-end;
@@ -378,6 +390,22 @@ const TIEMPO_MAX_MS = 8 * 60 * 1000; // CA-05: maximo 8 minutos
     .btn-voz { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); border-radius: 50%; width: 42px; height: 42px; font-size: 20px; cursor: pointer; transition: all .2s; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .btn-voz:hover { background: rgba(255,255,255,.2); transform: scale(1.1); }
 
+    /* ══ Tarjetas grandes de selección (modo / dificultad) ══ */
+    .opciones-grandes { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+    .opciones-tres { flex-direction: column; }
+    .opcion-grande {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      background: rgba(255,255,255,.08); border: 2px solid rgba(255,255,255,.16); border-radius: 18px;
+      padding: 18px 16px; cursor: pointer; transition: all .2s; color: white;
+    }
+    .opcion-grande:hover { background: rgba(255,255,255,.16); transform: translateY(-3px); border-color: #60a5fa; }
+    .og-ico { font-size: 34px; }
+    .og-titulo { font-size: 18px; font-weight: 800; }
+    .og-desc { font-size: 12.5px; color: #94a3b8; }
+    .nivel-facil:hover  { border-color: #4ade80; }
+    .nivel-medio:hover  { border-color: #fbbf24; }
+    .nivel-dificil:hover{ border-color: #f87171; }
+
     /* ══ JUGANDO ══ */
     .pantalla-juego { width: 100%; max-width: 640px; padding: 16px 16px 32px; position: relative; }
 
@@ -402,37 +430,23 @@ const TIEMPO_MAX_MS = 8 * 60 * 1000; // CA-05: maximo 8 minutos
     .badge-num  { font-size: 18px; font-weight: 900; color: white; min-width: 18px; text-align: center; }
     .btn-voz-hdr { background: rgba(255,255,255,.08); border: 1.5px solid rgba(255,255,255,.18); border-radius: 50%; width: 38px; height: 38px; font-size: 18px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
 
+    .pregunta-row { display: flex; align-items: stretch; gap: 8px; margin-bottom: 12px; }
     .pregunta-box {
+      flex: 1;
       text-align: center; font-size: 16px; font-weight: 800; color: #e2e8f0;
       background: rgba(255,255,255,.06); border: 1.5px solid rgba(255,255,255,.12);
-      border-radius: 16px; padding: 12px 16px; margin-bottom: 12px; transition: all .3s;
+      border-radius: 16px; padding: 12px 16px; transition: all .3s;
+      display: flex; align-items: center; justify-content: center;
     }
     .pregunta-correcta   { background: rgba(34,197,94,.16); border-color: rgba(34,197,94,.4); color: #86efac; }
     .pregunta-incorrecta { background: rgba(239,68,68,.16); border-color: rgba(239,68,68,.4); color: #fca5a5; }
+    .btn-repetir-audio {
+      flex-shrink: 0; width: 46px; background: rgba(96,165,250,.14); border: 1.5px solid rgba(96,165,250,.35);
+      border-radius: 16px; font-size: 19px; cursor: pointer; transition: all .2s; color: white;
+    }
+    .btn-repetir-audio:hover { background: rgba(96,165,250,.28); transform: scale(1.05); }
 
-    .mapa-wrap { border-radius: 20px; overflow: hidden; border: 2px solid rgba(255,255,255,.12); box-shadow: 0 12px 40px rgba(0,0,0,.4); margin-bottom: 14px; }
-    .mapa-svg { width: 100%; height: auto; display: block; }
-
-    .pin-group { cursor: default; }
-    .pin-clickable { cursor: pointer; }
-    .pin-halo { fill: rgba(96,165,250,.25); transition: all .2s; }
-    .pin-punto { fill: #60a5fa; stroke: white; stroke-width: 2.5; transition: all .2s; }
-    .pin-label { fill: white; font-size: 15px; font-weight: 800; opacity: 0; transition: opacity .2s; pointer-events: none; paint-order: stroke; stroke: rgba(0,0,0,.6); stroke-width: 3px; }
-    .pin-clickable:hover .pin-halo { fill: rgba(96,165,250,.45); }
-    .pin-clickable:hover .pin-punto { r: 10px; }
-    .pin-clickable:hover .pin-label { opacity: 1; }
-    .pin-resaltado .pin-halo { fill: rgba(251,191,36,.4); animation: pinPulso 1s ease-in-out infinite; }
-    .pin-resaltado .pin-punto { fill: #fbbf24; }
-    .pin-resaltado .pin-label { opacity: 1; }
-    .pin-correcto .pin-punto { fill: #22c55e; }
-    .pin-correcto .pin-halo { fill: rgba(34,197,94,.5); }
-    .pin-correcto .pin-label { opacity: 1; }
-    .pin-incorrecto .pin-punto { fill: #ef4444; }
-    .pin-incorrecto .pin-halo { fill: rgba(239,68,68,.5); }
-    .pin-incorrecto .pin-label { opacity: 1; }
-    @keyframes pinPulso { 0%,100%{ r:16px } 50%{ r:20px } }
-
-    .opciones-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .opciones-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
     .opcion-btn {
       background: rgba(255,255,255,.07); border: 2px solid rgba(255,255,255,.14); color: white;
       border-radius: 14px; padding: 14px 10px; font-size: 14.5px; font-weight: 700; cursor: pointer; transition: all .15s;
@@ -441,6 +455,18 @@ const TIEMPO_MAX_MS = 8 * 60 * 1000; // CA-05: maximo 8 minutos
     .opcion-btn[disabled] { cursor: default; }
     .opcion-btn.correcta { background: rgba(34,197,94,.25); border-color: #22c55e; color: #86efac; }
     .opcion-btn.incorrecta { background: rgba(239,68,68,.25); border-color: #ef4444; color: #fca5a5; }
+
+    .reveal-card {
+      display: flex; align-items: center; gap: 12px; margin-top: 14px;
+      background: rgba(255,255,255,.06); border: 1.5px solid rgba(255,255,255,.14);
+      border-radius: 16px; padding: 12px 14px; animation: slideUp .3s cubic-bezier(.34,1.56,.64,1);
+    }
+    .reveal-correcta   { border-color: rgba(34,197,94,.4); background: rgba(34,197,94,.1); }
+    .reveal-incorrecta { border-color: rgba(96,165,250,.4); background: rgba(96,165,250,.08); }
+    .reveal-bandera { width: 56px; height: 40px; object-fit: cover; border-radius: 6px; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,.4); }
+    .reveal-nombre { font-size: 15px; font-weight: 800; color: #f1f5f9; }
+    .reveal-capital { font-size: 13px; font-weight: 600; color: #94a3b8; }
+    .reveal-dato { font-size: 12.5px; color: #cbd5e1; margin-top: 2px; line-height: 1.4; }
 
     .confetti-container { position: fixed; inset: 0; pointer-events: none; z-index: 100; overflow: hidden; }
     .confeti { position: absolute; top: -20px; border-radius: 3px; animation: caer linear forwards; }
@@ -528,7 +554,6 @@ const TIEMPO_MAX_MS = 8 * 60 * 1000; // CA-05: maximo 8 minutos
 })
 export class MapaAventuraComponent implements OnInit, OnDestroy {
 
-  readonly PAISES = PAISES;
   readonly MAX_PREGUNTAS = MAX_PREGUNTAS;
 
   estado: Estado = 'inicio';
@@ -537,15 +562,25 @@ export class MapaAventuraComponent implements OnInit, OnDestroy {
   // Backend
   private perfilId: number | null = null;
   private juegoActual: Juego | null = null;
+  private nivelesDisponibles: NivelDificultad[] = [];
   private nivelActual: NivelDificultad | null = null;
   private sesionId: number | null = null;
 
+  // Banco de países (se carga una sola vez desde /data/paises-mundo.json)
+  private pool: Pais[] = [];
+  private datosListos = false;
+
+  // Constantes tipadas para usar en el template (strict templates no acepta literals inline)
+  readonly MODO_PAIS: TipoPregunta = 'PAIS';
+  readonly MODO_CAPITAL: TipoPregunta = 'CAPITAL';
+
+  // Selección del niño para esta partida
+  modoElegido: TipoPregunta | null = null;
+  dificultadElegida: Dificultad | null = null;
+
   // Motor de preguntas
-  private bolsa = new BolsaPaises();
+  private bolsa: BolsaPaises | null = null;
   preguntaActual: Pregunta | null = null;
-  private dificultadActual: Dificultad = 'FACIL';
-  private rachaAciertos = 0;
-  private rachaErrores = 0;
   paisesExplorados = new Set<string>();
 
   // Estado de la ronda
@@ -555,12 +590,11 @@ export class MapaAventuraComponent implements OnInit, OnDestroy {
   respondido = false;
   resultado: 'correcto' | 'incorrecto' | null = null;
   opcionElegida: string | null = null;
-  pinResultado: Record<string, 'correcto' | 'incorrecto'> = {};
 
   mascotMsg = '';
   mascotMood: MascotMood = 'idle';
 
-  // Temporizador (CA-05)
+  // Temporizador
   tiempoRestanteMs = TIEMPO_MAX_MS;
   private timerInterval: ReturnType<typeof setInterval> | null = null;
 
@@ -570,9 +604,14 @@ export class MapaAventuraComponent implements OnInit, OnDestroy {
 
   get tituloPregunta(): string {
     if (!this.preguntaActual) return '';
-    return this.preguntaActual.tipo === 'UBICACION'
-      ? `🐶 ¿Dónde está ${this.preguntaActual.pais.nombre}?`
-      : `🐶 ¿Cuál es la capital de ${this.preguntaActual.pais.nombre}?`;
+    return this.preguntaActual.tipo === 'CAPITAL'
+      ? `🐶 ¿Cuál es la capital de ${this.preguntaActual.pais.nombre}?`
+      : '🐶 ¿Cuál de estos países está marcado en el mapa?';
+  }
+
+  get respuestaCorrectaTexto(): string {
+    if (!this.preguntaActual) return '';
+    return this.preguntaActual.tipo === 'CAPITAL' ? this.preguntaActual.pais.capital : this.preguntaActual.pais.nombre;
   }
 
   get tiempoFormateado(): string {
@@ -580,10 +619,6 @@ export class MapaAventuraComponent implements OnInit, OnDestroy {
     const min = Math.floor(totalSeg / 60);
     const seg = totalSeg % 60;
     return `${min}:${seg.toString().padStart(2, '0')}`;
-  }
-
-  esPaisResaltado(pais: Pais): boolean {
-    return !!this.preguntaActual && this.preguntaActual.tipo === 'CAPITAL' && this.preguntaActual.pais.id === pais.id;
   }
 
   constructor(
@@ -600,7 +635,13 @@ export class MapaAventuraComponent implements OnInit, OnDestroy {
     this.profileService.activeProfile$.subscribe(state => {
       this.perfilId = state.profileId;
     });
-    this.cargarJuegoYNivel();
+    this.cargarJuegoYNiveles();
+
+    cargarPaises().then(paises => {
+      this.pool = paises;
+      this.datosListos = true;
+      this.cdr.detectChanges();
+    });
   }
 
   ngOnDestroy(): void {
@@ -609,13 +650,13 @@ export class MapaAventuraComponent implements OnInit, OnDestroy {
     window.speechSynthesis?.cancel();
   }
 
-  private cargarJuegoYNivel(): void {
+  private cargarJuegoYNiveles(): void {
     this.sesionJuegoService.listarJuegosActivos().subscribe(juegos => {
       const juego = juegos.find(j => j.nombre === 'Mapa Aventura');
       if (!juego) return;
       this.juegoActual = juego;
       this.sesionJuegoService.obtenerNiveles(juego.id).subscribe(niveles => {
-        this.nivelActual = niveles.find(n => n.nivel === 'FACIL') ?? niveles[0] ?? null;
+        this.nivelesDisponibles = niveles;
         this.cdr.detectChanges();
       });
     });
@@ -629,7 +670,6 @@ export class MapaAventuraComponent implements OnInit, OnDestroy {
   // ── AUDIO / VOZ ───────────────────────────────────
   private buddyVoice: SpeechSynthesisVoice | null = null;
 
-  /** Selecciona la voz de Buddy (mismo patrón que Michi/Koby/Tigre). */
   private cargarVozBuddy(): void {
     const seleccionar = () => {
       const voces = window.speechSynthesis?.getVoices() ?? [];
@@ -648,9 +688,8 @@ export class MapaAventuraComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** Quita emojis antes de mandar el texto al sintetizador de voz (mismo criterio que Espejo Mental/Michi/Koby/Tigre). */
   private sinEmojis(texto: string): string {
-    return texto.replace(/[\u{1F300}-\u{1FFFF}]/gu, '').trim();
+    return sinEmojisUtil(texto);
   }
 
   private initAudio(): void {
@@ -695,22 +734,55 @@ export class MapaAventuraComponent implements OnInit, OnDestroy {
     });
   }
 
-  private setMascota(mood: MascotMood, msg: string): void {
+  private setMascota(mood: MascotMood, msg: string, hablado?: string): void {
     this.mascotMood = mood;
     this.mascotMsg = msg;
-    this.hablar(this.sinEmojis(msg));
+    this.hablar(this.sinEmojis(hablado ?? msg));
+  }
+
+  repetirPregunta(): void {
+    this.hablar(this.sinEmojis(this.tituloPregunta));
   }
 
   // ── FLUJO ─────────────────────────────────────────
 
-  iniciarJuego(): void {
+  async empezar(): Promise<void> {
+    if (!this.datosListos) {
+      // los datos (194 países) pesan poco y normalmente ya están listos;
+      // por seguridad esperamos un instante si el niño hace clic muy rápido.
+      await new Promise<void>(resolve => {
+        const check = () => this.datosListos ? resolve() : setTimeout(check, 100);
+        check();
+      });
+    }
+    this.estado = 'seleccion-modo';
+    this.hablar('¿Quieres practicar países o capitales?');
+    this.cdr.detectChanges();
+  }
+
+  elegirModo(modo: TipoPregunta): void {
+    this.modoElegido = modo;
+    this.estado = 'seleccion-dificultad';
+    this.hablar('¿Qué nivel quieres jugar? Fácil, medio o difícil.');
+    this.cdr.detectChanges();
+  }
+
+  elegirDificultad(dificultad: Dificultad): void {
+    this.dificultadElegida = dificultad;
+    this.iniciarPartida();
+  }
+
+  private iniciarPartida(): void {
     this.initAudio();
     this.rondas = 0; this.aciertos = 0; this.errores = 0;
-    this.rachaAciertos = 0; this.rachaErrores = 0;
-    this.dificultadActual = 'FACIL';
     this.paisesExplorados.clear();
-    this.pinResultado = {};
     this.tiempoRestanteMs = TIEMPO_MAX_MS;
+
+    const poolNivel = this.pool.filter(p => p.dificultad === this.dificultadElegida);
+    this.bolsa = new BolsaPaises(poolNivel.length ? poolNivel : this.pool);
+
+    this.nivelActual = this.nivelesDisponibles.find(n => n.nivel === this.dificultadElegida)
+      ?? this.nivelesDisponibles[0] ?? null;
 
     if (this.perfilId && this.juegoActual && this.nivelActual) {
       this.sesionJuegoService.iniciarSesion({
@@ -749,13 +821,13 @@ export class MapaAventuraComponent implements OnInit, OnDestroy {
   }
 
   private nuevaPregunta(): void {
+    if (!this.bolsa || !this.modoElegido) return;
     this.respondido = false;
     this.resultado = null;
     this.opcionElegida = null;
 
-    const pais = this.bolsa.siguiente(this.dificultadActual);
-    const tipo: TipoPregunta = Math.random() < 0.5 ? 'UBICACION' : 'CAPITAL';
-    this.preguntaActual = generarPregunta(pais, tipo);
+    const pais = this.bolsa.siguiente();
+    this.preguntaActual = generarPregunta(pais, this.modoElegido, this.pool);
     this.paisesExplorados.add(pais.id);
     this.tiempoInicioPregunta = Date.now();
     this.sesionJuegoService.marcarElementoAparece();
@@ -764,22 +836,16 @@ export class MapaAventuraComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
-  clicPin(pais: Pais, event: MouseEvent): void {
-    if (this.respondido || !this.preguntaActual || this.preguntaActual.tipo !== 'UBICACION') return;
-    const correcto = pais.id === this.preguntaActual.pais.id;
-    this.pinResultado[pais.id] = correcto ? 'correcto' : 'incorrecto';
-    if (!correcto) this.pinResultado[this.preguntaActual.pais.id] = 'correcto';
+  clicOpcion(opcion: string, event: MouseEvent): void {
+    if (this.respondido || !this.preguntaActual) return;
+    this.opcionElegida = opcion;
+    const correcto = opcion === this.respuestaCorrectaTexto;
     this.responder(correcto, event);
   }
 
-  clicOpcion(capital: string, event: MouseEvent): void {
-    if (this.respondido || !this.preguntaActual || this.preguntaActual.tipo !== 'CAPITAL') return;
-    this.opcionElegida = capital;
-    const correcto = capital === this.preguntaActual.pais.capital;
-    this.responder(correcto, event);
-  }
-
-  // CA-03/07/08/09: registra la respuesta con métricas de click y tiempo.
+  // Registra la respuesta con métricas de click y tiempo — estos datos
+  // alimentan las estadísticas y las gráficas de evolución/IA, por eso se
+  // guardan igual sin importar si acertó o falló.
   private responder(correcto: boolean, event?: MouseEvent): void {
     this.respondido = true;
     this.resultado = correcto ? 'correcto' : 'incorrecto';
@@ -797,28 +863,24 @@ export class MapaAventuraComponent implements OnInit, OnDestroy {
     }
 
     if (correcto) {
-      this.aciertos++; this.rachaAciertos++; this.rachaErrores = 0;
+      this.aciertos++;
       this.sonarAcierto();
-      this.setMascota('celebrate', `¡Correcto! 🎉 ${this.preguntaActual!.pais.datoCurioso}`);
+      this.setMascota('celebrate', '¡Correcto! 🎉', `Correcto. ${this.respuestaCorrectaTexto}.`);
     } else {
-      this.errores++; this.rachaErrores++; this.rachaAciertos = 0;
+      this.errores++;
       this.sonarError();
-      const correcta = this.preguntaActual!.tipo === 'CAPITAL' ? this.preguntaActual!.pais.capital : this.preguntaActual!.pais.nombre;
-      this.setMascota('encourage', `¡Casi! Era ${correcta}. ${this.preguntaActual!.pais.datoCurioso}`);
+      this.setMascota('encourage', `¡Casi! Era ${this.respuestaCorrectaTexto}.`, `Casi. Era ${this.respuestaCorrectaTexto}.`);
     }
 
-    // CA-04: motor de dificultad adaptativa segun racha
-    this.dificultadActual = siguienteDificultad(this.dificultadActual, this.rachaAciertos, this.rachaErrores);
     this.cdr.detectChanges();
 
     this.timers.push(setTimeout(() => {
       if (this.rondas >= this.MAX_PREGUNTAS) {
         this.terminarSesion();
       } else {
-        this.pinResultado = {};
         this.nuevaPregunta();
       }
-    }, 3200));
+    }, 3800));
   }
 
   terminarSesion(): void {
@@ -831,13 +893,20 @@ export class MapaAventuraComponent implements OnInit, OnDestroy {
     const txt = this.sinEmojis(this.tituloFinal + '. ' + this.mensajeFinal);
     setTimeout(() => this.hablar(txt), 800);
 
-    // CA-03: fire-and-forget, guarda métricas de la sesión
+    // Guarda las métricas de la sesión (aciertos, rondas, puntuación) para
+    // las estadísticas y gráficas de evolución/IA.
     if (this.sesionId) {
       this.sesionJuegoService.finalizarSesion(this.sesionId, this.puntuacion, this.rondas, this.aciertos);
     }
   }
 
-  reiniciarJuego(): void { this.iniciarJuego(); }
+  reiniciarJuego(): void {
+    if (this.dificultadElegida) {
+      this.iniciarPartida();
+    } else {
+      this.estado = 'seleccion-modo';
+    }
+  }
   volver(): void { this.router.navigate(['/nino/juegos']); }
 
   get puntuacion(): number {

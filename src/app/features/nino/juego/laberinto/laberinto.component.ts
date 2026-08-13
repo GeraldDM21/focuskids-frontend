@@ -10,7 +10,7 @@ import { MascotComponent } from '../../../../shared/components/mascot/mascot.com
 import { LaberintoCognitivoService } from '../../../../core/services/laberinto-cognitivo.service';
 import { SesionJuegoService } from '../../../../core/services/sesion-juego.service';
 
-import { Celda, Direccion, EstadoJuego, Laberinto, Mood, Posicion } from './laberinto.types';
+import { Celda, Direccion, EstadoJuego, Laberinto, Mood, Posicion, RondaHistorial } from './laberinto.types';
 import {
   agregarObstaculoDinamico,
   calcularCaminoOptimo,
@@ -20,7 +20,9 @@ import {
   ObstaculoDinamico,
   tamanoParaNivel,
   tieneObstaculosDinamicos,
+  tieneMultiplesCaminos,
 } from './laberinto.utils';
+import { sinEmojis as sinEmojisUtil } from '../../../../shared/utils/tts-texto.util';
 
 const MASCOTA_MSGS: Record<Mood, string[]> = {
   idle: ['¡Listo para planificar! 🧩', '¡Vamos a pensar juntos! 🐱'],
@@ -225,6 +227,41 @@ const MASCOTA_MSGS: Record<Mood, string[]> = {
               <img class="foxy-msg-avatar-img" src="mascotas/michi-portrait.png" alt="Michi">
               <div class="foxy-msg-bubble">{{ mensajeFinal }}</div>
             </div>
+
+            @if (historialRondas.length > 0) {
+              <div class="rutas-section">
+                <h3 class="rutas-titulo">🗺️ Tu camino vs. el camino más rápido</h3>
+                <div class="rutas-leyenda">
+                  <span class="leyenda-item"><span class="leyenda-swatch swatch-optimo"></span>Camino más rápido</span>
+                  <span class="leyenda-item"><span class="leyenda-swatch swatch-jugador"></span>Tu camino</span>
+                  <span class="leyenda-item"><span class="leyenda-swatch swatch-ambos"></span>Coinciden</span>
+                </div>
+                <div class="rutas-scroll">
+                  @for (h of historialRondas; track h.numeroRonda) {
+                    <div class="ruta-card">
+                      <div class="ruta-card-header">Ronda {{ h.numeroRonda }} · Nivel {{ h.nivel }} · {{ h.pasosUsados }}/{{ h.pasosOptimos }} pasos</div>
+                      <div class="ruta-grid" [style.--tamano]="h.tamano">
+                        @for (fila of h.celdas; track $index) {
+                          @for (celda of fila; track celda.col) {
+                            <div class="ruta-celda"
+                              [class.pared-arriba]="celda.paredes.arriba"
+                              [class.pared-abajo]="celda.paredes.abajo"
+                              [class.pared-izquierda]="celda.paredes.izquierda"
+                              [class.pared-derecha]="celda.paredes.derecha"
+                              [class.ruta-optimo]="enCaminoOptimo(h, celda)"
+                              [class.ruta-jugador]="enRecorridoJugador(h, celda)"
+                              [class.ruta-inicio]="esInicioHistorial(h, celda)"
+                              [class.ruta-meta]="esMetaHistorial(h, celda)">
+                              @if (esMetaHistorial(h, celda)) { <span class="ruta-icono">🏁</span> }
+                            </div>
+                          }
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
 
             @if (errorBackend) {
               <div class="error-backend">{{ errorBackend }}</div>
@@ -445,6 +482,39 @@ const MASCOTA_MSGS: Record<Mood, string[]> = {
 
     .resultado-titulo { font-size:22px; font-weight:900; color:#f1f5f9; margin-bottom:16px; }
 
+    /* ══ Comparación de caminos (resultados) ══ */
+    .rutas-section { margin-top: 20px; text-align: left; }
+    .rutas-titulo { font-size: 14px; font-weight: 800; color: #f1f5f9; margin-bottom: 10px; text-align: center; }
+    .rutas-leyenda { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
+    .leyenda-item { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: #94a3b8; font-weight: 600; }
+    .leyenda-swatch { width: 12px; height: 12px; border-radius: 4px; display: inline-block; }
+    .swatch-optimo  { background: rgba(34,211,238,.55); }
+    .swatch-jugador { background: rgba(249,115,22,.55); }
+    .swatch-ambos   { background: rgba(74,222,128,.65); }
+
+    .rutas-scroll { display: flex; gap: 14px; overflow-x: auto; padding: 4px 2px 10px; scroll-snap-type: x mandatory; }
+    .ruta-card { flex: 0 0 auto; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1); border-radius: 14px; padding: 10px; scroll-snap-align: start; }
+    .ruta-card-header { font-size: 10px; font-weight: 700; color: #cbd5e1; margin-bottom: 8px; text-align: center; white-space: nowrap; }
+
+    .ruta-grid {
+      display: grid;
+      grid-template-columns: repeat(var(--tamano), 14px);
+      grid-template-rows: repeat(var(--tamano), 14px);
+      background: rgba(255,255,255,.03);
+      border-radius: 6px;
+    }
+    .ruta-celda { position: relative; border: 1px solid transparent; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
+    .ruta-celda.pared-arriba    { border-top-color: rgba(8,145,178,.5); }
+    .ruta-celda.pared-abajo     { border-bottom-color: rgba(8,145,178,.5); }
+    .ruta-celda.pared-izquierda { border-left-color: rgba(8,145,178,.5); }
+    .ruta-celda.pared-derecha   { border-right-color: rgba(8,145,178,.5); }
+    .ruta-celda.ruta-optimo  { background: rgba(34,211,238,.5); }
+    .ruta-celda.ruta-jugador { background: rgba(249,115,22,.5); }
+    .ruta-celda.ruta-optimo.ruta-jugador { background: rgba(74,222,128,.65); }
+    .ruta-celda.ruta-inicio { box-shadow: inset 0 0 0 1px rgba(34,211,238,.9); }
+    .ruta-celda.ruta-meta   { box-shadow: inset 0 0 0 1px rgba(74,222,128,.9); }
+    .ruta-icono { font-size: 9px; line-height: 1; }
+
     .score-ring { position:relative; width:120px; height:120px; margin:0 auto 18px; }
     .score-ring svg { width:120px; height:120px; transform:rotate(-90deg); }
     .ring-bg   { fill:none; stroke:rgba(255,255,255,.08); stroke-width:10; }
@@ -512,6 +582,10 @@ export class LaberintoComponent implements OnInit, OnDestroy {
   estado: EstadoJuego = 'inicio';
   laberinto: Laberinto | null = null;
   posicionJugador: Posicion = { fila: 0, col: 0 };
+  /** Todas las celdas por las que ha pasado el niño en la ronda actual, en orden (incluye vueltas atrás). */
+  recorridoJugador: Posicion[] = [];
+  /** Una foto por cada ronda ya jugada — camino óptimo vs. camino real — para mostrar en resultados. */
+  historialRondas: RondaHistorial[] = [];
 
   nivelActual = 1;
   tamanoActual = 5;
@@ -694,6 +768,7 @@ export class LaberintoComponent implements OnInit, OnDestroy {
     this.vecesAtrapadoTotal = 0;
     this.pasoGlobalCounter = 0;
     this.errorBackend = null;
+    this.historialRondas = [];
     this.tiempoInicioSesion = Date.now();
 
     if (this.profileId == null) {
@@ -722,8 +797,11 @@ export class LaberintoComponent implements OnInit, OnDestroy {
   private comenzarRonda(): void {
     this.tamanoActual = tamanoParaNivel(this.nivelActual);
     this.obstaculosActivos = tieneObstaculosDinamicos(this.nivelActual);
-    this.laberinto = generarLaberinto(this.tamanoActual);
+    // A partir de nivel 3 el laberinto deja de ser "perfecto": se agregan
+    // rutas alternas además del camino óptimo (ver tieneMultiplesCaminos).
+    this.laberinto = generarLaberinto(this.tamanoActual, tieneMultiplesCaminos(this.nivelActual));
     this.posicionJugador = { ...this.laberinto.inicio };
+    this.recorridoJugador = [{ ...this.laberinto.inicio }];
     this.pasosRondaActual = 0;
     this.callejonesRondaActual = 0;
     this.celdaObstaculoReciente = null;
@@ -817,6 +895,7 @@ export class LaberintoComponent implements OnInit, OnDestroy {
     if (!nuevaPos) return; // hay pared: no cuenta como paso
 
     this.posicionJugador = nuevaPos;
+    this.recorridoJugador.push({ ...nuevaPos });
     this.pasosRondaActual++;
     this.pasoGlobalCounter++;
 
@@ -922,6 +1001,21 @@ export class LaberintoComponent implements OnInit, OnDestroy {
     this.pasosOptimosTotal += pasosOptimos;
     this.nivelMaximoAlcanzado = Math.max(this.nivelMaximoAlcanzado, this.nivelActual);
 
+    // Foto de esta ronda para la pantalla de resultados (antes de que
+    // comenzarRonda() genere un laberinto nuevo y sobrescriba this.laberinto).
+    this.historialRondas.push({
+      numeroRonda: this.rondaActual,
+      nivel: this.nivelActual,
+      tamano: this.laberinto.tamano,
+      celdas: this.laberinto.celdas,
+      inicio: this.laberinto.inicio,
+      meta: this.laberinto.meta,
+      caminoOptimo: this.laberinto.caminoOptimo,
+      recorridoJugador: this.recorridoJugador,
+      pasosUsados: this.pasosRondaActual,
+      pasosOptimos,
+    });
+
     const fueEficiente = this.pasosRondaActual <= pasosOptimos * this.UMBRAL_EFICIENCIA_SUBIDA;
 
     this.estado = 'feedback';
@@ -1005,6 +1099,30 @@ export class LaberintoComponent implements OnInit, OnDestroy {
     return esOrigen || esDestino;
   }
 
+  // ── Comparación de caminos (pantalla de resultados) ───────────────────────
+
+  private posicionEnLista(lista: Posicion[], fila: number, col: number): boolean {
+    return lista.some(p => p.fila === fila && p.col === col);
+  }
+
+  /** La celda forma parte del camino más corto posible (BFS) de esa ronda. */
+  enCaminoOptimo(historial: RondaHistorial, celda: Celda): boolean {
+    return this.posicionEnLista(historial.caminoOptimo, celda.fila, celda.col);
+  }
+
+  /** La celda fue realmente visitada por el niño en esa ronda (incluye vueltas atrás y callejones). */
+  enRecorridoJugador(historial: RondaHistorial, celda: Celda): boolean {
+    return this.posicionEnLista(historial.recorridoJugador, celda.fila, celda.col);
+  }
+
+  esInicioHistorial(historial: RondaHistorial, celda: Celda): boolean {
+    return celda.fila === historial.inicio.fila && celda.col === historial.inicio.col;
+  }
+
+  esMetaHistorial(historial: RondaHistorial, celda: Celda): boolean {
+    return celda.fila === historial.meta.fila && celda.col === historial.meta.col;
+  }
+
   private setMascota(mood: Mood): void {
     this.mascotMood = mood;
     const msgs = MASCOTA_MSGS[mood];
@@ -1014,7 +1132,7 @@ export class LaberintoComponent implements OnInit, OnDestroy {
 
   /** Quita emojis antes de mandar el texto al sintetizador de voz (mismo criterio que Espejo Mental). */
   private sinEmojis(texto: string): string {
-    return texto.replace(/[\u{1F300}-\u{1FFFF}]/gu, '').trim();
+    return sinEmojisUtil(texto);
   }
 
   private limpiarTimers(): void {

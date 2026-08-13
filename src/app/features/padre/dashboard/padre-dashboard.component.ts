@@ -10,6 +10,7 @@ import { ChildProfile, ChildProfileRequest, AVATAR_EMOJIS } from '../perfiles/ch
 import { PadreService, SesionJuego, Metrica, AlertaRegresion, Notificacion } from '../padre.service';
 import { DocenteService } from '../../docente/docente.service';
 import { EvolucionChartComponent } from '../../../shared/components/evolucion-chart/evolucion-chart.component';
+import { NivelAsignadoService, JuegoResumen, NivelBloqueable } from '../../../core/services/nivel-asignado.service';
 import { CampanaNotificacionesComponent } from '../../../shared/components/campana-notificaciones/campana-notificaciones.component';
 
 const AVATAR_MAP: Record<string, string> = {
@@ -362,6 +363,7 @@ interface DiaActividad     { dia: string; valor: number; }
               <div class="hijo-actions">
                 <button class="hbtn hbtn-jugar" (click)="jugar(p)" [disabled]="!p.activo">▶ Jugar</button>
                 <button class="hbtn hbtn-edit" (click)="openEdit(p)">✏️</button>
+                <button class="hbtn hbtn-niveles" (click)="verNiveles(p)" title="Niveles de dificultad">🔒</button>
                 <button class="hbtn hbtn-tog"  (click)="toggleActivo(p)">{{ p.activo ? '⏸' : '▶' }}</button>
                 <button class="hbtn hbtn-del"  (click)="pedirEliminar(p)">🗑</button>
               </div>
@@ -567,6 +569,49 @@ interface DiaActividad     { dia: string; valor: number; }
             <button class="btn-save" [disabled]="calificacion === 0" (click)="enviarCalificacion()">Enviar</button>
           </div>
         }
+      </div>
+    </div>
+  }
+
+  <!-- ══ MODAL NIVELES BLOQUEADOS ══ -->
+  @if (perfilEnNiveles) {
+    <div class="overlay" (click)="cerrarNiveles()">
+      <div class="modal modal-niveles" (click)="$event.stopPropagation()">
+        <h2 class="modal-title">🔒 Niveles de {{ perfilEnNiveles.nombre }}</h2>
+        <p class="niveles-hint">
+          Fija el nivel de cada juego para que {{ perfilEnNiveles.nombre }} solo pueda jugar
+          en esa dificultad. Elegí "Sin restricción" para que vuelva a adaptarse automáticamente.
+        </p>
+        @if (loadingNiveles) {
+          <p class="niveles-hint">Cargando…</p>
+        } @else {
+          <table class="tabla-niveles">
+            <thead>
+              <tr><th>JUEGO</th><th>NIVEL ASIGNADO</th></tr>
+            </thead>
+            <tbody>
+              @for (j of juegosParaNiveles; track j.id) {
+                <tr>
+                  <td>{{ j.nombre }}</td>
+                  <td>
+                    <select
+                      [disabled]="savingNivelJuegoId === j.id"
+                      [ngModel]="nivelesAsignados[j.id] || ''"
+                      (ngModelChange)="cambiarNivel(j.id, $event)">
+                      <option value="">Sin restricción</option>
+                      @for (n of NIVELES_BLOQUEABLES; track n) {
+                        <option [value]="n">{{ n === 'FACIL' ? 'Fácil' : n === 'MEDIO' ? 'Medio' : 'Difícil' }}</option>
+                      }
+                    </select>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+        <div class="modal-footer">
+          <button class="btn-cancel" (click)="cerrarNiveles()">Cerrar</button>
+        </div>
       </div>
     </div>
   }
@@ -780,6 +825,7 @@ interface DiaActividad     { dia: string; valor: number; }
     .hbtn-jugar { background:linear-gradient(135deg,#6366F1,#4F46E5); color:white; flex:1; }
     .hbtn-jugar:disabled { background:#E8E4F4; color:#94A3B8; cursor:not-allowed; }
     .hbtn-edit  { background:#EDE9FF; color:#5B21B6; width:34px; padding:6px; }
+    .hbtn-niveles { background:#DCFCE7; color:#15803D; width:34px; padding:6px; }
     .hbtn-tog   { background:#FEF9C3; color:#92400E; width:34px; padding:6px; }
     .hbtn-del   { background:#FEE2E2; color:#B91C1C; width:34px; padding:6px; }
 
@@ -787,6 +833,12 @@ interface DiaActividad     { dia: string; valor: number; }
     .overlay { position:fixed; inset:0; background:rgba(30,27,78,.45); display:flex; align-items:center; justify-content:center; z-index:1000; padding:20px; }
     .modal { background:white; border-radius:24px; padding:36px 40px; width:100%; max-width:440px; box-shadow:0 20px 60px rgba(30,27,78,.2); }
     .modal-sm { max-width:360px; text-align:center; }
+    .modal-niveles { max-width:520px; max-height:80vh; overflow-y:auto; text-align:left; }
+    .niveles-hint { font-size:12.5px; color:#6B7280; margin-bottom:14px; line-height:1.5; }
+    .tabla-niveles { width:100%; border-collapse:collapse; }
+    .tabla-niveles th { text-align:left; font-size:10.5px; color:#6B7280; letter-spacing:.5px; padding:6px 8px; border-bottom:1.5px solid #EDE9FF; }
+    .tabla-niveles td { padding:8px; border-bottom:1px solid #F5F3FF; font-size:13px; color:#1E1B4B; }
+    .tabla-niveles select { padding:6px 10px; border-radius:8px; border:1.5px solid #EDE9FF; font-size:12.5px; font-weight:600; color:#5B21B6; background:white; }
     .modal-title { font-size:22px; font-weight:900; color:#1E1B4B; margin-bottom:20px; text-align:center; }
     .form-error { background:#fde8e8; color:#c0524a; border-radius:10px; padding:10px 14px; font-size:13px; font-weight:700; margin-bottom:16px; }
     .form-group { margin-bottom:18px; }
@@ -850,6 +902,15 @@ export class PadreDashboardComponent implements OnInit {
   showDeleteModal = false;
   perfilAEliminar: ChildProfile | null = null;
 
+  // Modal niveles bloqueados (CA: el niño solo juega el nivel que le fijó
+  // el docente/padre; ver NivelAsignadoService)
+  perfilEnNiveles: ChildProfile | null = null;
+  juegosParaNiveles: JuegoResumen[] = [];
+  nivelesAsignados: Record<number, NivelBloqueable> = {};
+  loadingNiveles = false;
+  savingNivelJuegoId: number | null = null;
+  readonly NIVELES_BLOQUEABLES: NivelBloqueable[] = ['FACIL', 'MEDIO', 'DIFICIL'];
+
   // Selector de docente
   docentesList:    any[]   = [];
   formDocenteId:   number | null = null;
@@ -895,7 +956,8 @@ export class PadreDashboardComponent implements OnInit {
     private padreService:        PadreService,
     private docenteService:      DocenteService,
     private router:              Router,
-    private cdr:                 ChangeDetectorRef
+    private cdr:                 ChangeDetectorRef,
+    private nivelSvc:            NivelAsignadoService
   ) {}
 
   irAProgreso(): void { this.router.navigate(['/padre/progreso']); }
@@ -1161,6 +1223,49 @@ export class PadreDashboardComponent implements OnInit {
         next: () => { this.calificacionEnviada = true; this.cdr.detectChanges(); },
         error: () => { this.cdr.detectChanges(); }
       });
+  }
+
+  // ── Niveles bloqueados por juego (modal) ──
+  verNiveles(p: ChildProfile): void {
+    this.perfilEnNiveles = p;
+    this.loadingNiveles = true;
+    this.nivelesAsignados = {};
+    forkJoin({
+      juegos: this.nivelSvc.listarJuegos().pipe(catchError(() => of([]))),
+      asignados: this.nivelSvc.listarPorPerfil(p.id).pipe(catchError(() => of([]))),
+    }).subscribe(({ juegos, asignados }) => {
+      this.juegosParaNiveles = juegos;
+      asignados.forEach(a => { this.nivelesAsignados[a.juego.id] = a.nivel; });
+      this.loadingNiveles = false;
+      this.cdr.detectChanges();
+    });
+  }
+
+  cerrarNiveles(): void {
+    this.perfilEnNiveles = null;
+    this.cdr.detectChanges();
+  }
+
+  cambiarNivel(juegoId: number, nivel: NivelBloqueable | ''): void {
+    if (!this.perfilEnNiveles) return;
+    const perfilId = this.perfilEnNiveles.id;
+    this.savingNivelJuegoId = juegoId;
+
+    const alTerminar = () => {
+      if (nivel) {
+        this.nivelesAsignados[juegoId] = nivel;
+      } else {
+        delete this.nivelesAsignados[juegoId];
+      }
+      this.savingNivelJuegoId = null;
+      this.cdr.detectChanges();
+    };
+
+    if (nivel) {
+      this.nivelSvc.asignar(perfilId, juegoId, nivel).pipe(catchError(() => of(null))).subscribe(alTerminar);
+    } else {
+      this.nivelSvc.quitar(perfilId, juegoId).pipe(catchError(() => of(null))).subscribe(alTerminar);
+    }
   }
 
   jugar(p: ChildProfile): void {

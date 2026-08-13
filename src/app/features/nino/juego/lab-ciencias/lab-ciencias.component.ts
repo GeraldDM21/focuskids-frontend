@@ -18,6 +18,7 @@ import {
   MascotComponent,
   MascotMood
 } from '../../../../shared/components/mascot/mascot.component';
+import { sinEmojis } from '../../../../shared/utils/tts-texto.util';
 
 import {
   ChildProfileService
@@ -313,7 +314,7 @@ export class LabCienciasComponent
       'y deduce la regla científica. ' +
       '¡La ciencia es magia que sí puedes entender!';
 
-    const msg = new SpeechSynthesisUtterance(texto);
+    const msg = new SpeechSynthesisUtterance(sinEmojis(texto));
     msg.lang  = 'es-ES';
     msg.rate  = 0.9;
     msg.pitch = 1.2;
@@ -1213,7 +1214,7 @@ export class LabCienciasComponent
 
     const voz =
       new SpeechSynthesisUtterance(
-        texto
+        sinEmojis(texto)
       );
 
     voz.lang = 'es-ES';
