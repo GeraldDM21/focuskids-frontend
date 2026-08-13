@@ -5,6 +5,7 @@ import { SesionJuegoService } from '../../../../core/services/sesion-juego.servi
 import { ChildProfileService } from '../../../padre/perfiles/child-profile.service';
 import { Juego, NivelDificultad } from '../../../../core/models/juego.model';
 import { MascotComponent } from '../../../../shared/components/mascot/mascot.component';
+import { sinEmojis as sinEmojisUtil } from '../../../../shared/utils/tts-texto.util';
 
 type Estado = 'inicio' | 'cuenta' | 'mostrando' | 'input' | 'feedback' | 'resultados';
 type Mood   = 'idle' | 'thinking' | 'excited' | 'celebrate' | 'encourage';
@@ -782,7 +783,7 @@ export class RitmoPatronComponent implements OnInit, OnDestroy {
 
   /** Quita emojis antes de mandar el texto al sintetizador de voz (mismo criterio que Espejo Mental/Michi/Koby/Tigre/Buddy). */
   private sinEmojis(texto: string): string {
-    return texto.replace(/[\u{1F300}-\u{1FFFF}]/gu, '').trim();
+    return sinEmojisUtil(texto);
   }
 
   // Cada instrumento tiene su propia sintesis (percusion real: golpe/ruido, no solo tonos puros)

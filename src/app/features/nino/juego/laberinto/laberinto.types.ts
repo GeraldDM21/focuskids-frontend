@@ -57,6 +57,24 @@ export interface ResultadoRonda {
   tiempoMs: number;
 }
 
+/**
+ * Foto de una ronda ya jugada, guardada para la pantalla de resultados:
+ * el mapa que se jugó, el camino más corto posible (BFS) y el camino que
+ * realmente recorrió el niño (incluye vueltas atrás y callejones).
+ */
+export interface RondaHistorial {
+  numeroRonda: number;
+  nivel: number;
+  tamano: number;
+  celdas: Celda[][];
+  inicio: Posicion;
+  meta: Posicion;
+  caminoOptimo: Posicion[];
+  recorridoJugador: Posicion[];
+  pasosUsados: number;
+  pasosOptimos: number;
+}
+
 // ── Contratos con el backend (mirror de los DTOs de Java) ──────────────────
 
 export interface IniciarLaberintoRequest {

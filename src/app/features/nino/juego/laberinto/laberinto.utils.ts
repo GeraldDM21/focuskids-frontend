@@ -62,7 +62,7 @@ function crearCuadricula(tamano: number): Celda[][] {
  * implementado de forma iterativa con una pila para evitar problemas de
  * recursión en tamaños grandes.
  */
-export function generarLaberinto(tamano: number): Laberinto {
+export function generarLaberinto(tamano: number, multiplesCaminos = false): Laberinto {
   const celdas = crearCuadricula(tamano);
   const visitada: boolean[][] = Array.from({ length: tamano }, () => Array(tamano).fill(false));
 
@@ -101,9 +101,56 @@ export function generarLaberinto(tamano: number): Laberinto {
     pila.push({ fila: elegido.fila, col: elegido.col });
   }
 
+  // A partir de nivel 3 (ver tieneMultiplesCaminos): el backtracking de arriba
+  // siempre genera un laberinto "perfecto" (un único camino posible, sin
+  // ciclos). Para que exista más de una forma real de llegar a la meta se
+  // "trenza" el laberinto después: se abren algunos pasajes extra al azar
+  // entre celdas que ya son vecinas pero seguían separadas por una pared.
+  // Esto solo AGREGA rutas — nunca puede dejar el laberinto sin solución.
+  if (multiplesCaminos) {
+    agregarRutasAlternas(celdas);
+  }
+
+  // El camino óptimo se calcula siempre al final: si se trenzó el laberinto,
+  // puede haber quedado un atajo más corto que el único camino original.
   const caminoOptimo = calcularCaminoOptimo(celdas, inicio, meta);
 
   return { tamano, celdas, inicio, meta, caminoOptimo };
+}
+
+/**
+ * "Trenza" un laberinto perfecto abriendo pasajes extra entre celdas vecinas
+ * que aún tienen una pared entre ellas, creando lazos/rutas alternas hacia la
+ * meta. Recorre cada pared interior una sola vez (solo evalúa abajo/derecha
+ * por celda para no evaluar la misma pared dos veces) y la abre con
+ * probabilidad `intensidad`. Nunca puede volver el laberinto irresoluble:
+ * solo derriba paredes, nunca las agrega.
+ */
+export function agregarRutasAlternas(celdas: Celda[][], intensidad = 0.16): number {
+  const tamano = celdas.length;
+  let agregadas = 0;
+
+  for (let fila = 0; fila < tamano; fila++) {
+    for (let col = 0; col < tamano; col++) {
+      const celda = celdas[fila][col];
+
+      // ABAJO
+      if (fila < tamano - 1 && paredEnDireccion(celda, 'ABAJO') && Math.random() < intensidad) {
+        setPared(celda, 'ABAJO', false);
+        setPared(celdas[fila + 1][col], 'ARRIBA', false);
+        agregadas++;
+      }
+
+      // DERECHA
+      if (col < tamano - 1 && paredEnDireccion(celda, 'DERECHA') && Math.random() < intensidad) {
+        setPared(celda, 'DERECHA', false);
+        setPared(celdas[fila][col + 1], 'IZQUIERDA', false);
+        agregadas++;
+      }
+    }
+  }
+
+  return agregadas;
 }
 
 /** Vecinos alcanzables desde una celda (solo a través de pasajes ya abiertos). */
@@ -264,5 +311,10 @@ export function tamanoParaNivel(nivel: number): number {
 
 /** CA-04: los obstáculos dinámicos empiezan a partir del nivel 3. */
 export function tieneObstaculosDinamicos(nivel: number): boolean {
+  return nivel >= 3;
+}
+
+/** El laberinto empieza a tener más de una ruta posible a la meta desde el nivel 3 (mismo umbral que los obstáculos dinámicos). */
+export function tieneMultiplesCaminos(nivel: number): boolean {
   return nivel >= 3;
 }

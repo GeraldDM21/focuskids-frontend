@@ -6,6 +6,7 @@ import { ChildProfileService } from '../../../padre/perfiles/child-profile.servi
 import { Juego, NivelDificultad } from '../../../../core/models/juego.model';
 import { MascotComponent, MascotMood } from '../../../../shared/components/mascot/mascot.component';
 import { BolsaPaises, Dificultad, Pais, PAISES, Pregunta, TipoPregunta, generarPregunta, siguienteDificultad } from './mapa-aventura.model';
+import { sinEmojis as sinEmojisUtil } from '../../../../shared/utils/tts-texto.util';
 
 // 'resultados' se conecta en el Paso 4.
 type Estado = 'inicio' | 'jugando' | 'resultados';
@@ -650,7 +651,7 @@ export class MapaAventuraComponent implements OnInit, OnDestroy {
 
   /** Quita emojis antes de mandar el texto al sintetizador de voz (mismo criterio que Espejo Mental/Michi/Koby/Tigre). */
   private sinEmojis(texto: string): string {
-    return texto.replace(/[\u{1F300}-\u{1FFFF}]/gu, '').trim();
+    return sinEmojisUtil(texto);
   }
 
   private initAudio(): void {

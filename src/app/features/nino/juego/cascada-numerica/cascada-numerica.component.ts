@@ -10,6 +10,7 @@ import { CommonModule } from '@angular/common';
 import { Router} from '@angular/router';
 import { take } from 'rxjs';
 import { MascotComponent } from '../../../../shared/components/mascot/mascot.component';
+import { sinEmojis } from '../../../../shared/utils/tts-texto.util';
 
 import {
   CascadaResultadoResponse,
@@ -145,7 +146,7 @@ export class CascadaNumericaComponent implements OnInit, OnDestroy {
       'observa los tres números que caen, ' +
       'toca el resultado correcto a tiempo. ' +
       '¡Tú puedes lograrlo!';
-    const msg = new SpeechSynthesisUtterance(texto);
+    const msg = new SpeechSynthesisUtterance(sinEmojis(texto));
     msg.lang = 'es-ES';
     msg.rate = 0.9;
     msg.pitch = 1.1;
@@ -1199,7 +1200,7 @@ export class CascadaNumericaComponent implements OnInit, OnDestroy {
     window.speechSynthesis.cancel();
 
     const mensaje =
-      new SpeechSynthesisUtterance(texto);
+      new SpeechSynthesisUtterance(sinEmojis(texto));
 
     mensaje.lang = 'es-ES';
     mensaje.rate = 0.88;

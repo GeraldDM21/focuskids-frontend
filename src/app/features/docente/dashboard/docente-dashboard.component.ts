@@ -9,6 +9,7 @@ import { SesionJuego, Metrica } from '../../padre/padre.service';
 import { MisionService, MisionReclamada } from '../../../core/services/mision.service';
 import { FormsModule } from '@angular/forms';
 import { EvolucionChartComponent } from '../../../shared/components/evolucion-chart/evolucion-chart.component';
+import { NivelAsignadoService, JuegoResumen, NivelBloqueable } from '../../../core/services/nivel-asignado.service';
 
 interface Estudiante {
   id: number; nombre: string; avatar: string; edad: number;
@@ -164,6 +165,7 @@ const MISIONES_DEF = [
                     <td><span class="badge" [class]="badgeClass(e.estado)">{{ e.estado }}</span></td>
                     <td><button class="btn-evolucion" (click)="verEvolucion(e)">📈 Ver evolución</button></td>
                     <td><button class="btn-ver-historial" (click)="verHistorialDetallado(e)">📅 Historial</button></td>
+                    <td><button class="btn-ver-historial" (click)="verNiveles(e)">🔒 Niveles</button></td>
                   </tr>
                 }
               </tbody>
@@ -526,6 +528,51 @@ const MISIONES_DEF = [
       </div>
     </div>
   }
+
+  <!-- ══ MODAL NIVELES BLOQUEADOS ══ -->
+  @if (alumnoEnNiveles) {
+    <div class="overlay" (click)="cerrarNiveles()">
+      <div class="modal modal-niveles" (click)="$event.stopPropagation()">
+        <div class="modal-evo-header">
+          <h2 class="modal-title" style="margin:0">
+            🔒 Niveles de {{ alumnoEnNiveles.nombre }}
+          </h2>
+          <button class="modal-close" (click)="cerrarNiveles()">×</button>
+        </div>
+        <p class="niveles-hint">
+          Fija el nivel de cada juego para que {{ alumnoEnNiveles.nombre }} solo pueda jugar
+          en esa dificultad. Elegí "Sin restricción" para que vuelva a adaptarse automáticamente.
+        </p>
+        @if (loadingNiveles) {
+          <p class="niveles-hint">Cargando…</p>
+        } @else {
+          <table class="tabla-niveles">
+            <thead>
+              <tr><th>JUEGO</th><th>NIVEL ASIGNADO</th></tr>
+            </thead>
+            <tbody>
+              @for (j of juegosParaNiveles; track j.id) {
+                <tr>
+                  <td>{{ j.nombre }}</td>
+                  <td>
+                    <select
+                      [disabled]="savingNivelJuegoId === j.id"
+                      [ngModel]="nivelesAsignados[j.id] || ''"
+                      (ngModelChange)="cambiarNivel(j.id, $event)">
+                      <option value="">Sin restricción</option>
+                      @for (n of NIVELES_BLOQUEABLES; track n) {
+                        <option [value]="n">{{ n === 'FACIL' ? 'Fácil' : n === 'MEDIO' ? 'Medio' : 'Difícil' }}</option>
+                      }
+                    </select>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+    </div>
+  }
 </div>
   `,
   styles: [`
@@ -771,6 +818,12 @@ const MISIONES_DEF = [
     .overlay { position:fixed; inset:0; background:rgba(20,83,45,.45); display:flex; align-items:center; justify-content:center; z-index:1000; padding:20px; }
     .modal { background:white; border-radius:24px; padding:28px 32px; box-shadow:0 20px 60px rgba(20,83,45,.2); }
     .modal-evolucion { width:100%; max-width:760px; max-height:88vh; overflow-y:auto; }
+    .modal-niveles { width:100%; max-width:520px; max-height:80vh; overflow-y:auto; }
+    .niveles-hint { font-size:12.5px; color:#6B7280; margin-bottom:14px; line-height:1.5; }
+    .tabla-niveles { width:100%; border-collapse:collapse; }
+    .tabla-niveles th { text-align:left; font-size:10.5px; color:#6B7280; letter-spacing:.5px; padding:6px 8px; border-bottom:1.5px solid #D1FAE5; }
+    .tabla-niveles td { padding:8px; border-bottom:1px solid #F0FDF4; font-size:13px; color:#14532D; }
+    .tabla-niveles select { padding:6px 10px; border-radius:8px; border:1.5px solid #D1FAE5; font-size:12.5px; font-weight:600; color:#15803D; background:white; }
     .modal-evo-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
     .modal-title { font-size:19px; font-weight:900; color:#14532D; }
     .modal-close { background:#F0FDF4; border:none; border-radius:10px; width:32px; height:32px; font-size:18px; color:#15803D; cursor:pointer; flex-shrink:0; }
@@ -792,6 +845,15 @@ export class DocenteDashboardComponent implements OnInit {
 
   // Modal de evolución (gráficas)
   alumnoEnEvolucion: Estudiante | null = null;
+
+  // Modal de niveles bloqueados (CA: el niño solo juega el nivel que le fijó
+  // el docente/padre; ver NivelAsignadoService)
+  alumnoEnNiveles: Estudiante | null = null;
+  juegosParaNiveles: JuegoResumen[] = [];
+  nivelesAsignados: Record<number, NivelBloqueable> = {};
+  loadingNiveles = false;
+  savingNivelJuegoId: number | null = null;
+  readonly NIVELES_BLOQUEABLES: NivelBloqueable[] = ['FACIL', 'MEDIO', 'DIFICIL'];
 
   logrosClase: LogroClase[] = [];
 
@@ -831,6 +893,7 @@ export class DocenteDashboardComponent implements OnInit {
     private cdr:     ChangeDetectorRef,
     private docSvc:  DocenteService,
     private misionSvc: MisionService,
+    private nivelSvc: NivelAsignadoService,
   ) {}
 
   irAProgreso(): void { this.router.navigate(['/docente/progreso']); }
@@ -1057,5 +1120,47 @@ export class DocenteDashboardComponent implements OnInit {
 
   verHistorialDetallado(e: Estudiante): void {
     this.router.navigate(['/docente/historial', e.id], { queryParams: { nombre: e.nombre } });
+  }
+
+  // ── Niveles bloqueados por juego (modal) ──
+  verNiveles(e: Estudiante): void {
+    this.alumnoEnNiveles = e;
+    this.loadingNiveles = true;
+    this.nivelesAsignados = {};
+    forkJoin({
+      juegos: this.nivelSvc.listarJuegos().pipe(catchError(() => of([]))),
+      asignados: this.nivelSvc.listarPorPerfil(e.id).pipe(catchError(() => of([]))),
+    }).subscribe(({ juegos, asignados }) => {
+      this.juegosParaNiveles = juegos;
+      asignados.forEach(a => { this.nivelesAsignados[a.juego.id] = a.nivel; });
+      this.loadingNiveles = false;
+      this.cdr.detectChanges();
+    });
+  }
+
+  cerrarNiveles(): void {
+    this.alumnoEnNiveles = null;
+  }
+
+  cambiarNivel(juegoId: number, nivel: NivelBloqueable | ''): void {
+    if (!this.alumnoEnNiveles) return;
+    const perfilId = this.alumnoEnNiveles.id;
+    this.savingNivelJuegoId = juegoId;
+
+    const alTerminar = () => {
+      if (nivel) {
+        this.nivelesAsignados[juegoId] = nivel;
+      } else {
+        delete this.nivelesAsignados[juegoId];
+      }
+      this.savingNivelJuegoId = null;
+      this.cdr.detectChanges();
+    };
+
+    if (nivel) {
+      this.nivelSvc.asignar(perfilId, juegoId, nivel).pipe(catchError(() => of(null))).subscribe(alTerminar);
+    } else {
+      this.nivelSvc.quitar(perfilId, juegoId).pipe(catchError(() => of(null))).subscribe(alTerminar);
+    }
   }
 }

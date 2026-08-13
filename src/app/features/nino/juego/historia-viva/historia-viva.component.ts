@@ -10,6 +10,7 @@ import { GameFeedbackService, NivelVolumen } from '../../../../shared/game-feedb
 import { ChildProfileService } from '../../../padre/perfiles/child-profile.service';
 import { MascotComponent } from '../../../../shared/components/mascot/mascot.component';
 import { SesionJuegoService } from '../../../../core/services/sesion-juego.service';
+import { sinEmojis } from '../../../../shared/utils/tts-texto.util';
 
 type Estado = 'inicio' | 'lectura' | 'pregunta' | 'resultados';
 type Mood   = 'idle' | 'thinking' | 'celebrate' | 'encourage';
@@ -609,7 +610,7 @@ export class HistoriaVivaComponent implements OnInit, OnDestroy {
     this.usoAudio++;
     this.leyendoAudio = true;
     this.cdr.detectChanges();
-    const utt = new SpeechSynthesisUtterance(this.historiaActual.texto.replace(/\n/g, ' '));
+    const utt = new SpeechSynthesisUtterance(sinEmojis(this.historiaActual.texto.replace(/\n/g, ' ')));
     utt.lang  = 'es-ES'; utt.rate = 0.88; utt.pitch = 1.0; utt.volume = 0.95;
     utt.onend = () => { this.leyendoAudio = false; this.cdr.detectChanges(); };
     utt.onerror = () => { this.leyendoAudio = false; this.cdr.detectChanges(); };
@@ -629,7 +630,7 @@ export class HistoriaVivaComponent implements OnInit, OnDestroy {
     return new Promise(resolve => {
       try {
         window.speechSynthesis.cancel();
-        const utt = new SpeechSynthesisUtterance(texto);
+        const utt = new SpeechSynthesisUtterance(sinEmojis(texto));
         utt.lang = 'es-ES'; utt.volume = 0.9; utt.rate = rate; utt.pitch = pitch;
         utt.onend = () => resolve(); utt.onerror = () => resolve();
         window.speechSynthesis.speak(utt);

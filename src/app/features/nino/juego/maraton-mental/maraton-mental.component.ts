@@ -27,6 +27,7 @@ import {
   reducirConfigColor,
   reducirConfigConteo,
 } from './maraton-mental.utils';
+import { sinEmojis as sinEmojisUtil } from '../../../../shared/utils/tts-texto.util';
 
 @Component({
   selector: 'app-maraton-mental',
@@ -608,7 +609,7 @@ export class MaratonMentalComponent implements OnInit, OnDestroy {
 
   /** Quita emojis antes de mandar el texto al sintetizador de voz (mismo criterio que Espejo Mental/Laberinto). */
   private sinEmojis(texto: string): string {
-    return texto.replace(/[\u{1F300}-\u{1FFFF}]/gu, '').trim();
+    return sinEmojisUtil(texto);
   }
 
   private hablar(texto: string, rate = 0.95, pitch = 1.1): void {
