@@ -99,12 +99,12 @@ const TIEMPO_MAX_MS = 8 * 60 * 1000; // maximo 8 minutos
           <div class="inicio-panel">
             <h1 class="titulo-juego"><span class="titulo-blanco">Elige un modo</span></h1>
             <div class="opciones-grandes">
-              <button class="opcion-grande" (click)="elegirModo('PAIS')">
+              <button class="opcion-grande" (click)="elegirModo(MODO_PAIS)">
                 <span class="og-ico">🌎</span>
                 <span class="og-titulo">Países</span>
                 <span class="og-desc">Adivina qué país está marcado en el mapa</span>
               </button>
-              <button class="opcion-grande" (click)="elegirModo('CAPITAL')">
+              <button class="opcion-grande" (click)="elegirModo(MODO_CAPITAL)">
                 <span class="og-ico">🏛️</span>
                 <span class="og-titulo">Capitales</span>
                 <span class="og-desc">Adivina la capital de cada país</span>
@@ -198,7 +198,7 @@ const TIEMPO_MAX_MS = 8 * 60 * 1000; // maximo 8 minutos
           </div>
 
           <!-- Mapa real (Leaflet), zoom automático a la zona del país objetivo -->
-          <app-mapa-leaflet [pais]="preguntaActual?.pais ?? null" [modo]="modoElegido ?? 'PAIS'"></app-mapa-leaflet>
+          <app-mapa-leaflet [pais]="preguntaActual?.pais ?? null" [modo]="modoElegido ?? MODO_PAIS"></app-mapa-leaflet>
 
           <!-- Opciones de respuesta (país o capital, siempre 4 opciones) -->
           @if (preguntaActual) {
@@ -218,7 +218,7 @@ const TIEMPO_MAX_MS = 8 * 60 * 1000; // maximo 8 minutos
           <!-- Revelación: bandera + dato curioso, sirve de apoyo tanto si acertó como si falló -->
           @if (respondido && preguntaActual) {
             <div class="reveal-card" [class.reveal-correcta]="resultado === 'correcto'" [class.reveal-incorrecta]="resultado === 'incorrecto'">
-              <img class="reveal-bandera" [src]="'https://flagcdn.com/w160/' + preguntaActual.pais.cca2 + '.png'" [alt]="'Bandera de ' + preguntaActual.pais.nombre">
+              <img class="reveal-bandera" [src]="'https://flagcdn.com/w160/' + $any(preguntaActual.pais).cca2 + '.png'" [alt]="'Bandera de ' + preguntaActual.pais.nombre">
               <div class="reveal-texto">
                 <div class="reveal-nombre">{{ preguntaActual.pais.nombre }} <span class="reveal-capital">· {{ preguntaActual.pais.capital }}</span></div>
                 <div class="reveal-dato">{{ preguntaActual.pais.datoCurioso }}</div>
@@ -569,6 +569,10 @@ export class MapaAventuraComponent implements OnInit, OnDestroy {
   // Banco de países (se carga una sola vez desde /data/paises-mundo.json)
   private pool: Pais[] = [];
   private datosListos = false;
+
+  // Constantes tipadas para usar en el template (strict templates no acepta literals inline)
+  readonly MODO_PAIS: TipoPregunta = 'PAIS';
+  readonly MODO_CAPITAL: TipoPregunta = 'CAPITAL';
 
   // Selección del niño para esta partida
   modoElegido: TipoPregunta | null = null;
