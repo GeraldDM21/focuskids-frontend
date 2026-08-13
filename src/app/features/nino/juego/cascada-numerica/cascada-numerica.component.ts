@@ -43,8 +43,10 @@ import { SesionJuegoService } from '../../../../core/services/sesion-juego.servi
 export class CascadaNumericaComponent implements OnInit, OnDestroy {
   readonly MAX_OPERACIONES = 20;
   readonly DURACION_MAXIMA_MS = 5 * 60 * 1000;
-  readonly VELOCIDAD_INICIAL_MS = 4000;
-  readonly VELOCIDAD_MINIMA_MS = 1800;
+  // Mismos valores que CascadaNumericaService.java en el backend (que es quien
+  // realmente controla el tiempo de caída via velocidadCaidaMs/velocidadSugeridaMs).
+  readonly VELOCIDAD_INICIAL_MS = 8500;
+  readonly VELOCIDAD_MINIMA_MS = 4500;
 
   estado: EstadoJuego = 'inicio';
   sonidoActivo = true;
@@ -835,7 +837,8 @@ export class CascadaNumericaComponent implements OnInit, OnDestroy {
     if (
       this.respuestaBloqueada ||
       this.estado !== 'jugando' ||
-      !this.operacionActual
+      !this.operacionActual ||
+      this.operacionesCompletadas >= this.MAX_OPERACIONES
     ) {
       return;
     }
@@ -1102,7 +1105,8 @@ export class CascadaNumericaComponent implements OnInit, OnDestroy {
     if (
       this.respuestaBloqueada ||
       this.estado !== 'jugando' ||
-      !this.operacionActual
+      !this.operacionActual ||
+      this.operacionesCompletadas >= this.MAX_OPERACIONES
     ) {
       return;
     }

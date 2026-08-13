@@ -33,6 +33,12 @@ interface ConfettiPiece { id: number; left: number; color: string; delay: number
         <div class="rp-bar rp-b7"></div><div class="rp-bar rp-b8"></div>
         <div class="rp-bar rp-b9"></div><div class="rp-bar rp-b10"></div>
       </div>
+      <div class="rp-bg" aria-hidden="true">
+        <span class="rp-bpp rp-bpp1">♪</span><span class="rp-bpp rp-bpp2">♫</span>
+        <span class="rp-bpp rp-bpp3">♬</span><span class="rp-bpp rp-bpp4">♩</span>
+        <span class="rp-bpp rp-bpp5">✦</span><span class="rp-bpp rp-bpp6">♪</span>
+        <span class="rp-bpp rp-bpp7">♫</span><span class="rp-bpp rp-bpp8">✧</span>
+      </div>
 
       <!-- Flash overlay -->
       @if (showFlash) {
@@ -238,7 +244,10 @@ interface ConfettiPiece { id: number; left: number; color: string; delay: number
 
     .game-wrapper {
       min-height: 100vh;
-      background: linear-gradient(160deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+      background:
+        radial-gradient(ellipse 60% 45% at 15% 12%, rgba(167,139,250,.14), transparent 60%),
+        radial-gradient(ellipse 55% 40% at 85% 88%, rgba(96,165,250,.12), transparent 60%),
+        linear-gradient(160deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
       display: flex; align-items: center; justify-content: center;
       font-family: 'Inter', -apple-system, sans-serif;
       color: white; overflow: hidden; position: relative;
@@ -618,6 +627,26 @@ interface ConfettiPiece { id: number; left: number; color: string; delay: number
     .rp-b5  {--d:4.5s;--dl:.6s;  --h:55px}  .rp-b6  {--d:3.4s;--dl:1.8s; --h:70px}
     .rp-b7  {--d:5.2s;--dl:.2s;  --h:42px}  .rp-b8  {--d:3.9s;--dl:1.0s; --h:65px}
     .rp-b9  {--d:4.7s;--dl:1.4s; --h:50px}  .rp-b10 {--d:3.6s;--dl:.5s;  --h:58px}
+
+    /* ── Partículas flotantes (notas musicales) — le dan cuerpo al fondo ─── */
+    .rp-bg { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+    .rp-bpp {
+      position: absolute; font-size: 22px; font-weight: 900;
+      color: rgba(196,181,253,.2); font-family: 'Inter', sans-serif;
+      animation: rpPFloat var(--d,13s) ease-in-out infinite var(--dl,0s);
+    }
+    @keyframes rpPFloat {
+      0%,100% { transform: translateY(0); opacity: .12; }
+      50%      { transform: translateY(-24px); opacity: .26; }
+    }
+    .rp-bpp1 { top:  9%; left: 12%; --d:12s; --dl:0s; }
+    .rp-bpp2 { top: 20%; left: 84%; --d:15s; --dl:2s; }
+    .rp-bpp3 { top: 55%; left:  7%; --d:10s; --dl:4s; font-size:26px; }
+    .rp-bpp4 { top: 71%; left: 80%; --d:13s; --dl:1s; font-size:18px; }
+    .rp-bpp5 { top: 36%; left: 47%; --d: 9s; --dl:5s; font-size:14px; }
+    .rp-bpp6 { top: 13%; left: 62%; --d:16s; --dl:3s; font-size:20px; }
+    .rp-bpp7 { top: 82%; left: 32%; --d:11s; --dl:7s; font-size:18px; }
+    .rp-bpp8 { top: 45%; left: 91%; --d:14s; --dl:6s; }
 
     @keyframes glowPulso {
       0%   { transform: translate(-50%,-50%) scale(.6); opacity: .4; }

@@ -355,12 +355,6 @@ export class LabCienciasComponent
     window.speechSynthesis?.cancel();
   }
 
-  seleccionarNivel(
-    nivel: NivelLab
-  ): void {
-    this.nivelActual = nivel;
-  }
-
   iniciarJuego(
     nivel: NivelLab = this.nivelActual
   ): void {

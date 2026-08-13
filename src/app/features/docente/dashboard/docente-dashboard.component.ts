@@ -11,6 +11,7 @@ import { FormsModule } from '@angular/forms';
 import { EvolucionChartComponent } from '../../../shared/components/evolucion-chart/evolucion-chart.component';
 import { NivelAsignadoService, JuegoResumen, NivelBloqueable } from '../../../core/services/nivel-asignado.service';
 import { CampanaNotificacionesComponent } from '../../../shared/components/campana-notificaciones/campana-notificaciones.component';
+import { MatIconModule } from '@angular/material/icon';
 
 interface Estudiante {
   id: number;
@@ -83,7 +84,7 @@ const MISIONES_DEF = [
 @Component({
   selector: 'app-docente-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, EvolucionChartComponent, CampanaNotificacionesComponent],
+  imports: [CommonModule, FormsModule, MatIconModule, EvolucionChartComponent, CampanaNotificacionesComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="root">
@@ -130,7 +131,7 @@ const MISIONES_DEF = [
             <div class="sb-name">{{ docenteName }}</div>
             <div class="sb-role">Docente</div>
           </div>
-          <button class="sb-logout" (click)="auth.logout()" title="Salir">⎋</button>
+          <button class="sb-logout" (click)="auth.logout()" title="Cerrar sesión"><mat-icon>logout</mat-icon></button>
         </div>
       </aside>
 
@@ -368,6 +369,9 @@ const MISIONES_DEF = [
                       >
                     </div>
                     <span class="badge sm" [class]="badgeClass(e.estado)">{{ e.estado }}</span>
+                    <button class="btn-ver-historial" (click)="verHistorialDetallado(e)">
+                      📅 Historial
+                    </button>
                   </div>
                 }
               </div>
@@ -423,11 +427,19 @@ const MISIONES_DEF = [
                 <div class="asig-form-card">
                   <h3 class="card-title">Nueva asignación</h3>
                   <p class="asig-note">
-                    Se distribuirá automáticamente a todos los alumnos activos de tu clase ({{
-                      estudiantes.length
-                    }}).
+                    Elige el alumno al que quieres asignarle esta tarea — cada asignación es para un
+                    alumno específico, no para toda la clase.
                   </p>
                   <div class="form-grid">
+                    <div class="form-field">
+                      <label>Alumno *</label>
+                      <select [(ngModel)]="formPerfilId">
+                        <option [ngValue]="null">Selecciona un alumno...</option>
+                        @for (e of estudiantes; track e.id) {
+                          <option [ngValue]="e.id">{{ e.nombre }}</option>
+                        }
+                      </select>
+                    </div>
                     <div class="form-field">
                       <label>Título *</label>
                       <input [(ngModel)]="formAsig.titulo" placeholder="Ej: Practica de memoria" />
@@ -467,7 +479,7 @@ const MISIONES_DEF = [
                     <button class="btn-cancel" (click)="cancelarAsig()">Cancelar</button>
                     <button
                       class="btn-add"
-                      [disabled]="savingAsig || !formAsig.titulo || !formAsig.fechaLimite"
+                      [disabled]="savingAsig || !formPerfilId || !formAsig.titulo || !formAsig.fechaLimite"
                       (click)="crearAsig()"
                     >
                       {{ savingAsig ? 'Guardando...' : 'Crear asignación' }}
@@ -487,8 +499,8 @@ const MISIONES_DEF = [
                   <div style="font-size:56px">📋</div>
                   <h2>Aún no hay asignaciones</h2>
                   <p>
-                    Crea una asignación con el botón <strong>+ Nueva asignación</strong>.<br />Se
-                    distribuirá automáticamente a los {{ estudiantes.length }} alumnos de tu clase.
+                    Crea una asignación con el botón <strong>+ Nueva asignación</strong> y elige a qué
+                    alumno se la dejas.
                   </p>
                 </div>
               }
@@ -517,7 +529,11 @@ const MISIONES_DEF = [
                       }
                       <div class="asig-meta">
                         <span class="asig-chip">🎯 {{ a.minimoSesiones }} sesiones</span>
-                        <span class="asig-chip">👨‍🎓 {{ estudiantes.length }} alumnos</span>
+                        @if (a.alumnosAsignados && a.alumnosAsignados.length) {
+                          <span class="asig-chip">👤 {{ a.alumnosAsignados.join(', ') }}</span>
+                        } @else {
+                          <span class="asig-chip">👨‍🎓 Toda la clase ({{ estudiantes.length }})</span>
+                        }
                       </div>
                       <div class="asig-fecha">
                         📅 Límite: {{ a.fechaLimite | date: 'dd/MM/yyyy' }}
@@ -883,10 +899,11 @@ const MISIONES_DEF = [
         background: none;
         border: none;
         color: rgba(255, 255, 255, 0.4);
-        font-size: 17px;
         cursor: pointer;
         padding: 4px;
         border-radius: 6px;
+        display: flex;
+        transition: all 0.2s;
       }
       .sb-logout:hover {
         color: white;
@@ -2045,6 +2062,9 @@ export class DocenteDashboardComponent implements OnInit {
   savingAsig = false;
   docenteUid = 0;
   formJuegoId: number | null = null;
+  /** Alumno al que se le deja la asignación — obligatorio: ya no se
+   *  permiten asignaciones generales para toda la clase. */
+  formPerfilId: number | null = null;
   formAsig: Asignacion = {
     titulo: '',
     descripcion: '',
@@ -2229,10 +2249,11 @@ export class DocenteDashboardComponent implements OnInit {
   }
 
   crearAsig(): void {
-    if (!this.formAsig.titulo || !this.formAsig.fechaLimite) return;
+    if (!this.formPerfilId || !this.formAsig.titulo || !this.formAsig.fechaLimite) return;
     this.savingAsig = true;
     const asigPayload = {
       ...this.formAsig,
+      perfilId: this.formPerfilId,
       fechaLimite: this.parseFechaISO(this.formAsig.fechaLimite),
     };
     this.docSvc.crearAsignacion(this.docenteUid, asigPayload).subscribe({
@@ -2256,6 +2277,7 @@ export class DocenteDashboardComponent implements OnInit {
     this.showFormAsig = false;
     this.savingAsig = false;
     this.formJuegoId = null;
+    this.formPerfilId = null;
     this.formAsig = {
       titulo: '',
       descripcion: '',

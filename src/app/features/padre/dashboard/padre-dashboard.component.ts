@@ -12,6 +12,7 @@ import { DocenteService } from '../../docente/docente.service';
 import { EvolucionChartComponent } from '../../../shared/components/evolucion-chart/evolucion-chart.component';
 import { NivelAsignadoService, JuegoResumen, NivelBloqueable } from '../../../core/services/nivel-asignado.service';
 import { CampanaNotificacionesComponent } from '../../../shared/components/campana-notificaciones/campana-notificaciones.component';
+import { MatIconModule } from '@angular/material/icon';
 
 const AVATAR_MAP: Record<string, string> = {
   fox:'🦊', frog:'🐸', lion:'🦁', panda:'🐼', koala:'🐨',
@@ -39,7 +40,7 @@ interface DiaActividad     { dia: string; valor: number; }
 @Component({
   selector: 'app-padre-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, EvolucionChartComponent, CampanaNotificacionesComponent],
+  imports: [CommonModule, FormsModule, MatIconModule, EvolucionChartComponent, CampanaNotificacionesComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
 <div class="root">
@@ -70,6 +71,7 @@ interface DiaActividad     { dia: string; valor: number; }
         <div class="su-name">{{ parentName }}</div>
         <div class="su-role">Padre / Tutor</div>
       </div>
+      <button class="sb-logout" (click)="auth.logout()" title="Cerrar sesión"><mat-icon>logout</mat-icon></button>
     </div>
   </aside>
 
@@ -98,7 +100,6 @@ interface DiaActividad     { dia: string; valor: number; }
           [usuarioId]="auth.user()?.usuarioId ?? 0"
           [notificacionesActivas]="notificacionesInAppActivas"
           historialBasePath="/padre/historial" />
-        <button class="icon-btn" title="Cerrar sesión" (click)="auth.logout()">⎋</button>
       </div>
     </header>
 
@@ -636,8 +637,11 @@ interface DiaActividad     { dia: string; valor: number; }
     .notif-dot { background:#EF4444; color:white; font-size:10px; font-weight:800; border-radius:100px; padding:1px 6px; margin-left:auto; }
     .sidebar-user { margin-top:auto; padding:14px 12px 0; border-top:1px solid rgba(255,255,255,.07); display:flex; align-items:center; gap:9px; }
     .su-avatar { width:34px; height:34px; border-radius:50%; flex-shrink:0; background:#F59E0B; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:800; color:white; }
-    .su-name { font-size:11.5px; font-weight:700; color:white; }
+    .su-info { flex:1; min-width:0; }
+    .su-name { font-size:11.5px; font-weight:700; color:white; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .su-role { font-size:10px; color:rgba(255,255,255,.38); }
+    .sb-logout { background:none; border:none; cursor:pointer; color:rgba(255,255,255,.35); padding:4px; border-radius:6px; display:flex; flex-shrink:0; transition:all .2s; }
+    .sb-logout:hover { color:white; background:rgba(255,255,255,.1); }
 
     /* ── Main ── */
     .main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
@@ -650,7 +654,6 @@ interface DiaActividad     { dia: string; valor: number; }
     .child-menu button:hover { background:#F3F0FF; }
     .btn-new-perfil { background:#5B21B6; color:white; border:none; border-radius:12px; padding:8px 16px; font-size:13px; font-weight:700; cursor:pointer; }
     .btn-new-perfil:hover { background:#4C1D95; }
-    .icon-btn { background:#F3F0FF; border:1.5px solid #DDD6FE; border-radius:10px; width:36px; height:36px; font-size:16px; cursor:pointer; }
     .content { flex:1; overflow-y:auto; padding:20px 22px 32px; display:flex; flex-direction:column; gap:16px; }
 
     /* Loader / Empty */

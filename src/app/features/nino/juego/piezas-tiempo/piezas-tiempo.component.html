@@ -40,19 +40,9 @@
         </h1>
         <p class="titulo-sub">Arrastra y rota las piezas geométricas a sus siluetas</p>
 
-        <div class="nivel-seccion">
-          <p class="nivel-label">Elige tu nivel:</p>
-          <div class="niveles-row">
-            @for (n of niveles; track n.id) {
-              <button class="nivel-btn" [class.activo]="nivelActual === n.id"
-                      (click)="seleccionarNivel(n.id)">
-                <span class="nv-emoji">{{ n.emoji }}</span>
-                <span class="nv-nombre">{{ n.label }}</span>
-                <span class="nv-desc">{{ n.desc }}</span>
-              </button>
-            }
-          </div>
-        </div>
+        <!-- El nivel lo decide el docente/padre (si hay un bloqueo asignado) o
+             el motor de IA con la recomendación inicial — el niño ya no elige
+             ni ve el nivel, simplemente juega. -->
 
         <div class="inicio-botones">
           <button class="btn-empezar" (click)="iniciarJuego(nivelActual)">🧩 ¡Empezar!</button>
@@ -76,6 +66,7 @@
           <span class="timer-texto">⏱ {{ formatTiempo(tiempoRestante) }}</span>
         </div>
         <div class="contadores">
+          <div class="contador">🔁 Ronda {{ rondaActual }}/{{ MAX_RONDAS }}</div>
           <div class="contador">⭐ {{ piezasColocadas }}/{{ slots.length }}</div>
           <div class="contador rojo">❌ {{ fallidos }}</div>
         </div>
@@ -147,6 +138,20 @@
   <!-- Mascota flotante durante el juego -->
   @if (estado === 'jugando') {
     <app-mascot game="piezas" [mood]="mascotMood" [message]="mascotMsg"></app-mascot>
+  }
+
+  <!-- ══ PANTALLA ENTRE RONDAS (breve, sin botones) ═══════════════════════ -->
+  @if (estado === 'ronda-feedback') {
+    <div class="pantalla-resultados">
+      <div class="resultados-card">
+        <div class="fox-resultado-hero">
+          <img class="foxy-resultado-img" src="mascotas/tigre-portrait.png" alt="Tigre">
+          <div class="fox-resultado-trophy">{{ ultimoResultadoRonda === 'completado' ? '🎉' : '⏰' }}</div>
+        </div>
+        <h2 class="resultado-titulo">{{ ultimoResultadoRonda === 'completado' ? '¡Ronda completada!' : '¡Se acabó el tiempo!' }}</h2>
+        <p class="ronda-feedback-sub">Ronda {{ rondaActual }} de {{ MAX_RONDAS }} · la siguiente empieza en un momento...</p>
+      </div>
+    </div>
   }
 
   <!-- ══ PANTALLA RESULTADO ════════════════════════════════════════════════ -->

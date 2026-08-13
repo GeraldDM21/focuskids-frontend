@@ -7,6 +7,7 @@ import { ChildProfileService } from '../../padre/perfiles/child-profile.service'
 import { DocenteService, AsignacionPerfil } from '../../docente/docente.service';
 import { SesionJuego, Metrica } from '../../padre/padre.service';
 import { MisionService, MisionReclamada } from '../../../core/services/mision.service';
+import { MatIconModule } from '@angular/material/icon';
 
 interface Juego       { nombre: string; tipo: string; icono: string; personaje: string; color: string; nivelTxt: string; progreso: number; ruta: string; mascotaImg: string; tip: string; portraitScale?: number; }
 interface ProgresoItem{ nombre: string; valor: number | null; color: string; icono: string; }
@@ -18,7 +19,7 @@ interface Avatar      { key: string; emoji: string; }
 @Component({
   selector: 'app-nino-juegos',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, MatIconModule],
   template: `
 <div class="dashboard">
 
@@ -45,7 +46,9 @@ interface Avatar      { key: string; emoji: string; }
       <button class="nav-item" [class.active]="activeTab==='tareas'"   (click)="activeTab='tareas'"><span class="nav-ico">📋</span> Mis tareas</button>
       <button class="nav-item" [class.active]="activeTab==='config'"   (click)="activeTab='config'"><span class="nav-ico">⚙️</span> Configuración</button>
     </nav>
-    <button class="btn-cerrar" (click)="cerrarSesion()"><span>🚪</span> Cerrar sesión</button>
+    <div class="sidebar-footer">
+      <button class="sb-logout" (click)="cerrarSesion()" title="Cerrar sesión"><mat-icon>logout</mat-icon></button>
+    </div>
   </aside>
 
   <!-- ══ MAIN ══ -->
@@ -585,8 +588,9 @@ interface Avatar      { key: string; emoji: string; }
     .nav-item:hover { background: rgba(255,255,255,.07); color: rgba(255,255,255,.9); }
     .nav-item.active { background: rgba(167,139,250,.2); color: white; }
     .nav-ico { font-size: 16px; }
-    .btn-cerrar { display: flex; align-items: center; gap: 8px; margin: 0 12px; padding: 10px 12px; background: transparent; border: none; border-radius: 12px; color: rgba(255,255,255,.4); font-size: 13px; font-weight: 600; cursor: pointer; transition: all .2s; }
-    .btn-cerrar:hover { background: rgba(239,68,68,.15); color: #f87171; }
+    .sidebar-footer { padding: 12px; border-top: 1px solid rgba(255,255,255,.08); display: flex; justify-content: center; }
+    .sb-logout { background: none; border: none; cursor: pointer; color: rgba(255,255,255,.4); padding: 6px; border-radius: 8px; display: flex; transition: all .2s; }
+    .sb-logout:hover { color: white; background: rgba(255,255,255,.1); }
 
     /* ══ MAIN ══ */
     .main { flex: 1; display: flex; flex-direction: column; overflow: auto; }

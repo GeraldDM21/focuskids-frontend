@@ -45,6 +45,7 @@ const MASCOTA_MSGS: Record<Mood, string[]> = {
       <div class="lc-bg-orb lc-o1" aria-hidden="true"></div>
       <div class="lc-bg-orb lc-o2" aria-hidden="true"></div>
       <div class="lc-bg-orb lc-o3" aria-hidden="true"></div>
+      <div class="lc-bg-orb lc-o4" aria-hidden="true"></div>
       <div class="lc-bg" aria-hidden="true">
         <span class="lc-p lc-p1">△</span><span class="lc-p lc-p2">◻</span>
         <span class="lc-p lc-p3">✦</span><span class="lc-p lc-p4">◈</span>
@@ -282,7 +283,11 @@ const MASCOTA_MSGS: Record<Mood, string[]> = {
 
     .game-wrapper {
       min-height: 100vh;
-      background: linear-gradient(160deg, #0b2027 0%, #123138 50%, #0d2429 100%);
+      background:
+        radial-gradient(ellipse 60% 40% at 15% 10%,  rgba(34,211,238,.13) 0%, transparent 60%),
+        radial-gradient(ellipse 55% 45% at 90% 85%,  rgba(8,145,178,.16)  0%, transparent 55%),
+        radial-gradient(ellipse 40% 35% at 80% 15%,  rgba(103,232,249,.10) 0%, transparent 50%),
+        linear-gradient(160deg, #0b2027 0%, #123138 50%, #0d2429 100%);
       display: flex; align-items: center; justify-content: center;
       font-family: 'Inter', -apple-system, sans-serif;
       color: white; overflow: hidden; position: relative;
@@ -565,6 +570,7 @@ const MASCOTA_MSGS: Record<Mood, string[]> = {
     .lc-o1 { width: 480px; height: 480px; top: -150px; left: -100px; background: radial-gradient(circle, rgba(34,211,238,.3), transparent 70%); animation-delay: 0s; }
     .lc-o2 { width: 360px; height: 360px; bottom: -120px; right: -90px; background: radial-gradient(circle, rgba(8,145,178,.25), transparent 70%); animation-delay: 4s; }
     .lc-o3 { width: 260px; height: 260px; top: 42%; left: 60%; background: radial-gradient(circle, rgba(103,232,249,.18), transparent 70%); animation-delay: 8s; }
+    .lc-o4 { width: 200px; height: 200px; top: 10%; right: 8%; background: radial-gradient(circle, rgba(45,212,191,.2), transparent 70%); animation-delay: 5s; }
     @keyframes lcOrbPulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.1);} }
     .lc-bg { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
     .lc-p { position: absolute; font-size: 20px; color: rgba(103,232,249,.2); animation: lcPFloat var(--d,13s) ease-in-out infinite var(--dl,0s); }

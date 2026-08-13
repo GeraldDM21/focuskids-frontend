@@ -4,6 +4,7 @@
   <div class="mm-bg-orb mm-bo1" aria-hidden="true"></div>
   <div class="mm-bg-orb mm-bo2" aria-hidden="true"></div>
   <div class="mm-bg-orb mm-bo3" aria-hidden="true"></div>
+  <div class="mm-bg-orb mm-bo4" aria-hidden="true"></div>
   <div class="mm-bg" aria-hidden="true">
     <span class="mm-bpp mm-bpp1">1</span><span class="mm-bpp mm-bpp2">2</span>
     <span class="mm-bpp mm-bpp3">∞</span><span class="mm-bpp mm-bpp4">÷</span>
@@ -40,20 +41,9 @@
         </h1>
         <p class="mm-subtitulo-juego">Entrena tu atención dividida resolviendo dos retos a la vez</p>
 
-        <div class="mm-niveles">
-          @for (n of niveles; track n.id) {
-            <button
-              type="button"
-              class="mm-nivel-card"
-              [class.mm-nivel-activo]="nivelActual === n.id"
-              (click)="seleccionarNivel(n.id)"
-            >
-              <span class="mm-nivel-emoji">{{ n.emoji }}</span>
-              <span class="mm-nivel-label">{{ n.label }}</span>
-              <span class="mm-nivel-desc">{{ n.desc }}</span>
-            </button>
-          }
-        </div>
+        <!-- El nivel lo decide el docente/padre (si hay un bloqueo asignado) o
+             el motor de IA con la recomendación inicial — el niño ya no elige
+             ni ve el nivel, simplemente juega. -->
 
         @if (errorApi) {
           <p class="mm-error">{{ errorApi }}</p>

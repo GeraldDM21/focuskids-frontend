@@ -47,16 +47,9 @@
         </h1>
         <p class="subtitulo-juego">¡Mezcla ingredientes y descubre las reglas de la ciencia!</p>
 
-        <div class="niveles-row">
-          @for (nivel of niveles; track nivel.id) {
-            <button type="button" class="nivel-btn" [class.activo]="nivelActual === nivel.id"
-                    (click)="seleccionarNivel(nivel.id)">
-              <span>{{ nivel.emoji }}</span>
-              <b>{{ nivel.label }}</b>
-              <small>{{ nivel.desc }}</small>
-            </button>
-          }
-        </div>
+        <!-- El nivel lo decide el docente/padre (si hay un bloqueo asignado) o
+             el motor de IA con la recomendación inicial — el niño ya no elige
+             ni ve el nivel, simplemente juega. -->
 
         @if (errorApi) {
           <div class="error-api">⚠️ {{ errorApi }}</div>

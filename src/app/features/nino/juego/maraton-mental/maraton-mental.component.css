@@ -1,6 +1,9 @@
 .mm-root {
   min-height: 100vh;
-  background: linear-gradient(135deg, #0f172a, #064e3b);
+  background:
+    radial-gradient(ellipse 55% 45% at 12% 10%, rgba(52,211,153,.16), transparent 60%),
+    radial-gradient(ellipse 50% 40% at 88% 90%, rgba(56,189,248,.14), transparent 60%),
+    linear-gradient(135deg, #0f172a, #064e3b);
   font-family: 'Inter', sans-serif;
   color: white;
   display: flex;
@@ -110,6 +113,8 @@
 }
 .mm-btn-voz:hover { background: rgba(255,255,255,.2); transform: scale(1.1); }
 
+.mm-nivel-actual-label { font-size: 13px; font-weight: 800; color: rgba(255,255,255,.65); text-transform: uppercase; letter-spacing: .5px; margin: 0 0 10px; }
+
 .mm-niveles { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px,1fr)); gap: 10px; margin-bottom: 18px; width: 100%; }
 .mm-nivel-card {
   background: rgba(255,255,255,.06); border: 1.5px solid rgba(255,255,255,.14); border-radius: 16px;
@@ -121,6 +126,11 @@
 .mm-nivel-emoji { font-size: 24px; }
 .mm-nivel-label { font-weight: 800; font-size: 14px; }
 .mm-nivel-desc { font-size: 10px; color: rgba(255,255,255,.6); text-align: center; }
+
+/* Modo solo-lectura: el niño ya no elige nivel, solo lo visualiza. */
+.mm-nivel-solo-lectura { cursor: default; opacity: .55; }
+.mm-nivel-solo-lectura:hover { background: rgba(255,255,255,.06); transform: none; }
+.mm-nivel-solo-lectura.mm-nivel-activo { opacity: 1; }
 
 .mm-btn-primario, .mm-btn-secundario {
   border: none; border-radius: 14px; padding: 14px 32px; font-size: 15px; font-weight: 700; cursor: pointer; transition: all .2s;
@@ -144,7 +154,7 @@
 }
 
 /* ── Zonas (calibración y dual) ────────────────────────────────────── */
-.mm-calibracion { width: 100%; max-width: 480px; display: flex; flex-direction: column; align-items: center; }
+.mm-calibracion { width: 100%; max-width: 600px; display: flex; flex-direction: column; align-items: center; }
 
 .mm-zona {
   position: relative; border-radius: 22px; padding: 24px 20px; width: 100%; box-sizing: border-box;
@@ -189,7 +199,7 @@
 .mm-transicion p { color: rgba(255,255,255,.7); }
 
 /* ── Fase dual ──────────────────────────────────────────────────────── */
-.mm-dual-wrap { width: 100%; max-width: 920px; }
+.mm-dual-wrap { width: 100%; max-width: 1080px; }
 .mm-dual-header { display: flex; align-items: center; gap: 16px; margin-bottom: 8px; }
 .mm-ronda-info { font-weight: 800; font-size: 13px; white-space: nowrap; color: rgba(255,255,255,.75); }
 .mm-timer-bar-wrap { flex: 1; height: 10px; border-radius: 6px; background: rgba(255,255,255,.12); overflow: hidden; }
@@ -311,6 +321,7 @@
 .mm-bo1 { width: 480px; height: 480px; top: -150px; left: -100px; background: radial-gradient(circle, rgba(52,211,153,.3), transparent 70%); animation-delay: 0s; }
 .mm-bo2 { width: 360px; height: 360px; bottom: -120px; right: -90px; background: radial-gradient(circle, rgba(96,165,250,.25), transparent 70%); animation-delay: 4s; }
 .mm-bo3 { width: 260px; height: 260px; top: 42%; left: 58%; background: radial-gradient(circle, rgba(34,211,238,.2), transparent 70%); animation-delay: 8s; }
+.mm-bo4 { width: 220px; height: 220px; top: 12%; right: 6%; background: radial-gradient(circle, rgba(167,139,250,.22), transparent 70%); animation-delay: 6s; }
 @keyframes mmBgOrbPulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.1);} }
 
 .mm-bg { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }

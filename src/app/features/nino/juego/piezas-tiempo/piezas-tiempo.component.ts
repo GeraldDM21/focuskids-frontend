@@ -7,9 +7,10 @@ import { ChildProfileService } from '../../../padre/perfiles/child-profile.servi
 import { PiezaData, SlotData, Nivel } from './piezas-tiempo.model';
 import { MascotComponent, MascotMood } from '../../../../shared/components/mascot/mascot.component';
 import { SesionJuegoService } from '../../../../core/services/sesion-juego.service';
+import { NivelAsignadoService } from '../../../../core/services/nivel-asignado.service';
 import { sinEmojis as sinEmojisUtil } from '../../../../shared/utils/tts-texto.util';
 
-type Estado = 'inicio' | 'jugando' | 'completado' | 'tiempo-agotado';
+type Estado = 'inicio' | 'jugando' | 'ronda-feedback' | 'completado' | 'tiempo-agotado';
 
 const SVG_SHAPES: Record<string, string> = {
   circulo:    '<circle cx="50" cy="50" r="42"/>',
@@ -43,6 +44,14 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
   nivelActual: Nivel = 'FACIL';
   sonidoActivo = true;
   perfilId = 0;
+
+  /** El juego se juega en varias rondas seguidas (antes terminaba en la
+   *  primera) — cada ronda es un set nuevo de piezas/siluetas del mismo nivel. */
+  readonly MAX_RONDAS = 5;
+  rondaActual = 1;
+  /** Resultado de la última ronda jugada, para el mensaje de la pantalla
+   *  breve entre rondas (no es la pantalla final). */
+  ultimoResultadoRonda: 'completado' | 'tiempo-agotado' = 'completado';
 
   piezas: PiezaData[] = [];
   slots:  SlotData[]  = [];
@@ -127,6 +136,14 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
   private nivelFacilId: number | null = null;
   private tiempoInicioRonda = 0;  // CA-05: tiempo por pieza
 
+  /** Nivel fijado por el docente/padre (si existe) — el niño ya no puede
+   *  elegir libremente y el motor de IA tampoco puede sugerir otro nivel.
+   *  Este juego no tiene endpoint propio de bloqueo en el backend (a
+   *  diferencia de Maratón Mental/Laberinto/Cascada/Lab de Ciencias), así
+   *  que la restricción se aplica acá, en el cliente, reutilizando el mismo
+   *  NivelAsignadoService que usa el panel del docente. */
+  private nivelBloqueado: Nivel | null = null;
+
   readonly niveles: { id: Nivel; label: string; emoji: string; desc: string }[] = [
     { id: 'FACIL',   label: 'Fácil',   emoji: '🟢', desc: '3 piezas · 50s · 1 giro' },
     { id: 'MEDIO',   label: 'Medio',   emoji: '🟡', desc: '5 piezas · 42s · más giros' },
@@ -141,12 +158,14 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef,
     private router: Router,
     private sesionJuegoService: SesionJuegoService,
+    private nivelAsignadoService: NivelAsignadoService,
   ) {}
 
   ngOnInit(): void {
     this.profileService.activeProfile$.subscribe(state => {
       if (!state.profileId) { this.router.navigate(['/padre/perfiles/selector']); return; }
       this.perfilId = state.profileId;
+      this.cargarNivelBloqueado();
     });
     // Cargar niveles y preseleccionar el recomendado por IA (CA-03)
     this.sesionJuegoService.obtenerNiveles(this.JUEGO_ID).subscribe({
@@ -160,7 +179,9 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
                 : null;
               if (match) {
                 this.nivelFacilId = match.id;
-                if (rec!.nivelRecomendado.nivel) {
+                // Si el docente/padre fijó un nivel, ese manda siempre sobre
+                // la recomendación de la IA.
+                if (rec!.nivelRecomendado.nivel && !this.nivelBloqueado) {
                   this.nivelActual = rec!.nivelRecomendado.nivel as Nivel;
                 }
               }
@@ -174,6 +195,22 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
     this.speak('¡Hola! Soy Tigre. Vamos a encajar piezas contra el tiempo.');
   }
 
+  /** Igual que en Maratón Mental: si el docente/padre asignó un nivel fijo
+   *  para este juego, se bloquea la elección y se fuerza ese nivel. */
+  private cargarNivelBloqueado(): void {
+    if (!this.perfilId) return;
+    this.nivelAsignadoService.listarPorPerfil(this.perfilId).subscribe({
+      next: asignados => {
+        const bloqueo = asignados.find(a => a.juego?.id === this.JUEGO_ID);
+        if (bloqueo) {
+          this.nivelBloqueado = bloqueo.nivel as Nivel;
+          this.nivelActual = this.nivelBloqueado;
+        }
+      },
+      error: () => {}
+    });
+  }
+
   ngOnDestroy(): void {
     this.detenerTimer();
     this.stopBgMusic();
@@ -183,10 +220,11 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
 
   // ── INICIO ──────────────────────────────────────────────────────────────
 
-  seleccionarNivel(nivel: Nivel): void { this.nivelActual = nivel; }
-
-  iniciarJuego(nivel: Nivel = this.nivelActual): void {
+  iniciarJuego(nivel: Nivel = this.nivelActual, esNuevaRonda = false): void {
+    // El niño no puede elegir nivel: si hay un bloqueo del docente/padre, manda siempre.
+    if (this.nivelBloqueado) { nivel = this.nivelBloqueado; }
     this.nivelActual     = nivel;
+    if (!esNuevaRonda) { this.rondaActual = 1; }
     const cfg            = this.service.generarConfig(nivel);
     this.requiereRotacion = true; // siempre activo: formas no simétricas empiezan giradas
     this.nivelSugerido   = cfg.siguiente;
@@ -228,7 +266,9 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
     this.estado = 'jugando';
     this.tiempoInicioRonda = Date.now();
     this.mascotMood = 'excited';
-    this.mascotMsg  = '¡Vamos Tigre! 🐯 ¡Arrastrá las piezas a sus siluetas!';
+    this.mascotMsg  = this.rondaActual === 1
+      ? '¡Vamos Tigre! 🐯 ¡Arrastrá las piezas a sus siluetas!'
+      : `¡Ronda ${this.rondaActual} de ${this.MAX_RONDAS}! 🐯`;
     this.cdr.detectChanges();
 
     // Backend: iniciar sesión (CA-01)
@@ -411,11 +451,16 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
 
   // ── FINALIZAR ────────────────────────────────────────────────────────────
 
-  private finalizarSesion(nuevoEstado: 'completado' | 'tiempo-agotado'): void {
-    this.estado = nuevoEstado;
+  private finalizarSesion(nuevoEstado: 'completado' | 'tiempo-agotado', forzarSalida = false): void {
+    // Se juegan MAX_RONDAS rondas seguidas antes de mostrar la pantalla final
+    // de resultados — salvo que el niño pida salir antes con "Salir".
+    const esUltimaRonda = forzarSalida || this.rondaActual >= this.MAX_RONDAS;
+
+    this.estado = esUltimaRonda ? nuevoEstado : 'ronda-feedback';
+    this.ultimoResultadoRonda = nuevoEstado;
     this.cdr.detectChanges();
     this.stopBgMusic();
-    if (nuevoEstado === 'completado') { this.confettiActivo = true; }
+    if (nuevoEstado === 'completado' && esUltimaRonda) { this.confettiActivo = true; }
 
     // CA-03: fire-and-forget con 3 reintentos + localStorage fallback
     if (this.sesionBackendId) {
@@ -427,17 +472,17 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
 
     if (nuevoEstado === 'completado') {
       this.puntosBonus = this.tiempoRestante;
-      if (this.tiempoRestante / this.tiempoTotal > 0.5 && this.nivelSugerido) {
+      if (this.tiempoRestante / this.tiempoTotal > 0.5 && this.nivelSugerido && !this.nivelBloqueado) {
         this.subioNivel = true;
       }
       this.playCompletado();
-      this.speak('¡Lo lograste! ¡Excelente trabajo!');
+      this.speak(esUltimaRonda ? '¡Lo lograste! ¡Excelente trabajo!' : '¡Muy bien! Siguiente ronda.');
     } else {
       this.fraseMotivaconalActual = this.frasesMotivacionales[
         Math.floor(Math.random() * this.frasesMotivacionales.length)
       ];
       this.playTiempoAgotado();
-      this.speak('¡Sigue intentando, tú puedes!');
+      this.speak(esUltimaRonda ? '¡Sigue intentando, tú puedes!' : 'Vamos con la siguiente ronda.');
     }
 
     this.service.guardarSesion({
@@ -453,6 +498,13 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
       completada: nuevoEstado === 'completado',
       subioNivel: this.subioNivel
     });
+
+    if (!esUltimaRonda) {
+      setTimeout(() => {
+        this.rondaActual++;
+        this.iniciarJuego(this.nivelActual, true);
+      }, 2000);
+    }
   }
 
   // ── TIMER ────────────────────────────────────────────────────────────────
@@ -652,7 +704,8 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
     clearTimeout(this.mascotTimer);
     this.isDragging = false;
     this.dragPieza = null;
-    this.finalizarSesion('tiempo-agotado');
+    // forzarSalida=true: el niño pidió salir ya, no seguir con más rondas.
+    this.finalizarSesion('tiempo-agotado', true);
   }
 
   volverInicio(): void {

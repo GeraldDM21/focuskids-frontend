@@ -27,6 +27,10 @@ export interface Asignacion {
   minimoSesiones: number;
   fechaLimite: string;
   juego?: { id: number; nombre: string } | null;
+  /** Al crear: id del alumno específico (si no se manda, aplica a toda la clase). */
+  perfilId?: number | null;
+  /** Al listar: nombres de los alumnos enlazados a esta asignación (null/vacío = toda la clase). */
+  alumnosAsignados?: string[] | null;
 }
 
 export interface AsignacionPerfil {
