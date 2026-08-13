@@ -441,6 +441,16 @@ const MISIONES_DEF = [
                         }
                       </select>
                     </div>
+                    @if (formAsig.juego?.nombre === 'Palabras Ocultas') {
+                      <div class="form-field">
+                        <label>Tema de vocabulario *</label>
+                        <select [(ngModel)]="formAsig.tema">
+                          <option value="CIENCIAS">🔬 Ciencias</option>
+                          <option value="GEOGRAFIA">🗺️ Geografía</option>
+                          <option value="MATEMATICAS">➗ Matemáticas</option>
+                        </select>
+                      </div>
+                    }
                     <div class="form-field">
                       <label>Mínimo de sesiones *</label>
                       <input type="number" [(ngModel)]="formAsig.minimoSesiones" min="1" max="50" />
@@ -518,6 +528,9 @@ const MISIONES_DEF = [
                       <div class="asig-meta">
                         <span class="asig-chip">🎯 {{ a.minimoSesiones }} sesiones</span>
                         <span class="asig-chip">👨‍🎓 {{ estudiantes.length }} alumnos</span>
+                        @if (a.tema) {
+                          <span class="asig-chip">{{ temaLabel(a.tema) }}</span>
+                        }
                       </div>
                       <div class="asig-fecha">
                         📅 Límite: {{ a.fechaLimite | date: 'dd/MM/yyyy' }}
@@ -2051,6 +2064,7 @@ export class DocenteDashboardComponent implements OnInit {
     minimoSesiones: 1,
     fechaLimite: '',
     juego: null,
+    tema: null,
   };
 
   readonly JUEGOS_LISTA = [
@@ -2262,17 +2276,32 @@ export class DocenteDashboardComponent implements OnInit {
       minimoSesiones: 1,
       fechaLimite: '',
       juego: null,
+      tema: null,
     };
     this.cdr.detectChanges();
   }
 
   setJuego(id: number | null): void {
+    this.formAsig.tema = null; // resetear tema al cambiar juego
     if (!id) {
       this.formAsig.juego = null;
       return;
     }
     const j = this.JUEGOS_LISTA.find((x) => x.id === id);
     this.formAsig.juego = j ? { id: j.id, nombre: j.nombre } : null;
+    // Tema por defecto para Palabras Ocultas
+    if (j?.nombre === 'Palabras Ocultas') {
+      this.formAsig.tema = 'CIENCIAS';
+    }
+  }
+
+  temaLabel(tema: string): string {
+    const map: Record<string, string> = {
+      CIENCIAS:    '🔬 Ciencias',
+      GEOGRAFIA:   '🗺️ Geografía',
+      MATEMATICAS: '➗ Matemáticas',
+    };
+    return map[tema] ?? tema;
   }
 
   juegoIco(nombre?: string): string {

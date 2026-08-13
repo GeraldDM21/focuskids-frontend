@@ -1849,8 +1849,21 @@ export class NinoJuegosComponent implements OnInit {
   seleccionarAvatar(key: string): void { this.avatarSeleccionado = key; this.profileAvatar = this.avatarEmoji(key); }
   estaImplementado(ruta: string): boolean { return this.implementados.includes(ruta); }
   irAJuego(juego: Juego): void {
-    if (this.implementados.includes(juego.ruta)) this.router.navigate([juego.ruta]);
-    else alert(`¡${juego.nombre} próximamente! 🎮`);
+    if (!this.implementados.includes(juego.ruta)) {
+      alert(`¡${juego.nombre} próximamente! 🎮`);
+      return;
+    }
+    // Si es Palabras Ocultas, pasar el tema de la tarea activa como query param
+    if (juego.nombre === 'Palabras Ocultas') {
+      const tareaActiva = this.tareas.find(
+        t => !t.completada && t.asignacion.juego?.nombre === 'Palabras Ocultas' && t.asignacion.tema
+      );
+      if (tareaActiva?.asignacion.tema) {
+        this.router.navigate([juego.ruta], { queryParams: { tema: tareaActiva.asignacion.tema } });
+        return;
+      }
+    }
+    this.router.navigate([juego.ruta]);
   }
   cerrarSesion(): void { this.router.navigate(['/padre/dashboard']); }
   get xpPorcentaje(): number { return Math.round((this.xpActual / this.xpMax) * 100); }

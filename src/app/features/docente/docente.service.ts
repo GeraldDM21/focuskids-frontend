@@ -27,6 +27,7 @@ export interface Asignacion {
   minimoSesiones: number;
   fechaLimite: string;
   juego?: { id: number; nombre: string } | null;
+  tema?: string | null;
 }
 
 export interface AsignacionPerfil {
