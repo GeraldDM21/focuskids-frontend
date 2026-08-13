@@ -29,9 +29,16 @@ export interface Asignacion {
   juego?: { id: number; nombre: string } | null;
   /** Al crear: id del alumno específico (si no se manda, aplica a toda la clase). */
   perfilId?: number | null;
-  /** Al listar: nombres de los alumnos enlazados a esta asignación (null/vacío = toda la clase). */
+  /** Al listar: nombres de los alumnos enlazados a esta asignación. */
   alumnosAsignados?: string[] | null;
   tema?: string | null;
+  cantidadAlumnos?: number;
+  alumnoNombre?: string | null;
+}
+
+export interface JuegoCatalogo {
+  id: number;
+  nombre: string;
 }
 
 export interface AsignacionPerfil {
@@ -115,14 +122,22 @@ export class DocenteService {
   }
 
   // ── Asignaciones del docente ──────────────────────────────────────────────
-  crearAsignacion(docenteUsuarioId: number, data: Asignacion) {
-    return this.http.post<Asignacion>(`${this.api}/asignaciones/docente/${docenteUsuarioId}`, data);
+  /** perfilId opcional: si viene, se asigna solo a ese alumno; si no, a toda la clase. */
+  crearAsignacion(docenteUsuarioId: number, data: Asignacion, perfilId?: number | null) {
+    const params: Record<string, number> = {};
+    if (perfilId != null) params['perfilId'] = perfilId;
+    return this.http.post<Asignacion>(`${this.api}/asignaciones/docente/${docenteUsuarioId}`, data, { params });
   }
   getAsignacionesDocente(docenteUsuarioId: number) {
     return this.http.get<Asignacion[]>(`${this.api}/asignaciones/docente/${docenteUsuarioId}`);
   }
   eliminarAsignacion(id: number) {
     return this.http.delete<void>(`${this.api}/asignaciones/${id}`);
+  }
+
+  // ── Catálogo de juegos ─────────────────────────────────────────────────────
+  getJuegos() {
+    return this.http.get<JuegoCatalogo[]>(`${this.api}/juegos`);
   }
 
   // ── Asignaciones del niño ─────────────────────────────────────────────────

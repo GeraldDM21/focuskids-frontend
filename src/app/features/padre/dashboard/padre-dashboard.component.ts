@@ -404,18 +404,28 @@ interface DiaActividad     { dia: string; valor: number; }
             </div>
           } @else {
             <div class="notif-list">
-              @for (n of notificaciones; track n.id) {
-                <div class="notif-item" [class.notif-leida]="n.leida" (click)="marcarLeida(n)">
+              @for (n of notificacionesPaginadas; track n.id) {
+                <div class="notif-item" [class.notif-leida]="n.leida" (click)="abrirNotificacion(n)">
                   <div class="notif-ico">{{ tipoIco(n.tipo) }}</div>
                   <div class="notif-body">
-                    <div class="notif-tipo">{{ n.tipo }}</div>
-                    <div class="notif-msg">{{ n.mensaje }}</div>
+                    <div class="notif-tipo">{{ tipoLabel(n.tipo) }}</div>
+                    <div class="notif-titulo-item">{{ n.titulo || n.mensaje }}</div>
                     <div class="notif-fecha">{{ formatFecha(n.fecha) }}</div>
                   </div>
                   @if (!n.leida) { <div class="notif-new-dot"></div> }
                 </div>
               }
             </div>
+
+            @if (totalPaginasNotif > 1) {
+              <div class="paginacion">
+                <button class="pg-btn pg-flecha" [disabled]="paginaNotif === 1" (click)="irAPaginaNotif(paginaNotif - 1)">‹</button>
+                @for (p of paginasNotif; track p) {
+                  <button class="pg-btn" [class.pg-activa]="p === paginaNotif" (click)="irAPaginaNotif(p)">{{ p }}</button>
+                }
+                <button class="pg-btn pg-flecha" [disabled]="paginaNotif === totalPaginasNotif" (click)="irAPaginaNotif(paginaNotif + 1)">›</button>
+              </div>
+            }
           }
         </div>
       }
@@ -425,30 +435,14 @@ interface DiaActividad     { dia: string; valor: number; }
         <div class="config-wrap">
           <div class="config-card">
             <h3 class="config-title">👤 Mi cuenta</h3>
-            @if (errorPerfil) { <div class="form-error">{{ errorPerfil }}</div> }
             @if (perfilGuardadoOk) { <div class="config-ok">✓ Perfil actualizado correctamente.</div> }
-            <div class="form-group">
-              <label>Nombre</label>
-              <input class="form-input" type="text" [(ngModel)]="formPerfil.nombre" placeholder="Tu nombre completo" maxlength="150"/>
-            </div>
-            <div class="form-group">
-              <label>Correo</label>
-              <input class="form-input" type="email" [(ngModel)]="formPerfil.email" placeholder="correo@ejemplo.com"/>
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label>Teléfono</label>
-                <input class="form-input" type="tel" [(ngModel)]="formPerfil.telefono" placeholder="Ej: 8888-8888"/>
-              </div>
-              <div class="form-group">
-                <label>Relación con el niño</label>
-                <input class="form-input" type="text" [(ngModel)]="formPerfil.relacionConNino" placeholder="Ej: Madre, Padre, Tutor"/>
-              </div>
-            </div>
+            @if (errorCargaPerfil) { <div class="form-error">{{ errorCargaPerfil }}</div> }
+            <div class="config-field"><label>Nombre</label><div class="config-val">{{ parentName || '—' }}</div></div>
+            <div class="config-field"><label>Correo</label><div class="config-val">{{ parentEmail || '—' }}</div></div>
+            <div class="config-field"><label>Teléfono</label><div class="config-val">{{ formPerfil.telefono || '—' }}</div></div>
+            <div class="config-field"><label>Relación con el niño</label><div class="config-val">{{ formPerfil.relacionConNino || '—' }}</div></div>
             <div class="config-actions">
-              <button class="btn-primary" [disabled]="guardandoPerfil" (click)="guardarPerfil()">
-                {{ guardandoPerfil ? 'Guardando...' : 'Guardar cambios' }}
-              </button>
+              <button class="btn-primary" (click)="abrirEditarPerfil()">✏️ Editar perfil</button>
             </div>
             <p class="config-note">Para cambiar la contraseña, contacta al administrador.</p>
           </div>
@@ -499,6 +493,87 @@ interface DiaActividad     { dia: string; valor: number; }
 
     </div>
   </div>
+
+  <!-- ══ MODAL DETALLE NOTIFICACIÓN ══ -->
+  @if (notifSeleccionada) {
+    <div class="overlay" (click)="cerrarNotificacion()">
+      <div class="modal modal-notif" (click)="$event.stopPropagation()">
+        <div class="notif-modal-badge" [class]="'nb-' + notifSeleccionada.tipo?.toLowerCase()">
+          {{ tipoIco(notifSeleccionada.tipo) }} {{ tipoLabel(notifSeleccionada.tipo) }}
+        </div>
+        <h2 class="modal-title" style="text-align:left;margin-bottom:8px">{{ notifSeleccionada.titulo || notifSeleccionada.mensaje }}</h2>
+
+        @if (notifSeleccionada.fechaEvento) {
+          <div class="notif-modal-fecha">
+            📅 {{ formatFechaEvento(notifSeleccionada.fechaEvento) }}
+            @if (notifSeleccionada.horaEvento) { · 🕐 {{ notifSeleccionada.horaEvento.substring(0,5) }} }
+          </div>
+        }
+
+        @if (notifSeleccionada.descripcion) {
+          <p class="notif-modal-desc">{{ notifSeleccionada.descripcion }}</p>
+        }
+
+        @if (notifSeleccionada.contactoEmail) {
+          <div class="notif-modal-contacto">
+            ✉️ ¿Dudas o comentarios? Escribe al docente: <a href="mailto:{{ notifSeleccionada.contactoEmail }}">{{ notifSeleccionada.contactoEmail }}</a>
+          </div>
+        }
+
+        <div class="modal-footer">
+          <button class="btn-save" (click)="cerrarNotificacion()">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ══ MODAL EDITAR MI CUENTA ══ -->
+  @if (mostrarModalPerfil) {
+    <div class="overlay" (click)="cerrarEditarPerfil()">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <h2 class="modal-title">Editar mi cuenta</h2>
+        @if (errorPerfil) { <div class="form-error">{{ errorPerfil }}</div> }
+        <div class="form-group">
+          <label>Nombre *</label>
+          <input class="form-input" type="text" [(ngModel)]="formPerfil.nombre"
+                 (blur)="tocadoPerfil.nombre = true; validarNombrePerfil()"
+                 [class.input-err]="tocadoPerfil.nombre && erroresPerfil.nombre"
+                 placeholder="Tu nombre completo" maxlength="150"/>
+          @if (tocadoPerfil.nombre && erroresPerfil.nombre) { <span class="field-err">{{ erroresPerfil.nombre }}</span> }
+        </div>
+        <div class="form-group">
+          <label>Correo *</label>
+          <input class="form-input" type="email" [(ngModel)]="formPerfil.email"
+                 (blur)="tocadoPerfil.email = true; validarEmailPerfil()"
+                 [class.input-err]="tocadoPerfil.email && erroresPerfil.email"
+                 placeholder="correo@ejemplo.com"/>
+          @if (tocadoPerfil.email && erroresPerfil.email) { <span class="field-err">{{ erroresPerfil.email }}</span> }
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Teléfono (opcional)</label>
+            <input class="form-input" type="tel" [(ngModel)]="formPerfil.telefono" placeholder="Ej: 8888-8888"/>
+          </div>
+          <div class="form-group">
+            <label>Relación con el niño</label>
+            <select class="form-input" [(ngModel)]="formPerfil.relacionConNino">
+              <option value="">— Selecciona —</option>
+              <option value="Padre">Padre</option>
+              <option value="Madre">Madre</option>
+              <option value="Tutor">Tutor legal</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-cancel" (click)="cerrarEditarPerfil()">Cancelar</button>
+          <button class="btn-save" [disabled]="guardandoPerfil" (click)="guardarPerfil()">
+            {{ guardandoPerfil ? 'Guardando...' : 'Guardar cambios' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
 
   <!-- ══ MODAL PERFIL ══ -->
   @if (showModal) {
@@ -832,8 +907,23 @@ interface DiaActividad     { dia: string; valor: number; }
     .notif-tipo   { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.8px; color:#7C3AED; margin-bottom:3px; }
     .notif-leida .notif-tipo { color:#94A3B8; }
     .notif-msg    { font-size:13px; color:#334155; line-height:1.5; }
+    .notif-titulo-item { font-size:13px; font-weight:700; color:#1E1B4B; line-height:1.5; }
     .notif-fecha  { font-size:10.5px; color:#94A3B8; margin-top:4px; }
     .notif-new-dot { position:absolute; top:14px; right:14px; width:10px; height:10px; border-radius:50%; background:#7C3AED; }
+
+    /* ── Modal detalle de notificación ── */
+    .modal-notif { max-width:440px; }
+    .notif-modal-badge { display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.6px; border-radius:20px; padding:5px 12px; margin-bottom:14px; background:#EDE9FE; color:#5B21B6; }
+    .nb-cita         { background:#DBEAFE; color:#1D4ED8; }
+    .nb-recordatorio { background:#FEF9C3; color:#92400E; }
+    .nb-asignacion   { background:#EDE9FE; color:#5B21B6; }
+    .nb-alerta       { background:#FFFBEB; color:#92400E; }
+    .nb-logro        { background:#FEF3C7; color:#B45309; }
+    .notif-modal-fecha { font-size:13px; font-weight:700; color:#5B21B6; background:#F5F3FF; border-radius:10px; padding:8px 12px; margin-bottom:14px; }
+    .notif-modal-desc { font-size:13.5px; color:#475569; line-height:1.6; margin-bottom:16px; white-space:pre-wrap; }
+    .notif-modal-contacto { font-size:12.5px; color:#64748B; background:#F8FAFC; border-radius:10px; padding:10px 12px; line-height:1.5; }
+    .notif-modal-contacto a { color:#5B21B6; font-weight:700; text-decoration:none; }
+    .notif-modal-contacto a:hover { text-decoration:underline; }
 
     /* ── CONFIGURACIÓN ── */
     .config-wrap { display:flex; flex-direction:column; gap:16px; max-width:560px; }
@@ -894,6 +984,8 @@ interface DiaActividad     { dia: string; valor: number; }
     .form-group label { display:block; font-size:13px; font-weight:800; color:#1E1B4B; margin-bottom:7px; }
     .form-input { width:100%; padding:12px 16px; border:2px solid #E4DEFF; border-radius:12px; font-size:15px; font-family:inherit; color:#1E1B4B; outline:none; }
     .form-input:focus { border-color:#7C3AED; box-shadow:0 0 0 3px rgba(124,58,237,.12); }
+    .form-input.input-err { border-color:#FCA5A5; background:#FEF2F2; }
+    .field-err { display:block; font-size:11px; font-weight:600; color:#DC2626; margin-top:5px; }
     .form-row { display:flex; gap:14px; }
     .form-row .form-group { flex:1; }
     .avatar-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:8px; }
@@ -978,6 +1070,11 @@ export class PadreDashboardComponent implements OnInit {
   paginaActividad = 1;
   notificaciones: Notificacion[]    = [];
 
+  // Paginación y detalle de notificaciones
+  readonly NOTIFS_POR_PAGINA = 10;
+  paginaNotif = 1;
+  notifSeleccionada: Notificacion | null = null;
+
   // Stats derivados
   precisionMedia      = 0;
   puntosTotales       = 0;
@@ -1004,10 +1101,15 @@ export class PadreDashboardComponent implements OnInit {
   guardandoNotifInApp        = false;
 
   // Perfil del padre (auto-servicio)
+  parentEmail = '';
   formPerfil: PerfilPadreUpdate = { nombre:'', email:'', telefono:'', relacionConNino:'' };
   guardandoPerfil    = false;
   perfilGuardadoOk   = false;
   errorPerfil        = '';
+  errorCargaPerfil   = '';
+  mostrarModalPerfil = false;
+  erroresPerfil: { nombre?: string; email?: string } = {};
+  tocadoPerfil:  { nombre?: boolean; email?: boolean } = {};
 
   constructor(
     public  auth:                AuthService,
@@ -1024,7 +1126,8 @@ export class PadreDashboardComponent implements OnInit {
   ngOnInit(): void {
     const user = this.auth.user();
     if (user) {
-      this.parentName = user.nombre || user.email || 'Padre';
+      this.parentName  = user.nombre || user.email || 'Padre';
+      this.parentEmail = user.email || '';
       this.loadPerfiles(user.usuarioId);
       this.loadNotificaciones(user.usuarioId);
       this.docenteService.getListaDocentes().pipe(catchError(() => of([]))).subscribe(d => {
@@ -1042,8 +1145,11 @@ export class PadreDashboardComponent implements OnInit {
   }
 
   private loadPerfilPadre(uid: number): void {
-    this.padreService.getPerfilPadre(uid).pipe(catchError(() => of(null))).subscribe((p: PerfilPadre | null) => {
+    this.errorCargaPerfil = '';
+    this.padreService.getPerfilPadre(uid).pipe(catchError(err => { this.errorCargaPerfil = err?.error?.error || 'No se pudo cargar tu perfil. Intenta recargar la página.'; return of(null); })).subscribe((p: PerfilPadre | null) => {
       if (p) {
+        this.parentName  = p.nombre || this.parentName;
+        this.parentEmail = p.email  || this.parentEmail;
         this.formPerfil = {
           nombre: p.nombre, email: p.email,
           telefono: p.telefono, relacionConNino: p.relacionConNino
@@ -1053,9 +1159,47 @@ export class PadreDashboardComponent implements OnInit {
     });
   }
 
+  abrirEditarPerfil(): void {
+    this.formPerfil = {
+      nombre: this.parentName ?? '',
+      email: this.parentEmail ?? '',
+      telefono: this.formPerfil.telefono ?? '',
+      relacionConNino: this.formPerfil.relacionConNino ?? '',
+    };
+    this.erroresPerfil = {};
+    this.tocadoPerfil  = {};
+    this.errorPerfil   = '';
+    this.mostrarModalPerfil = true;
+    this.cdr.detectChanges();
+  }
+
+  cerrarEditarPerfil(): void {
+    this.mostrarModalPerfil = false;
+    this.guardandoPerfil = false;
+    this.cdr.detectChanges();
+  }
+
+  validarNombrePerfil(): void {
+    const v = (this.formPerfil.nombre || '').trim();
+    this.erroresPerfil.nombre = !v ? 'El nombre es requerido.' : v.length < 2 ? 'Debe tener al menos 2 caracteres.' : undefined;
+  }
+
+  validarEmailPerfil(): void {
+    const v = (this.formPerfil.email || '').trim();
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    this.erroresPerfil.email = !v ? 'El correo es requerido.' : !re.test(v) ? 'Ingresa un correo válido (ej: nombre@dominio.com).' : undefined;
+  }
+
+  private perfilFormValido(): boolean {
+    this.validarNombrePerfil();
+    this.validarEmailPerfil();
+    this.tocadoPerfil = { nombre: true, email: true };
+    return !this.erroresPerfil.nombre && !this.erroresPerfil.email;
+  }
+
   guardarPerfil(): void {
     const uid = this.auth.user()?.usuarioId;
-    if (!uid) return;
+    if (!uid || !this.perfilFormValido()) { this.cdr.detectChanges(); return; }
     this.errorPerfil = '';
     this.perfilGuardadoOk = false;
     this.guardandoPerfil = true;
@@ -1065,10 +1209,13 @@ export class PadreDashboardComponent implements OnInit {
           nombre: p.nombre, email: p.email,
           telefono: p.telefono, relacionConNino: p.relacionConNino
         };
-        this.parentName = p.nombre || this.parentName;
+        this.parentName  = p.nombre || this.parentName;
+        this.parentEmail = p.email  || this.parentEmail;
         this.guardandoPerfil = false;
         this.perfilGuardadoOk = true;
+        this.mostrarModalPerfil = false;
         this.cdr.detectChanges();
+        setTimeout(() => { this.perfilGuardadoOk = false; this.cdr.detectChanges(); }, 3000);
       },
       error: (err) => {
         this.errorPerfil = err?.error?.error || 'No se pudo guardar el perfil. Intenta de nuevo.';
@@ -1114,6 +1261,7 @@ export class PadreDashboardComponent implements OnInit {
   private loadNotificaciones(uid: number): void {
     this.padreService.getNotificaciones(uid).pipe(catchError(() => of([]))).subscribe(data => {
       this.notificaciones = data;
+      this.paginaNotif = 1;
       this.cdr.detectChanges();
     });
   }
@@ -1412,7 +1560,10 @@ export class PadreDashboardComponent implements OnInit {
   juegoIco(nombre: string):      string { return JUEGO_ICO[nombre] ?? '🎮'; }
 
   tipoIco(tipo: string): string {
-    const m: Record<string,string> = { ALERTA:'⚠️', LOGRO:'🏆', PROGRESO:'📊', INFO:'ℹ️', SISTEMA:'🔧' };
+    const m: Record<string,string> = {
+      ALERTA:'⚠️', LOGRO:'🏆', PROGRESO:'📊', INFO:'ℹ️', SISTEMA:'🔧',
+      ASIGNACION:'📋', CITA:'🗓️', RECORDATORIO:'🔔',
+    };
     return m[tipo?.toUpperCase()] ?? '🔔';
   }
 
@@ -1424,6 +1575,13 @@ export class PadreDashboardComponent implements OnInit {
   formatFechaCorta(fecha: string): string {
     if (!fecha) return '';
     return new Date(fecha).toLocaleDateString('es-CR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+  }
+
+  /** Para fechas puras (YYYY-MM-DD, sin hora), evitando el corrimiento de zona horaria. */
+  formatFechaEvento(fecha: string): string {
+    if (!fecha) return '';
+    const [y, m, d] = fecha.split('-').map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString('es-CR', { day:'2-digit', month:'short', year:'numeric' });
   }
 
   formatFechaRelativa(fecha: string): string {
@@ -1457,6 +1615,41 @@ export class PadreDashboardComponent implements OnInit {
     this.paginaActividad = pagina;
     this.cdr.detectChanges();
   }
+  // Notificaciones paginadas (máx. 10 por página).
+  get totalPaginasNotif(): number {
+    return Math.max(1, Math.ceil(this.notificaciones.length / this.NOTIFS_POR_PAGINA));
+  }
+  get paginasNotif(): number[] {
+    return Array.from({ length: this.totalPaginasNotif }, (_, i) => i + 1);
+  }
+  get notificacionesPaginadas(): Notificacion[] {
+    const inicio = (this.paginaNotif - 1) * this.NOTIFS_POR_PAGINA;
+    return this.notificaciones.slice(inicio, inicio + this.NOTIFS_POR_PAGINA);
+  }
+  irAPaginaNotif(pagina: number): void {
+    if (pagina < 1 || pagina > this.totalPaginasNotif) return;
+    this.paginaNotif = pagina;
+    this.cdr.detectChanges();
+  }
+
+  abrirNotificacion(n: Notificacion): void {
+    this.notifSeleccionada = n;
+    this.marcarLeida(n);
+    this.cdr.detectChanges();
+  }
+  cerrarNotificacion(): void {
+    this.notifSeleccionada = null;
+    this.cdr.detectChanges();
+  }
+
+  tipoLabel(tipo: string): string {
+    const m: Record<string,string> = {
+      ALERTA:'Alerta', LOGRO:'Logro', PROGRESO:'Progreso', INFO:'Info', SISTEMA:'Sistema',
+      ASIGNACION:'Nueva asignación', CITA:'Cita con el docente', RECORDATORIO:'Recordatorio',
+    };
+    return m[tipo?.toUpperCase()] ?? tipo;
+  }
+
   get notifNoLeidas(): number { return this.notificaciones.filter(n => !n.leida).length; }
   get xpPct():         number { return Math.round((this.xpActual / this.xpMax) * 100); }
   get maxAct():        number { return Math.max(...this.actividadSemana.map(a => a.valor), 1); }

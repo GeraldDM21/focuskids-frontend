@@ -33,11 +33,16 @@ export interface AlertaRegresion {
 }
 
 export interface Notificacion {
-  id: number;
-  tipo: string;
+  id:      number;
+  tipo:    string;
+  titulo?: string | null;
   mensaje: string;
-  leida: boolean;
-  fecha: string;
+  descripcion?:   string | null;
+  fechaEvento?:   string | null;
+  horaEvento?:    string | null;
+  contactoEmail?: string | null;
+  leida:   boolean;
+  fecha:   string;
   ninoPerfil?: { id: number; nombre: string } | null;
   juego?: { id: number; nombre: string } | null;
   sesionesResaltadas?: string | null;
