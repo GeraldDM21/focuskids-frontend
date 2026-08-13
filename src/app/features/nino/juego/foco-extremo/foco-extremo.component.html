@@ -10,6 +10,14 @@
     <div class="fe-ring fe-r3"></div>
     <div class="fe-ring fe-r4"></div>
   </div>
+  <div class="fe-stars" aria-hidden="true">
+    <span class="fe-star fe-s1">✦</span>
+    <span class="fe-star fe-s2">✦</span>
+    <span class="fe-star fe-s3">✦</span>
+    <span class="fe-star fe-s4">✦</span>
+    <span class="fe-star fe-s5">✦</span>
+    <span class="fe-star fe-s6">✦</span>
+  </div>
 
   @if (estado === 'inicio') {
   <div class="pantalla-inicio">
@@ -80,19 +88,26 @@
           <span>❌</span>
           <span>{{ falsasAlarmas }}</span>
         </div>
+        @if (racha >= 2) {
+        <div class="contador racha">
+          <span>🔥</span>
+          <span>{{ racha }}</span>
+        </div>
+        }
       </div>
 
       <button class="btn-sonido-top" (click)="toggleSonido()">{{ sonidoActivo ? '🔊' : '🔇' }}</button>
     </div>
 
     <div class="juego-subtitulo">
-      🎯 Tu objetivo:<span class="objetivo-recordatorio">{{ config.estimuloObjetivo }}</span> · {{ nivelLabel }}
+      🎯 Tu objetivo:<span class="objetivo-recordatorio">{{ config.estimuloObjetivo }}</span> · {{ nivelIcono }} {{ nivelLabel }}
     </div>
 
     <div class="juego-body">
 
       @if (mostrandoObjetivo) {
       <div class="preparacion-card">
+        <div class="prep-countdown" [class.cnt-a]="prepCountdown % 2 !== 0" [class.cnt-b]="prepCountdown % 2 === 0">{{ prepCountdown }}</div>
         <p class="prep-texto">¡Presiona solo cuando veas!</p>
         <div class="prep-objetivo">{{ config.estimuloObjetivo }}</div>
         <p class="prep-sub">Prepárate...</p>
@@ -105,18 +120,38 @@
            (pointerdown)="presionar($event)">
         <div class="estimulo-box"
              [class.ok]="feedbackEstado === 'ok'"
-             [class.error]="feedbackEstado === 'error'">
+             [class.error]="feedbackEstado === 'error'"
+             [style.--racha-glow]="rachaGlow">
           @if (estimuloActual) {
-          <span class="estimulo-simbolo">{{ estimuloActual.simbolo }}</span>
+          <span class="estimulo-simbolo"
+                [class.anim-a]="estimuloActual.id % 2 === 0"
+                [class.anim-b]="estimuloActual.id % 2 !== 0">{{ estimuloActual.simbolo }}</span>
+          }
+          @for (s of sparklePiezas; track s.id) {
+          <span class="sparkle-particle"
+                [style.--ang]="s.angle + 'deg'"
+                [style.--dist.px]="s.dist"
+                [style.animation-delay.s]="s.delay">✨</span>
           }
         </div>
         <p class="estimulo-ayuda">Toca la pantalla o presiona espacio</p>
+        <div class="historial-strip">
+          @for (h of historialReciente; track $index) {
+          <span class="historial-chip"
+                [class.h-ok]="h === 'acierto'"
+                [class.h-err]="h === 'falsaAlarma'"
+                [class.h-omit]="h === 'omision'"
+                [class.h-neutral]="h === 'inhibicion'">{{ h === 'acierto' ? '✓' : h === 'falsaAlarma' ? '✗' : h === 'omision' ? '·' : '—' }}</span>
+          }
+        </div>
       </div>
       }
 
       <div class="objetivo-panel">
         <p class="panel-titulo">Presiona solo con:</p>
-        <div class="objetivo-panel-simbolo">{{ config.estimuloObjetivo }}</div>
+        <div class="objetivo-panel-anillo">
+          <div class="objetivo-panel-simbolo">{{ config.estimuloObjetivo }}</div>
+        </div>
         <p class="panel-nota">Todo lo demás: no lo toques 🚫</p>
       </div>
 
@@ -126,15 +161,15 @@
 
   @if (estado === 'completado' && resultado) {
   <div class="pantalla-resultados">
-      @if (confettiActivo) {
-        <div class="confetti-container" aria-hidden="true">
-          @for (p of confettiPiezas; track p.id) {
-            <div class="confeti" [style.left.%]="p.left" [style.background]="p.color"
-              [style.animation-delay.s]="p.delay" [style.animation-duration.s]="p.dur"
-              [style.width.px]="p.size" [style.height.px]="p.size*1.6"></div>
-          }
-        </div>
+    @if (confettiActivo) {
+    <div class="confetti-container" aria-hidden="true">
+      @for (p of confettiPiezas; track p.id) {
+      <div class="confeti" [style.left.%]="p.left" [style.background]="p.color"
+           [style.animation-delay.s]="p.delay" [style.animation-duration.s]="p.dur"
+           [style.width.px]="p.size" [style.height.px]="p.size*1.6"></div>
       }
+    </div>
+    }
     <div class="resultados-card">
       <div class="fox-resultado-hero">
         <img class="foxy-resultado-img" src="mascotas/leo-portrait.png" alt="Leo">
@@ -150,8 +185,8 @@
         <svg viewBox="0 0 120 120">
           <circle cx="60" cy="60" r="50" class="ring-bg"/>
           <circle cx="60" cy="60" r="50" class="ring-fill"
-            [style.stroke-dasharray]="314"
-            [style.stroke-dashoffset]="314-(314*resultado.indicePrecision/100)"/>
+                  [style.stroke-dasharray]="314"
+                  [style.stroke-dashoffset]="314-(314*resultado.indicePrecision/100)"/>
         </svg>
         <div class="score-texto">
           <div class="score-num">{{ resultado.indicePrecision }}%</div>
@@ -159,10 +194,10 @@
         </div>
       </div>
       @if (seRedujoCadencia) {
-        <div class="ia-badge">🤖 Motor IA: bajamos la velocidad para ayudarte a pensar mejor</div>
+      <div class="ia-badge">🤖 Motor IA: bajamos la velocidad para ayudarte a pensar mejor</div>
       }
       @if (nivelSugerido) {
-        <div class="ia-badge">🤖 Motor IA: nivel sugerido <strong>{{ nivelSugerido }}</strong></div>
+      <div class="ia-badge">🤖 Motor IA: nivel sugerido <strong>{{ nivelSugerido }}</strong></div>
       }
       <div class="foxy-msg-final">
         <img class="foxy-msg-avatar" src="mascotas/leo-portrait.png" alt="Leo">
@@ -172,6 +207,7 @@
         <div class="metrica"><div class="m-icon">🎯</div><div class="m-val verde">{{ resultado.indicePrecision }}%</div><div class="m-lbl">Precisión</div></div>
         <div class="metrica"><div class="m-icon">🧘</div><div class="m-val azul">{{ resultado.indiceControlImpulsos }}%</div><div class="m-lbl">Control</div></div>
         <div class="metrica"><div class="m-icon">⚡</div><div class="m-val amarillo">{{ resultado.tiempoReaccionPromedioMs ?? '—' }}</div><div class="m-lbl">Reacción ms</div></div>
+        <div class="metrica"><div class="m-icon">🔥</div><div class="m-val naranja">{{ resultado.mejorRacha }}</div><div class="m-lbl">Mejor racha</div></div>
       </div>
       <div class="res-detalle" style="margin-bottom:20px; display:flex; flex-wrap:wrap; gap:6px; justify-content:center;">
         <span class="pw-badge pw-ok">✓ {{ resultado.aciertos }} aciertos</span>
@@ -180,7 +216,7 @@
       </div>
       <div class="btns-final">
         @if (nivelSugerido) {
-          <button class="btn-ia" (click)="subirNivel()">⬆️ Jugar en {{ nivelSugerido }}</button>
+        <button class="btn-ia" (click)="subirNivel()">⬆️ Jugar en {{ nivelSugerido }}</button>
         }
         <button class="btn-repetir" (click)="jugarDeNuevo()">🔄 Jugar de nuevo</button>
         <button class="btn-volver" (click)="volverLobby()">← Volver</button>

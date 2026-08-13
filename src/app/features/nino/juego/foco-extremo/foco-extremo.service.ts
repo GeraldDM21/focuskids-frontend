@@ -39,4 +39,3 @@ export class FocoExtremoService {
     return idx >= 0 && idx < ORDEN_NIVELES.length - 1 ? (ORDEN_NIVELES[idx + 1] as Nivel) : null;
   }
 }
-

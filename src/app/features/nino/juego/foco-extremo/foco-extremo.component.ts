@@ -34,7 +34,7 @@ export class FocoExtremoComponent implements OnInit, OnDestroy {
   perfilId = 0;
   perfilNombre = '';
 
-  private readonly JUEGO_ID = 2;  // "Foco Extremo" en el seeder
+  private readonly JUEGO_ID = 2; // "Foco Extremo" en el seeder
   private sesionBackendId: number | null = null;
   private nivelFacilId: number | null = null;
 
@@ -49,6 +49,15 @@ export class FocoExtremoComponent implements OnInit, OnDestroy {
   aciertos = 0;
   omisiones = 0;
   falsasAlarmas = 0;
+  racha = 0;
+  mejorRacha = 0;
+
+  sparklePiezas: { id: number; angle: number; dist: number; delay: number }[] = [];
+  private sparkleId = 0;
+  private sparkleTimeout: any = null;
+
+  prepCountdown = 3;
+  private prepCountdownInterval: any = null;
 
   tiempoRestante = 0;
   tiempoTotal = 0;
@@ -62,6 +71,7 @@ export class FocoExtremoComponent implements OnInit, OnDestroy {
   private profileSub?: Subscription;
   private cadenciaActual = 0;
   private ventana: ('acierto' | 'falsaAlarma' | 'omision' | 'inhibicion')[] = [];
+  historialReciente: ('acierto' | 'falsaAlarma' | 'omision' | 'inhibicion')[] = [];
   seRedujoCadencia = false;
   private readonly VENTANA_TAM = 8;
   private readonly RATIO_ALARMA_LIMITE = 0.3;
@@ -74,10 +84,15 @@ export class FocoExtremoComponent implements OnInit, OnDestroy {
   mascotMsg = '¡Hola! Soy Leo 🦁 ¡Vamos a entrenar tu atención!';
   // ── Confetti ────────────────────────────────────────────────────────────
   confettiActivo = false;
-  confettiPiezas = Array.from({length:60},(_,i)=>({
-    id:i, left:Math.random()*100,
-    color:['#a78bfa','#60a5fa','#4ade80','#fbbf24','#f87171','#c084fc','#34d399','#fb923c'][i%8],
-    delay:Math.random()*2, dur:2.5+Math.random()*2, size:8+Math.random()*8
+  confettiPiezas = Array.from({ length: 60 }, (_, i) => ({
+    id: i,
+    left: Math.random() * 100,
+    color: ['#a78bfa', '#60a5fa', '#4ade80', '#fbbf24', '#f87171', '#c084fc', '#34d399', '#fb923c'][
+      i % 8
+    ],
+    delay: Math.random() * 2,
+    dur: 2.5 + Math.random() * 2,
+    size: 8 + Math.random() * 8,
   }));
 
   private mascotTimer: any;
@@ -127,13 +142,14 @@ export class FocoExtremoComponent implements OnInit, OnDestroy {
     });
     // Cargar niveles y preseleccionar el recomendado por IA (CA-03)
     this.sesionJuegoService.obtenerNiveles(this.JUEGO_ID).subscribe({
-      next: niveles => {
+      next: (niveles) => {
         this.nivelFacilId = niveles[0]?.id ?? null;
         if (this.perfilId) {
-          this.sesionJuegoService.obtenerRecomendacion(this.perfilId, this.JUEGO_ID)
-            .subscribe(rec => {
+          this.sesionJuegoService
+            .obtenerRecomendacion(this.perfilId, this.JUEGO_ID)
+            .subscribe((rec) => {
               const match = rec?.nivelRecomendado?.id
-                ? niveles.find(n => n.id === rec.nivelRecomendado.id)
+                ? niveles.find((n) => n.id === rec.nivelRecomendado.id)
                 : null;
               if (match) {
                 this.nivelFacilId = match.id;
@@ -145,7 +161,7 @@ export class FocoExtremoComponent implements OnInit, OnDestroy {
             });
         }
       },
-      error: () => {}
+      error: () => {},
     });
 
     this.cargarVozLeo();
@@ -161,7 +177,6 @@ export class FocoExtremoComponent implements OnInit, OnDestroy {
     window.speechSynthesis?.cancel();
     this.audioCtx?.close();
   }
-
 
   iniciarJuego(nivel: Nivel = this.nivelActual): void {
     this.detenerTimer();
@@ -179,7 +194,11 @@ export class FocoExtremoComponent implements OnInit, OnDestroy {
     this.aciertos = 0;
     this.omisiones = 0;
     this.falsasAlarmas = 0;
+    this.racha = 0;
+    this.mejorRacha = 0;
+    this.sparklePiezas = [];
     this.ventana = [];
+    this.historialReciente = [];
     this.seRedujoCadencia = false;
     this.resultado = null;
     this.nivelSugerido = null;
@@ -189,17 +208,19 @@ export class FocoExtremoComponent implements OnInit, OnDestroy {
     // Backend: iniciar sesión (CA-01)
     this.sesionBackendId = null;
     if (this.perfilId && this.nivelFacilId) {
-      this.sesionJuegoService.iniciarSesion({
-        perfilId: this.perfilId,
-        juegoId:  this.JUEGO_ID,
-        nivelId:  this.nivelFacilId,
-      }).subscribe({
-        next: sesion => {
-          this.sesionBackendId = sesion.id ?? null;
-          if (sesion.id) this.sesionJuegoService.comenzarTracking(sesion.id);  // CA-04
-        },
-        error: () => {}
-      });
+      this.sesionJuegoService
+        .iniciarSesion({
+          perfilId: this.perfilId,
+          juegoId: this.JUEGO_ID,
+          nivelId: this.nivelFacilId,
+        })
+        .subscribe({
+          next: (sesion) => {
+            this.sesionBackendId = sesion.id ?? null;
+            if (sesion.id) this.sesionJuegoService.comenzarTracking(sesion.id); // CA-04
+          },
+          error: () => {},
+        });
     }
 
     this.estado = 'jugando';
@@ -213,14 +234,21 @@ export class FocoExtremoComponent implements OnInit, OnDestroy {
     setTimeout(() => this.startBgMusic(), 200);
     this.iniciarTimer();
 
+    this.prepCountdown = 3;
+    this.prepCountdownInterval = setInterval(() => {
+      this.prepCountdown = Math.max(1, this.prepCountdown - 1);
+      this.cdr.markForCheck();
+    }, 700);
+
     this.prepTimeout = setTimeout(() => {
       this.prepTimeout = null;
+      clearInterval(this.prepCountdownInterval);
+      this.prepCountdownInterval = null;
       this.mostrandoObjetivo = false;
       this.cicloEstimulos();
       this.cdr.markForCheck();
     }, 2200);
   }
-
 
   private cicloEstimulos(): void {
     if (this.estado !== 'jugando') return;
@@ -231,7 +259,7 @@ export class FocoExtremoComponent implements OnInit, OnDestroy {
     this.historial.push(estimulo);
     this.estimuloActual = estimulo;
     this.feedbackEstado = '';
-    this.sesionJuegoService.marcarElementoAparece();  // CA-08
+    this.sesionJuegoService.marcarElementoAparece(); // CA-08
     this.cdr.markForCheck();
 
     this.estimuloTimeout = setTimeout(() => this.cicloEstimulos(), this.cadenciaActual);
@@ -261,12 +289,12 @@ export class FocoExtremoComponent implements OnInit, OnDestroy {
 
     if (previo.tipo === 'objetivo') {
       this.omisiones++;
+      this.racha = 0;
       this.registrarEnVentana('omision');
     } else {
       this.registrarEnVentana('inhibicion');
     }
   }
-
 
   @HostListener('window:keydown.space', ['$event'])
   onKey(event: any) {
@@ -293,13 +321,20 @@ export class FocoExtremoComponent implements OnInit, OnDestroy {
       this.aciertos++;
       this.tiemposReaccion.push(tiempoReaccionMs);
       this.feedbackEstado = 'ok';
+      this.racha++;
+      this.mejorRacha = Math.max(this.mejorRacha, this.racha);
+      this.spawnSparkles();
       this.playAcierto();
       this.registrarEnVentana('acierto');
-      this.setMascot('celebrate', '¡Perfecto! ⚡');
-      this.sesionJuegoService.trackRespuestaMs(tiempoReaccionMs);  // CA-05
+      this.setMascot(
+        'celebrate',
+        this.racha >= 5 ? `¡Racha de ${this.racha}! 🔥` : '¡Perfecto! ⚡',
+      );
+      this.sesionJuegoService.trackRespuestaMs(tiempoReaccionMs); // CA-05
     } else {
       this.falsasAlarmas++;
       this.feedbackEstado = 'error';
+      this.racha = 0;
       this.playFalsaAlarma();
       this.registrarEnVentana('falsaAlarma');
       this.setMascot('encourage', '¡Cuidado! Ese no era tu objetivo 🚫');
@@ -307,10 +342,29 @@ export class FocoExtremoComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
+  private spawnSparkles(): void {
+    clearTimeout(this.sparkleTimeout);
+    this.sparkleId++;
+    const base = this.sparkleId * 100;
+    this.sparklePiezas = Array.from({ length: 10 }, (_, i) => ({
+      id: base + i,
+      angle: (360 / 10) * i + Math.random() * 20,
+      dist: 60 + Math.random() * 40,
+      delay: Math.random() * 0.08,
+    }));
+    this.cdr.markForCheck();
+    this.sparkleTimeout = setTimeout(() => {
+      this.sparklePiezas = [];
+      this.cdr.markForCheck();
+    }, 550);
+  }
 
   private registrarEnVentana(
     resultado: 'acierto' | 'falsaAlarma' | 'omision' | 'inhibicion',
   ): void {
+    this.historialReciente.push(resultado);
+    if (this.historialReciente.length > 6) this.historialReciente.shift();
+
     this.ventana.push(resultado);
     if (this.ventana.length < this.VENTANA_TAM) return;
 
@@ -329,7 +383,6 @@ export class FocoExtremoComponent implements OnInit, OnDestroy {
     }
     this.ventana = [];
   }
-
 
   private iniciarTimer(): void {
     this.endTime = Date.now() + this.tiempoTotal * 1000;
@@ -363,8 +416,15 @@ export class FocoExtremoComponent implements OnInit, OnDestroy {
       clearTimeout(this.prepTimeout);
       this.prepTimeout = null;
     }
+    if (this.prepCountdownInterval) {
+      clearInterval(this.prepCountdownInterval);
+      this.prepCountdownInterval = null;
+    }
+    if (this.sparkleTimeout) {
+      clearTimeout(this.sparkleTimeout);
+      this.sparkleTimeout = null;
+    }
   }
-
 
   private finalizarSesion(): void {
     this.evaluarEstimuloAnterior();
@@ -380,7 +440,12 @@ export class FocoExtremoComponent implements OnInit, OnDestroy {
     if (this.sesionBackendId) {
       const puntaje = this.resultado.indicePrecision;
       const intentos = this.aciertos + this.falsasAlarmas;
-      this.sesionJuegoService.finalizarSesion(this.sesionBackendId, puntaje, intentos, this.aciertos);
+      this.sesionJuegoService.finalizarSesion(
+        this.sesionBackendId,
+        puntaje,
+        intentos,
+        this.aciertos,
+      );
       this.sesionBackendId = null;
     }
 
@@ -395,7 +460,6 @@ export class FocoExtremoComponent implements OnInit, OnDestroy {
       this.setMascot('encourage', '¡Buen esfuerzo! Cada partida te hace más fuerte 💪', 5000);
       this.speak('¡Buen intento! Sigue practicando');
     }
-
   }
 
   private calcularResultado(): ResultadoSesion {
@@ -419,9 +483,9 @@ export class FocoExtremoComponent implements OnInit, OnDestroy {
         : 100,
       cadenciaFinalMs: this.cadenciaActual,
       seRedujoCadencia: this.seRedujoCadencia,
+      mejorRacha: this.mejorRacha,
     };
   }
-
 
   jugarDeNuevo(): void {
     this.iniciarJuego(this.nivelActual);
@@ -453,7 +517,6 @@ export class FocoExtremoComponent implements OnInit, OnDestroy {
     if (!this.sonidoActivo) this.stopBgMusic();
     else if (this.estado === 'jugando') this.startBgMusic();
   }
-
 
   private getAudio(): AudioContext | null {
     if (!this.sonidoActivo) return null;
@@ -554,14 +617,14 @@ export class FocoExtremoComponent implements OnInit, OnDestroy {
       const voces = window.speechSynthesis?.getVoices() ?? [];
       // Prioridad: voces en español disponibles en Windows/Mac/Android (mismo orden que Koby/Tigre/Buddy/Bongo)
       const candidatas = [
-        voces.find(v => v.name.includes('Jorge')),
-        voces.find(v => v.name.includes('Diego')),
-        voces.find(v => v.name.includes('Juan')),
-        voces.find(v => v.lang === 'es-MX'),
-        voces.find(v => v.lang === 'es-ES'),
-        voces.find(v => v.lang.startsWith('es')),
+        voces.find((v) => v.name.includes('Jorge')),
+        voces.find((v) => v.name.includes('Diego')),
+        voces.find((v) => v.name.includes('Juan')),
+        voces.find((v) => v.lang === 'es-MX'),
+        voces.find((v) => v.lang === 'es-ES'),
+        voces.find((v) => v.lang.startsWith('es')),
       ];
-      this.leoVoice = candidatas.find(v => !!v) ?? null;
+      this.leoVoice = candidatas.find((v) => !!v) ?? null;
     };
     if (window.speechSynthesis?.getVoices().length) {
       seleccionar();
@@ -592,7 +655,6 @@ export class FocoExtremoComponent implements OnInit, OnDestroy {
     } catch {}
   }
 
-
   get timerPorcentaje(): number {
     return this.tiempoTotal ? (this.tiempoRestante / this.tiempoTotal) * 100 : 100;
   }
@@ -615,5 +677,13 @@ export class FocoExtremoComponent implements OnInit, OnDestroy {
         this.nivelActual
       ] ?? this.nivelActual
     );
+  }
+
+  get nivelIcono(): string {
+    return { FACIL: '⭐', MEDIO: '🔥', DIFICIL: '💎', EXPERTO: '👑' }[this.nivelActual] ?? '⭐';
+  }
+
+  get rachaGlow(): number {
+    return Math.min(this.racha, 6);
   }
 }

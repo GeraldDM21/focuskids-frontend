@@ -47,6 +47,7 @@ export interface ResultadoSesion {
   indiceControlImpulsos: number;
   cadenciaFinalMs: number;
   seRedujoCadencia: boolean;
+  mejorRacha: number;
 }
 
 export type Nivel = 'FACIL' | 'MEDIO' | 'DIFICIL' | 'EXPERTO';
