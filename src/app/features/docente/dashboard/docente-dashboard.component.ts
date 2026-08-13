@@ -386,8 +386,8 @@ const MISIONES_DEF = [
                   </div>
                 }
               </div>
-            }
-          </div>
+            </div>
+          }
 
           <!-- Logros por alumno -->
           <div class="logros-card">
@@ -435,7 +435,6 @@ const MISIONES_DEF = [
           </div>
 
         </div>
-      }
 
       <!-- ══ CALENDARIO ══ -->
       @if (!loading && tab === 'calendario') {
@@ -531,7 +530,14 @@ const MISIONES_DEF = [
                   <span class="ca-nombre">{{ e.nombre }}</span>
                   <span class="ca-edad">{{ e.edad }} años</span>
                   <span class="ca-est" [class.est-ok]="e.activo" [class.est-no]="!e.activo">{{ e.activo ? 'Activo' : 'Inactivo' }}</span>
-          <!-- ══ ASIGNACIONES ══ -->
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ══ ASIGNACIONES ══ -->
           @if (!loading && tab === 'asignaciones') {
             <div class="asig-wrap">
               <!-- Formulario de nueva asignación -->
@@ -714,114 +720,6 @@ const MISIONES_DEF = [
               </div>
             </div>
           }
-
-          <!-- ══ CALENDARIO ══ -->
-          @if (!loading && tab === 'calendario') {
-            <div class="cal-wrap">
-              <div class="cal-card">
-                <div class="cal-header">
-                  <h3 class="card-title">Julio 2026</h3>
-                  <div class="cal-legend">
-                    <span class="leg asig-col">📋 Asignación</span>
-                    <span class="leg rep-col">📊 Reporte</span>
-                    <span class="leg reu-col">👥 Reunión</span>
-                  </div>
-                </div>
-                <div class="dias-header">
-                  @for (d of ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']; track d) {
-                    <div class="dia-hdr">{{ d }}</div>
-                  }
-                </div>
-                <div class="dias-grid">
-                  @for (dia of diasMes; track dia) {
-                    <div class="dia-cel" [class.dia-hoy]="dia === 20" [class.dia-vacio]="dia === 0">
-                      @if (dia > 0) {
-                        <span class="dia-num">{{ dia }}</span>
-                        @for (ev of eventosDelDia(dia); track ev.titulo) {
-                          <div
-                            class="ev-chip"
-                            [class.ev-asig]="ev.tipo === 'asig'"
-                            [class.ev-rep]="ev.tipo === 'reporte'"
-                            [class.ev-reu]="ev.tipo === 'reunion'"
-                          >
-                            {{ ev.titulo }}
-                          </div>
-                        }
-                      }
-                    </div>
-                  }
-                </div>
-              </div>
-            </div>
-          }
-
-          <!-- ══ CONFIGURACIÓN ══ -->
-          @if (!loading && tab === 'config') {
-            <div class="cfg-wrap">
-              <div class="cfg-card">
-                <h3 class="cfg-title">👤 Mi perfil docente</h3>
-                <div class="cfg-avatar">{{ inicial }}</div>
-                <div class="cfg-field">
-                  <label>Nombre</label>
-                  <div class="cfg-val">{{ docenteName }}</div>
-                </div>
-                <div class="cfg-field">
-                  <label>Institución</label>
-                  <div class="cfg-val">{{ institucion }}</div>
-                </div>
-                <div class="cfg-field">
-                  <label>Grado / Grupo</label>
-                  <div class="cfg-val">{{ gradoGrupo }}</div>
-                </div>
-                <div class="cfg-field">
-                  <label>Rol</label>
-                  <div class="cfg-val">Docente</div>
-                </div>
-                <p class="cfg-note">
-                  Para actualizar tu información, contacta al administrador del sistema.
-                </p>
-              </div>
-              <div class="cfg-card">
-                <h3 class="cfg-title">🔔 Notificaciones</h3>
-                <div class="toggle-row">
-                  <div class="toggle-info">
-                    <div class="toggle-label">Notificaciones in-app</div>
-                    <div class="toggle-desc">
-                      Muestra el badge de la campana cuando la IA detecta una regresión en un
-                      alumno. Las alertas se siguen registrando aunque esté apagado.
-                    </div>
-                  </div>
-                  <button
-                    class="toggle-btn"
-                    [class.toggle-on]="notificacionesInAppActivas"
-                    (click)="cambiarNotificacionesInApp()"
-                    [disabled]="guardandoNotifInApp"
-                  >
-                    <span class="toggle-thumb"></span>
-                  </button>
-                </div>
-                @if (guardandoNotifInApp) {
-                  <p class="cfg-note" style="margin-top:8px">Guardando...</p>
-                }
-              </div>
-              <div class="cfg-card">
-                <h3 class="cfg-title">👨‍🎓 Mi clase</h3>
-                <div class="cfg-alumnos">
-                  @for (e of estudiantes; track e.id) {
-                    <div class="cfg-alumno">
-                      <span>{{ e.avatar }}</span>
-                      <span class="ca-nombre">{{ e.nombre }}</span>
-                      <span class="ca-edad">{{ e.edad }} años</span>
-                      <span class="ca-est" [class.est-ok]="e.activo" [class.est-no]="!e.activo">{{
-                        e.activo ? 'Activo' : 'Inactivo'
-                      }}</span>
-                    </div>
-                  }
-                </div>
-              </div>
-            </div>
-          }
-        </div>
       </div>
 
       <!-- ══ MODAL EVOLUCIÓN DE ALUMNO ══ -->
@@ -958,11 +856,7 @@ const MISIONES_DEF = [
     `
       *,
       *::before,
-      *::after {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
+
       .root {
         display: flex;
         height: 100vh;
@@ -2063,9 +1957,6 @@ export class DocenteDashboardComponent implements OnInit {
         this.cdr.detectChanges();
       },
     });
-
-    this.loadPerfilDocente(user.usuarioId);
-    this.cargarCalendario();
   }
 
   private loadAlumnos(uid: number): void {

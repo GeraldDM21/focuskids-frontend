@@ -1155,13 +1155,12 @@ h1 {
 }
 
 @keyframes caer {
-  from {
-    top: -90px;
-  }
-
-  to {
-    top: calc(100% - 105px);
-  }
+  0%   { top: -90px; animation-timing-function: ease-in; }
+  78%  { top: calc(100% - 105px); animation-timing-function: ease-out; }
+  86%  { top: calc(100% - 148px); animation-timing-function: ease-in; }
+  93%  { top: calc(100% - 110px); animation-timing-function: ease-out; }
+  97%  { top: calc(100% - 122px); animation-timing-function: ease-in; }
+  100% { top: calc(100% - 105px); }
 }
 
 @keyframes aparecer {
