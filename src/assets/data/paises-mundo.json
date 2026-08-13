@@ -1,0 +1,1942 @@
+[
+ {
+  "id": "AFG",
+  "nombre": "Afganistán",
+  "capital": "Kabul",
+  "capitalLat": 34.52813,
+  "capitalLng": 69.17233,
+  "continente": "Asia",
+  "dificultad": "FACIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "AGO",
+  "nombre": "Angola",
+  "capital": "Luanda",
+  "capitalLat": -8.83682,
+  "capitalLng": 13.23432,
+  "continente": "Africa",
+  "dificultad": "FACIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "ALB",
+  "nombre": "Albania",
+  "capital": "Tirana",
+  "capitalLat": 41.3275,
+  "capitalLng": 19.81889,
+  "continente": "Europa",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "AND",
+  "nombre": "Andorra",
+  "capital": "Andorra la Vella",
+  "capitalLat": 42.50779,
+  "capitalLng": 1.52109,
+  "continente": "Europa",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "ARE",
+  "nombre": "Emiratos Árabes Unidos",
+  "capital": "Abu Dhabi",
+  "capitalLat": 24.45118,
+  "capitalLng": 54.39696,
+  "continente": "Asia",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "ARG",
+  "nombre": "Argentina",
+  "capital": "Buenos Aires",
+  "capitalLat": -34.61315,
+  "capitalLng": -58.37723,
+  "continente": "America",
+  "dificultad": "FACIL",
+  "datoCurioso": "Aquí está la cascada del Iguazú, una de las más espectaculares del mundo."
+ },
+ {
+  "id": "ARM",
+  "nombre": "Armenia",
+  "capital": "Ereván",
+  "capitalLat": 40.18111,
+  "capitalLng": 44.51361,
+  "continente": "Asia",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "ATG",
+  "nombre": "Antigua y Barbuda",
+  "capital": "Saint John's",
+  "capitalLat": 17.12096,
+  "capitalLng": -61.84329,
+  "continente": "America",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "AUS",
+  "nombre": "Australia",
+  "capital": "Canberra",
+  "capitalLat": -35.28346,
+  "capitalLng": 149.12807,
+  "continente": "Oceania",
+  "dificultad": "FACIL",
+  "datoCurioso": "Aquí viven canguros y koalas, animales que casi no se ven en ningún otro lugar."
+ },
+ {
+  "id": "AUT",
+  "nombre": "Austria",
+  "capital": "Viena",
+  "capitalLat": 48.20849,
+  "capitalLng": 16.37208,
+  "continente": "Europa",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "AZE",
+  "nombre": "Azerbaiyán",
+  "capital": "Bakú",
+  "capitalLat": 40.37767,
+  "capitalLng": 49.89201,
+  "continente": "Asia",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "BDI",
+  "nombre": "Burundi",
+  "capital": "Gitega",
+  "capitalLat": -3.42708,
+  "capitalLng": 29.92463,
+  "continente": "Africa",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "BEL",
+  "nombre": "Bélgica",
+  "capital": "Bruselas",
+  "capitalLat": 50.85045,
+  "capitalLng": 4.34878,
+  "continente": "Europa",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "BEN",
+  "nombre": "Benín",
+  "capital": "Porto-Novo",
+  "capitalLat": 6.49646,
+  "capitalLng": 2.60359,
+  "continente": "Africa",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "BFA",
+  "nombre": "Burkina Faso",
+  "capital": "Uagadugú",
+  "capitalLat": 12.36566,
+  "capitalLng": -1.53388,
+  "continente": "Africa",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "BGD",
+  "nombre": "Bangladesh",
+  "capital": "Daca",
+  "capitalLat": 23.7104,
+  "capitalLng": 90.40744,
+  "continente": "Asia",
+  "dificultad": "FACIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "BGR",
+  "nombre": "Bulgaria",
+  "capital": "Sofía",
+  "capitalLat": 42.69751,
+  "capitalLng": 23.32415,
+  "continente": "Europa",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "BHR",
+  "nombre": "Bahrein",
+  "capital": "Manama",
+  "capitalLat": 26.22787,
+  "capitalLng": 50.58565,
+  "continente": "Asia",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "BHS",
+  "nombre": "Bahamas",
+  "capital": "Nassau",
+  "capitalLat": 25.05823,
+  "capitalLng": -77.34306,
+  "continente": "America",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "BIH",
+  "nombre": "Bosnia y Herzegovina",
+  "capital": "Sarajevo",
+  "capitalLat": 43.84864,
+  "capitalLng": 18.35644,
+  "continente": "Europa",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "BLR",
+  "nombre": "Bielorrusia",
+  "capital": "Minsk",
+  "capitalLat": 53.9,
+  "capitalLng": 27.56667,
+  "continente": "Europa",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "BLZ",
+  "nombre": "Belice",
+  "capital": "Belmopan",
+  "capitalLat": 17.25,
+  "capitalLng": -88.76667,
+  "continente": "America",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "BOL",
+  "nombre": "Bolivia",
+  "capital": "Sucre",
+  "capitalLat": -19.03332,
+  "capitalLng": -65.26274,
+  "continente": "America",
+  "dificultad": "FACIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "BRA",
+  "nombre": "Brasil",
+  "capital": "Brasília",
+  "capitalLat": -15.77972,
+  "capitalLng": -47.92972,
+  "continente": "America",
+  "dificultad": "FACIL",
+  "datoCurioso": "Aquí está la selva amazónica, la selva tropical más grande del mundo."
+ },
+ {
+  "id": "BRB",
+  "nombre": "Barbados",
+  "capital": "Bridgetown",
+  "capitalLat": 13.10732,
+  "capitalLng": -59.62021,
+  "continente": "America",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "BRN",
+  "nombre": "Brunei",
+  "capital": "Bandar Seri Begawan",
+  "capitalLat": 4.89035,
+  "capitalLng": 114.94006,
+  "continente": "Asia",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "BTN",
+  "nombre": "Bután",
+  "capital": "Thimphu",
+  "capitalLat": 27.46609,
+  "capitalLng": 89.64191,
+  "continente": "Asia",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "BWA",
+  "nombre": "Botswana",
+  "capital": "Gaborone",
+  "capitalLat": -24.65451,
+  "capitalLng": 25.90859,
+  "continente": "Africa",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "CAF",
+  "nombre": "República Centroafricana",
+  "capital": "Bangui",
+  "capitalLat": 4.36122,
+  "capitalLng": 18.55496,
+  "continente": "Africa",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "CAN",
+  "nombre": "Canadá",
+  "capital": "Ottawa",
+  "capitalLat": 45.41117,
+  "capitalLng": -75.69812,
+  "continente": "America",
+  "dificultad": "FACIL",
+  "datoCurioso": "Tiene más lagos que cualquier otro país del mundo."
+ },
+ {
+  "id": "CHE",
+  "nombre": "Suiza",
+  "capital": "Berna",
+  "capitalLat": 46.94809,
+  "capitalLng": 7.44744,
+  "continente": "Europa",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Aquí hay montañas muy altas cubiertas de nieve, los Alpes."
+ },
+ {
+  "id": "CHL",
+  "nombre": "Chile",
+  "capital": "Santiago",
+  "capitalLat": -33.45694,
+  "capitalLng": -70.64827,
+  "continente": "America",
+  "dificultad": "FACIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "CHN",
+  "nombre": "China",
+  "capital": "Pekín",
+  "capitalLat": 39.9075,
+  "capitalLng": 116.39723,
+  "continente": "Asia",
+  "dificultad": "FACIL",
+  "datoCurioso": "Aquí está la Gran Muralla China, que se puede recorrer por miles de kilómetros."
+ },
+ {
+  "id": "CIV",
+  "nombre": "Costa de Marfil",
+  "capital": "Yamoussoukro",
+  "capitalLat": 6.82055,
+  "capitalLng": -5.27674,
+  "continente": "Africa",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "CMR",
+  "nombre": "Camerún",
+  "capital": "Yaoundé",
+  "capitalLat": 3.86667,
+  "capitalLng": 11.51667,
+  "continente": "Africa",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "COD",
+  "nombre": "República Democrática del Congo",
+  "capital": "Kinshasa",
+  "capitalLat": -4.32758,
+  "capitalLng": 15.31357,
+  "continente": "Africa",
+  "dificultad": "FACIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "COG",
+  "nombre": "Congo",
+  "capital": "Brazzaville",
+  "capitalLat": -4.26613,
+  "capitalLng": 15.28318,
+  "continente": "Africa",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "COL",
+  "nombre": "Colombia",
+  "capital": "Bogotá",
+  "capitalLat": 4.60971,
+  "capitalLng": -74.08175,
+  "continente": "America",
+  "dificultad": "FACIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "COM",
+  "nombre": "Comoras",
+  "capital": "Moroni",
+  "capitalLat": -11.70216,
+  "capitalLng": 43.25506,
+  "continente": "Africa",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "CPV",
+  "nombre": "Cabo Verde",
+  "capital": "Praia",
+  "capitalLat": 14.93152,
+  "capitalLng": -23.51254,
+  "continente": "Africa",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "CRI",
+  "nombre": "Costa Rica",
+  "capital": "San José",
+  "capitalLat": 9.93333,
+  "capitalLng": -84.08333,
+  "continente": "America",
+  "dificultad": "FACIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "CUB",
+  "nombre": "Cuba",
+  "capital": "La Habana",
+  "capitalLat": 23.13302,
+  "capitalLng": -82.38304,
+  "continente": "America",
+  "dificultad": "FACIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "CYP",
+  "nombre": "Chipre",
+  "capital": "Nicosia",
+  "capitalLat": 35.17531,
+  "capitalLng": 33.3642,
+  "continente": "Europa",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "CZE",
+  "nombre": "Chequia",
+  "capital": "Praga",
+  "capitalLat": 50.08804,
+  "capitalLng": 14.42076,
+  "continente": "Europa",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "DEU",
+  "nombre": "Alemania",
+  "capital": "Berlin",
+  "capitalLat": 52.52437,
+  "capitalLng": 13.41053,
+  "continente": "Europa",
+  "dificultad": "FACIL",
+  "datoCurioso": "Aquí se celebra una fiesta muy famosa llamada Oktoberfest."
+ },
+ {
+  "id": "DJI",
+  "nombre": "Djibouti",
+  "capital": "Djibouti",
+  "capitalLat": 11.58901,
+  "capitalLng": 43.14503,
+  "continente": "Africa",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "DMA",
+  "nombre": "Dominica",
+  "capital": "Roseau",
+  "capitalLat": 15.30174,
+  "capitalLng": -61.38808,
+  "continente": "America",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "DNK",
+  "nombre": "Dinamarca",
+  "capital": "Copenhague",
+  "capitalLat": 55.67594,
+  "capitalLng": 12.56553,
+  "continente": "Europa",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "DOM",
+  "nombre": "República Dominicana",
+  "capital": "Santo Domingo",
+  "capitalLat": 18.47186,
+  "capitalLng": -69.89232,
+  "continente": "America",
+  "dificultad": "FACIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "DZA",
+  "nombre": "Argelia",
+  "capital": "Argel",
+  "capitalLat": 36.73225,
+  "capitalLng": 3.08746,
+  "continente": "Africa",
+  "dificultad": "FACIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "ECU",
+  "nombre": "Ecuador",
+  "capital": "Quito",
+  "capitalLat": -0.22985,
+  "capitalLng": -78.52495,
+  "continente": "America",
+  "dificultad": "FACIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "EGY",
+  "nombre": "Egipto",
+  "capital": "El Cairo",
+  "capitalLat": 30.06263,
+  "capitalLng": 31.24967,
+  "continente": "Africa",
+  "dificultad": "FACIL",
+  "datoCurioso": "Aquí están las pirámides de Guiza, unas de las construcciones más antiguas del mundo."
+ },
+ {
+  "id": "ERI",
+  "nombre": "Eritrea",
+  "capital": "Asmara",
+  "capitalLat": 15.33805,
+  "capitalLng": 38.93184,
+  "continente": "Africa",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "ESP",
+  "nombre": "España",
+  "capital": "Madrid",
+  "capitalLat": 40.4165,
+  "capitalLng": -3.70256,
+  "continente": "Europa",
+  "dificultad": "FACIL",
+  "datoCurioso": "Aquí se baila el flamenco, un baile muy famoso en el mundo."
+ },
+ {
+  "id": "EST",
+  "nombre": "Estonia",
+  "capital": "Tallin",
+  "capitalLat": 59.43696,
+  "capitalLng": 24.75353,
+  "continente": "Europa",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "ETH",
+  "nombre": "Etiopía",
+  "capital": "Adís Abeba",
+  "capitalLat": 9.02497,
+  "capitalLng": 38.74689,
+  "continente": "Africa",
+  "dificultad": "FACIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "FIN",
+  "nombre": "Finlandia",
+  "capital": "Helsinki",
+  "capitalLat": 60.16952,
+  "capitalLng": 24.93545,
+  "continente": "Europa",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "FJI",
+  "nombre": "Fiyi",
+  "capital": "Suva",
+  "capitalLat": -18.14161,
+  "capitalLng": 178.44149,
+  "continente": "Oceania",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "FRA",
+  "nombre": "Francia",
+  "capital": "Paris",
+  "capitalLat": 48.85341,
+  "capitalLng": 2.3488,
+  "continente": "Europa",
+  "dificultad": "FACIL",
+  "datoCurioso": "Aquí está la Torre Eiffel, uno de los monumentos más visitados del mundo."
+ },
+ {
+  "id": "FSM",
+  "nombre": "Micronesia",
+  "capital": "Palikir",
+  "capitalLat": 6.92477,
+  "capitalLng": 158.16109,
+  "continente": "Oceania",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "GAB",
+  "nombre": "Gabón",
+  "capital": "Libreville",
+  "capitalLat": 0.39241,
+  "capitalLng": 9.45356,
+  "continente": "Africa",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "GBR",
+  "nombre": "Reino Unido",
+  "capital": "Londres",
+  "capitalLat": 51.50853,
+  "capitalLng": -0.12574,
+  "continente": "Europa",
+  "dificultad": "FACIL",
+  "datoCurioso": "Aquí está el reloj Big Ben, uno de los más famosos del mundo."
+ },
+ {
+  "id": "GEO",
+  "nombre": "Georgia",
+  "capital": "Tiflis",
+  "capitalLat": 41.69411,
+  "capitalLng": 44.83368,
+  "continente": "Asia",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "GHA",
+  "nombre": "Ghana",
+  "capital": "Accra",
+  "capitalLat": 5.55602,
+  "capitalLng": -0.1969,
+  "continente": "Africa",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "GIN",
+  "nombre": "Guinea",
+  "capital": "Conakry",
+  "capitalLat": 9.53795,
+  "capitalLng": -13.67729,
+  "continente": "Africa",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "GMB",
+  "nombre": "Gambia",
+  "capital": "Banjul",
+  "capitalLat": 13.45274,
+  "capitalLng": -16.57803,
+  "continente": "Africa",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "GNB",
+  "nombre": "Guinea-Bisáu",
+  "capital": "Bissau",
+  "capitalLat": 11.86357,
+  "capitalLng": -15.59767,
+  "continente": "Africa",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "GNQ",
+  "nombre": "Guinea Ecuatorial",
+  "capital": "Malabo",
+  "capitalLat": 3.75578,
+  "capitalLng": 8.78166,
+  "continente": "Africa",
+  "dificultad": "FACIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "GRC",
+  "nombre": "Grecia",
+  "capital": "Atenas",
+  "capitalLat": 37.98376,
+  "capitalLng": 23.72784,
+  "continente": "Europa",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Aquí nacieron los Juegos Olímpicos, hace miles de años."
+ },
+ {
+  "id": "GRD",
+  "nombre": "Grenada",
+  "capital": "St. George's",
+  "capitalLat": 12.05288,
+  "capitalLng": -61.75226,
+  "continente": "America",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "GTM",
+  "nombre": "Guatemala",
+  "capital": "Ciudad de Guatemala",
+  "capitalLat": 14.64072,
+  "capitalLng": -90.51327,
+  "continente": "America",
+  "dificultad": "FACIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "GUY",
+  "nombre": "Guyana",
+  "capital": "Georgetown",
+  "capitalLat": 6.80448,
+  "capitalLng": -58.15527,
+  "continente": "America",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "HND",
+  "nombre": "Honduras",
+  "capital": "Tegucigalpa",
+  "capitalLat": 14.0818,
+  "capitalLng": -87.20681,
+  "continente": "America",
+  "dificultad": "FACIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "HRV",
+  "nombre": "Croacia",
+  "capital": "Zagreb",
+  "capitalLat": 45.81444,
+  "capitalLng": 15.97798,
+  "continente": "Europa",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "HTI",
+  "nombre": "Haití",
+  "capital": "Puerto Príncipe",
+  "capitalLat": 18.54349,
+  "capitalLng": -72.33881,
+  "continente": "America",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "HUN",
+  "nombre": "Hungría",
+  "capital": "Budapest",
+  "capitalLat": 47.49835,
+  "capitalLng": 19.04045,
+  "continente": "Europa",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "IDN",
+  "nombre": "Indonesia",
+  "capital": "Yakarta",
+  "capitalLat": -6.21462,
+  "capitalLng": 106.84513,
+  "continente": "Asia",
+  "dificultad": "FACIL",
+  "datoCurioso": "Está formado por más de 17000 islas."
+ },
+ {
+  "id": "IND",
+  "nombre": "India",
+  "capital": "Nueva Delhi",
+  "capitalLat": 28.63576,
+  "capitalLng": 77.22445,
+  "continente": "Asia",
+  "dificultad": "FACIL",
+  "datoCurioso": "Aquí está el Taj Mahal, un palacio de mármol blanco muy famoso."
+ },
+ {
+  "id": "IRL",
+  "nombre": "Irlanda",
+  "capital": "Dublín",
+  "capitalLat": 53.33306,
+  "capitalLng": -6.24889,
+  "continente": "Europa",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "IRN",
+  "nombre": "Iran",
+  "capital": "Teherán",
+  "capitalLat": 35.69439,
+  "capitalLng": 51.42151,
+  "continente": "Asia",
+  "dificultad": "FACIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "IRQ",
+  "nombre": "Irak",
+  "capital": "Bagdad",
+  "capitalLat": 33.34058,
+  "capitalLng": 44.40088,
+  "continente": "Asia",
+  "dificultad": "FACIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "ISL",
+  "nombre": "Islandia",
+  "capital": "Reikiavik",
+  "capitalLat": 64.13548,
+  "capitalLng": -21.89541,
+  "continente": "Europa",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Aquí hay volcanes, géiseres y auroras boreales."
+ },
+ {
+  "id": "ISR",
+  "nombre": "Israel",
+  "capital": "Jerusalén",
+  "capitalLat": 31.76904,
+  "capitalLng": 35.21633,
+  "continente": "Asia",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Aquí está el mar Muerto, un lago tan salado que es fácil flotar en él."
+ },
+ {
+  "id": "ITA",
+  "nombre": "Italia",
+  "capital": "Rome",
+  "capitalLat": 41.89193,
+  "capitalLng": 12.51133,
+  "continente": "Europa",
+  "dificultad": "FACIL",
+  "datoCurioso": "Aquí está el Coliseo Romano, un antiguo estadio de casi 2000 años."
+ },
+ {
+  "id": "JAM",
+  "nombre": "Jamaica",
+  "capital": "Kingston",
+  "capitalLat": 17.99702,
+  "capitalLng": -76.79358,
+  "continente": "America",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "JOR",
+  "nombre": "Jordania",
+  "capital": "Amán",
+  "capitalLat": 31.95522,
+  "capitalLng": 35.94503,
+  "continente": "Asia",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "JPN",
+  "nombre": "Japón",
+  "capital": "Tokio",
+  "capitalLat": 35.6895,
+  "capitalLng": 139.69171,
+  "continente": "Asia",
+  "dificultad": "FACIL",
+  "datoCurioso": "Aquí hay muchos volcanes, entre ellos el monte Fuji."
+ },
+ {
+  "id": "KAZ",
+  "nombre": "Kazajistán",
+  "capital": "Astana",
+  "capitalLat": 51.1801,
+  "capitalLng": 71.44598,
+  "continente": "Asia",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "KEN",
+  "nombre": "Kenia",
+  "capital": "Nairobi",
+  "capitalLat": -1.28333,
+  "capitalLng": 36.81667,
+  "continente": "Africa",
+  "dificultad": "FACIL",
+  "datoCurioso": "Cada año miles de animales cruzan sus llanuras en una gran migración."
+ },
+ {
+  "id": "KGZ",
+  "nombre": "Kirguizistán",
+  "capital": "Bishkek",
+  "capitalLat": 42.87,
+  "capitalLng": 74.59,
+  "continente": "Asia",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "KHM",
+  "nombre": "Camboya",
+  "capital": "Phnom Penh",
+  "capitalLat": 11.56245,
+  "capitalLng": 104.91601,
+  "continente": "Asia",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "KIR",
+  "nombre": "Kiribati",
+  "capital": "South Tarawa",
+  "capitalLat": 1.3278,
+  "capitalLng": 172.97696,
+  "continente": "Oceania",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "KNA",
+  "nombre": "San Cristóbal y Nieves",
+  "capital": "Basseterre",
+  "capitalLat": 17.2955,
+  "capitalLng": -62.72499,
+  "continente": "America",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "KOR",
+  "nombre": "Corea del Sur",
+  "capital": "Seúl",
+  "capitalLat": 37.566,
+  "capitalLng": 126.9784,
+  "continente": "Asia",
+  "dificultad": "FACIL",
+  "datoCurioso": "Aquí nació el K-pop, un estilo de música muy popular."
+ },
+ {
+  "id": "KWT",
+  "nombre": "Kuwait",
+  "capital": "Ciudad de Kuwait",
+  "capitalLat": 29.36972,
+  "capitalLng": 47.97833,
+  "continente": "Asia",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "LAO",
+  "nombre": "Laos",
+  "capital": "Vientián",
+  "capitalLat": 17.96667,
+  "capitalLng": 102.6,
+  "continente": "Asia",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "LBN",
+  "nombre": "Líbano",
+  "capital": "Beirut",
+  "capitalLat": 33.89332,
+  "capitalLng": 35.50157,
+  "continente": "Asia",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "LBR",
+  "nombre": "Liberia",
+  "capital": "Monrovia",
+  "capitalLat": 6.30054,
+  "capitalLng": -10.7969,
+  "continente": "Africa",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "LBY",
+  "nombre": "Libia",
+  "capital": "Trípoli",
+  "capitalLat": 32.88743,
+  "capitalLng": 13.18733,
+  "continente": "Africa",
+  "dificultad": "FACIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "LCA",
+  "nombre": "Santa Lucía",
+  "capital": "Castries",
+  "capitalLat": 13.9957,
+  "capitalLng": -61.00614,
+  "continente": "America",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "LIE",
+  "nombre": "Liechtenstein",
+  "capital": "Vaduz",
+  "capitalLat": 47.14151,
+  "capitalLng": 9.52154,
+  "continente": "Europa",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "LKA",
+  "nombre": "Sri Lanka",
+  "capital": "Colombo",
+  "capitalLat": 6.93548,
+  "capitalLng": 79.84868,
+  "continente": "Asia",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "LSO",
+  "nombre": "Lesotho",
+  "capital": "Maseru",
+  "capitalLat": -29.31667,
+  "capitalLng": 27.48333,
+  "continente": "Africa",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "LTU",
+  "nombre": "Lituania",
+  "capital": "Vilna",
+  "capitalLat": 54.68916,
+  "capitalLng": 25.2798,
+  "continente": "Europa",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "LUX",
+  "nombre": "Luxemburgo",
+  "capital": "Luxemburgo",
+  "capitalLat": 49.61167,
+  "capitalLng": 6.13,
+  "continente": "Europa",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "LVA",
+  "nombre": "Letonia",
+  "capital": "Riga",
+  "capitalLat": 56.946,
+  "capitalLng": 24.10589,
+  "continente": "Europa",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "MAR",
+  "nombre": "Marruecos",
+  "capital": "Rabat",
+  "capitalLat": 34.01325,
+  "capitalLng": -6.83255,
+  "continente": "Africa",
+  "dificultad": "FACIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "MCO",
+  "nombre": "Mónaco",
+  "capital": "Monaco",
+  "capitalLat": 43.73333,
+  "capitalLng": 7.41667,
+  "continente": "Europa",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Es uno de los países más pequeños del mundo, junto al mar Mediterráneo."
+ },
+ {
+  "id": "MDA",
+  "nombre": "Moldavia",
+  "capital": "Chișinău",
+  "capitalLat": 47.00556,
+  "capitalLng": 28.8575,
+  "continente": "Europa",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "MDG",
+  "nombre": "Madagascar",
+  "capital": "Antananarivo",
+  "capitalLat": -18.91368,
+  "capitalLng": 47.53613,
+  "continente": "Africa",
+  "dificultad": "FACIL",
+  "datoCurioso": "Aquí viven los lémures, unos animales que casi no existen en otro lugar del mundo."
+ },
+ {
+  "id": "MDV",
+  "nombre": "Maldivas",
+  "capital": "Malé",
+  "capitalLat": 4.17521,
+  "capitalLng": 73.50916,
+  "continente": "Asia",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "MEX",
+  "nombre": "México",
+  "capital": "Ciudad de México",
+  "capitalLat": 19.42847,
+  "capitalLng": -99.12766,
+  "continente": "America",
+  "dificultad": "FACIL",
+  "datoCurioso": "Aquí está Chichén Itzá, una gran pirámide construida por los mayas."
+ },
+ {
+  "id": "MHL",
+  "nombre": "Islas Marshall",
+  "capital": "Majuro",
+  "capitalLat": 7.08971,
+  "capitalLng": 171.38027,
+  "continente": "Oceania",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "MKD",
+  "nombre": "Macedonia del Norte",
+  "capital": "Skopje",
+  "capitalLat": 41.99646,
+  "capitalLng": 21.43141,
+  "continente": "Europa",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "MLI",
+  "nombre": "Mali",
+  "capital": "Bamako",
+  "capitalLat": 12.65,
+  "capitalLng": -8,
+  "continente": "Africa",
+  "dificultad": "FACIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "MLT",
+  "nombre": "Malta",
+  "capital": "Valletta",
+  "capitalLat": 35.89968,
+  "capitalLng": 14.5148,
+  "continente": "Europa",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "MMR",
+  "nombre": "Myanmar",
+  "capital": "Naypyidaw",
+  "capitalLat": 19.745,
+  "capitalLng": 96.12972,
+  "continente": "Asia",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "MNE",
+  "nombre": "Montenegro",
+  "capital": "Podgorica",
+  "capitalLat": 42.44111,
+  "capitalLng": 19.26361,
+  "continente": "Europa",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "MNG",
+  "nombre": "Mongolia",
+  "capital": "Ulan Bator",
+  "capitalLat": 47.90771,
+  "capitalLng": 106.88324,
+  "continente": "Asia",
+  "dificultad": "FACIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "MOZ",
+  "nombre": "Mozambique",
+  "capital": "Maputo",
+  "capitalLat": -25.96553,
+  "capitalLng": 32.58322,
+  "continente": "Africa",
+  "dificultad": "FACIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "MRT",
+  "nombre": "Mauritania",
+  "capital": "Nouakchott",
+  "capitalLat": 18.08581,
+  "capitalLng": -15.9785,
+  "continente": "Africa",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "MUS",
+  "nombre": "Mauricio",
+  "capital": "Puerto Luis",
+  "capitalLat": -20.16194,
+  "capitalLng": 57.49889,
+  "continente": "Africa",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "MWI",
+  "nombre": "Malawi",
+  "capital": "Lilongwe",
+  "capitalLat": -13.96692,
+  "capitalLng": 33.78725,
+  "continente": "Africa",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "MYS",
+  "nombre": "Malasia",
+  "capital": "Kuala Lumpur",
+  "capitalLat": 3.1412,
+  "capitalLng": 101.68653,
+  "continente": "Asia",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "NAM",
+  "nombre": "Namibia",
+  "capital": "Windhoek",
+  "capitalLat": -22.55941,
+  "capitalLng": 17.08323,
+  "continente": "Africa",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "NER",
+  "nombre": "Níger",
+  "capital": "Niamey",
+  "capitalLat": 13.51366,
+  "capitalLng": 2.1098,
+  "continente": "Africa",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "NGA",
+  "nombre": "Nigeria",
+  "capital": "Abuja",
+  "capitalLat": 9.05785,
+  "capitalLng": 7.49508,
+  "continente": "Africa",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "NIC",
+  "nombre": "Nicaragua",
+  "capital": "Managua",
+  "capitalLat": 12.13282,
+  "capitalLng": -86.2504,
+  "continente": "America",
+  "dificultad": "FACIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "NLD",
+  "nombre": "Países Bajos",
+  "capital": "Ámsterdam",
+  "capitalLat": 52.37403,
+  "capitalLng": 4.88969,
+  "continente": "Europa",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Aquí hay campos enormes de tulipanes de muchos colores."
+ },
+ {
+  "id": "NOR",
+  "nombre": "Noruega",
+  "capital": "Oslo",
+  "capitalLat": 59.91273,
+  "capitalLng": 10.74609,
+  "continente": "Europa",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "NPL",
+  "nombre": "Nepal",
+  "capital": "Katmandú",
+  "capitalLat": 27.70169,
+  "capitalLng": 85.3206,
+  "continente": "Asia",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "NRU",
+  "nombre": "Nauru",
+  "capital": "Yaren",
+  "capitalLat": -0.55085,
+  "capitalLng": 166.9252,
+  "continente": "Oceania",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "NZL",
+  "nombre": "Nueva Zelanda",
+  "capital": "Wellington",
+  "capitalLat": -41.28664,
+  "capitalLng": 174.77557,
+  "continente": "Oceania",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Aquí se filmaron las películas de El Señor de los Anillos."
+ },
+ {
+  "id": "OMN",
+  "nombre": "Omán",
+  "capital": "Mascate",
+  "capitalLat": 23.58413,
+  "capitalLng": 58.40778,
+  "continente": "Asia",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "PAK",
+  "nombre": "Pakistán",
+  "capital": "Islamabad",
+  "capitalLat": 33.72148,
+  "capitalLng": 73.04329,
+  "continente": "Asia",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "PAN",
+  "nombre": "Panamá",
+  "capital": "Ciudad de Panamá",
+  "capitalLat": 8.9936,
+  "capitalLng": -79.51973,
+  "continente": "America",
+  "dificultad": "FACIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "PER",
+  "nombre": "Perú",
+  "capital": "Lima",
+  "capitalLat": -12.04318,
+  "capitalLng": -77.02824,
+  "continente": "America",
+  "dificultad": "FACIL",
+  "datoCurioso": "Aquí está Machu Picchu, una antigua ciudad inca en las montañas."
+ },
+ {
+  "id": "PHL",
+  "nombre": "Filipinas",
+  "capital": "Manila",
+  "capitalLat": 14.6042,
+  "capitalLng": 120.9822,
+  "continente": "Asia",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "PLW",
+  "nombre": "Palau",
+  "capital": "Ngerulmud",
+  "capitalLat": 7.50077,
+  "capitalLng": 134.6238,
+  "continente": "Oceania",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "PNG",
+  "nombre": "Papúa Nueva Guinea",
+  "capital": "Port Moresby",
+  "capitalLat": -9.47723,
+  "capitalLng": 147.15089,
+  "continente": "Oceania",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "POL",
+  "nombre": "Polonia",
+  "capital": "Varsovia",
+  "capitalLat": 52.22977,
+  "capitalLng": 21.01178,
+  "continente": "Europa",
+  "dificultad": "FACIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "PRK",
+  "nombre": "Corea del Norte",
+  "capital": "Pionyang",
+  "capitalLat": 39.03385,
+  "capitalLng": 125.75432,
+  "continente": "Asia",
+  "dificultad": "FACIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "PRT",
+  "nombre": "Portugal",
+  "capital": "Lisboa",
+  "capitalLat": 38.71667,
+  "capitalLng": -9.13333,
+  "continente": "Europa",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "PRY",
+  "nombre": "Paraguay",
+  "capital": "Asunción",
+  "capitalLat": -25.28646,
+  "capitalLng": -57.647,
+  "continente": "America",
+  "dificultad": "FACIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "QAT",
+  "nombre": "Catar",
+  "capital": "Doha",
+  "capitalLat": 25.28545,
+  "capitalLng": 51.53096,
+  "continente": "Asia",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "ROU",
+  "nombre": "Rumania",
+  "capital": "Bucarest",
+  "capitalLat": 44.43225,
+  "capitalLng": 26.10626,
+  "continente": "Europa",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "RUS",
+  "nombre": "Rusia",
+  "capital": "Moscú",
+  "capitalLat": 55.75222,
+  "capitalLng": 37.61556,
+  "continente": "Europa",
+  "dificultad": "FACIL",
+  "datoCurioso": "Es el país más grande del mundo, tan ancho que abarca once husos horarios."
+ },
+ {
+  "id": "RWA",
+  "nombre": "Ruanda",
+  "capital": "Kigali",
+  "capitalLat": -1.94995,
+  "capitalLng": 30.05885,
+  "continente": "Africa",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "SAU",
+  "nombre": "Arabia Saudí",
+  "capital": "Riad",
+  "capitalLat": 24.68773,
+  "capitalLng": 46.72185,
+  "continente": "Asia",
+  "dificultad": "FACIL",
+  "datoCurioso": "Aquí hay grandes desiertos de arena."
+ },
+ {
+  "id": "SDN",
+  "nombre": "Sudán",
+  "capital": "Jartum",
+  "capitalLat": 15.55177,
+  "capitalLng": 32.53241,
+  "continente": "Africa",
+  "dificultad": "FACIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "SEN",
+  "nombre": "Senegal",
+  "capital": "Dakar",
+  "capitalLat": 14.6937,
+  "capitalLng": -17.44406,
+  "continente": "Africa",
+  "dificultad": "FACIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "SGP",
+  "nombre": "Singapur",
+  "capital": "Singapore",
+  "capitalLat": 1.28967,
+  "capitalLng": 103.85007,
+  "continente": "Asia",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "SLB",
+  "nombre": "Islas Salomón",
+  "capital": "Honiara",
+  "capitalLat": -9.43333,
+  "capitalLng": 159.95,
+  "continente": "Oceania",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "SLE",
+  "nombre": "Sierra Leone",
+  "capital": "Freetown",
+  "capitalLat": 8.48714,
+  "capitalLng": -13.2356,
+  "continente": "Africa",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "SLV",
+  "nombre": "El Salvador",
+  "capital": "San Salvador",
+  "capitalLat": 13.68935,
+  "capitalLng": -89.18718,
+  "continente": "America",
+  "dificultad": "FACIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "SMR",
+  "nombre": "San Marino",
+  "capital": "Ciudad de San Marino",
+  "capitalLat": 43.93667,
+  "capitalLng": 12.44639,
+  "continente": "Europa",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "SOM",
+  "nombre": "Somalia",
+  "capital": "Mogadiscio",
+  "capitalLat": 2.03711,
+  "capitalLng": 45.34375,
+  "continente": "Africa",
+  "dificultad": "FACIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "SRB",
+  "nombre": "Serbia",
+  "capital": "Belgrado",
+  "capitalLat": 44.80401,
+  "capitalLng": 20.46513,
+  "continente": "Europa",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "SSD",
+  "nombre": "Sudán del Sur",
+  "capital": "Juba",
+  "capitalLat": 4.85165,
+  "capitalLng": 31.58247,
+  "continente": "Africa",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "STP",
+  "nombre": "Santo Tomé y Príncipe",
+  "capital": "São Tomé",
+  "capitalLat": 0.33654,
+  "capitalLng": 6.72732,
+  "continente": "Africa",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "SUR",
+  "nombre": "Surinam",
+  "capital": "Paramaribo",
+  "capitalLat": 5.86638,
+  "capitalLng": -55.16682,
+  "continente": "America",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "SVK",
+  "nombre": "Eslovaquia",
+  "capital": "Bratislava",
+  "capitalLat": 48.14816,
+  "capitalLng": 17.10674,
+  "continente": "Europa",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "SVN",
+  "nombre": "Eslovenia",
+  "capital": "Ljubljana",
+  "capitalLat": 46.05108,
+  "capitalLng": 14.50513,
+  "continente": "Europa",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "SWE",
+  "nombre": "Suecia",
+  "capital": "Stockholm",
+  "capitalLat": 59.32938,
+  "capitalLng": 18.06871,
+  "continente": "Europa",
+  "dificultad": "FACIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "SWZ",
+  "nombre": "Esuatini",
+  "capital": "Mbabane",
+  "capitalLat": -26.31667,
+  "capitalLng": 31.13333,
+  "continente": "Africa",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "SYC",
+  "nombre": "Seychelles",
+  "capital": "Victoria",
+  "capitalLat": -4.62001,
+  "capitalLng": 55.45501,
+  "continente": "Africa",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "SYR",
+  "nombre": "Siria",
+  "capital": "Damasco",
+  "capitalLat": 33.5102,
+  "capitalLng": 36.29128,
+  "continente": "Asia",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "TCD",
+  "nombre": "Chad",
+  "capital": "Yamena",
+  "capitalLat": 12.10672,
+  "capitalLng": 15.0444,
+  "continente": "Africa",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "TGO",
+  "nombre": "Togo",
+  "capital": "Lomé",
+  "capitalLat": 6.12874,
+  "capitalLng": 1.22154,
+  "continente": "Africa",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "THA",
+  "nombre": "Tailandia",
+  "capital": "Bangkok",
+  "capitalLat": 13.75398,
+  "capitalLng": 100.50144,
+  "continente": "Asia",
+  "dificultad": "FACIL",
+  "datoCurioso": "Aquí viven muchos elefantes, un animal muy importante en su cultura."
+ },
+ {
+  "id": "TJK",
+  "nombre": "Tayikistán",
+  "capital": "Dushanbe",
+  "capitalLat": 38.53575,
+  "capitalLng": 68.77905,
+  "continente": "Asia",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "TKM",
+  "nombre": "Turkmenistán",
+  "capital": "Ashgabat",
+  "capitalLat": 37.95,
+  "capitalLng": 58.38333,
+  "continente": "Asia",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "TLS",
+  "nombre": "Timor Oriental",
+  "capital": "Dili",
+  "capitalLat": -8.55861,
+  "capitalLng": 125.57361,
+  "continente": "Asia",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "TON",
+  "nombre": "Tonga",
+  "capital": "Nuku'alofa",
+  "capitalLat": -21.13938,
+  "capitalLng": -175.2018,
+  "continente": "Oceania",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "TTO",
+  "nombre": "Trinidad y Tobago",
+  "capital": "Puerto España",
+  "capitalLat": 10.66668,
+  "capitalLng": -61.51889,
+  "continente": "America",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "TUN",
+  "nombre": "Túnez",
+  "capital": "Túnez",
+  "capitalLat": 36.81897,
+  "capitalLng": 10.16579,
+  "continente": "Africa",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "TUR",
+  "nombre": "Turquía",
+  "capital": "Ankara",
+  "capitalLat": 39.91987,
+  "capitalLng": 32.85427,
+  "continente": "Asia",
+  "dificultad": "FACIL",
+  "datoCurioso": "Tiene territorio en dos continentes: Europa y Asia."
+ },
+ {
+  "id": "TUV",
+  "nombre": "Tuvalu",
+  "capital": "Funafuti",
+  "capitalLat": -8.52425,
+  "capitalLng": 179.19417,
+  "continente": "Oceania",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "TZA",
+  "nombre": "Tanzania",
+  "capital": "Dodoma",
+  "capitalLat": -6.17221,
+  "capitalLng": 35.73947,
+  "continente": "Africa",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "UGA",
+  "nombre": "Uganda",
+  "capital": "Kampala",
+  "capitalLat": 0.31628,
+  "capitalLng": 32.58219,
+  "continente": "Africa",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "UKR",
+  "nombre": "Ucrania",
+  "capital": "Kiev",
+  "capitalLat": 50.45466,
+  "capitalLng": 30.5238,
+  "continente": "Europa",
+  "dificultad": "FACIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "URY",
+  "nombre": "Uruguay",
+  "capital": "Montevideo",
+  "capitalLat": -34.90328,
+  "capitalLng": -56.18816,
+  "continente": "America",
+  "dificultad": "FACIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "USA",
+  "nombre": "Estados Unidos",
+  "capital": "Washington D.C.",
+  "capitalLat": 38.89511,
+  "capitalLng": -77.03637,
+  "continente": "America",
+  "dificultad": "FACIL",
+  "datoCurioso": "Aquí está el Gran Cañón, uno de los cañones más grandes del mundo."
+ },
+ {
+  "id": "UZB",
+  "nombre": "Uzbekistán",
+  "capital": "Tashkent",
+  "capitalLat": 41.26465,
+  "capitalLng": 69.21627,
+  "continente": "Asia",
+  "dificultad": "FACIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "VAT",
+  "nombre": "Ciudad del Vaticano",
+  "capital": "Vatican City",
+  "capitalLat": 41.90268,
+  "capitalLng": 12.45414,
+  "continente": "Europa",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Es el país más pequeño del mundo."
+ },
+ {
+  "id": "VCT",
+  "nombre": "San Vicente y las Granadinas",
+  "capital": "Kingstown",
+  "capitalLat": 13.15527,
+  "capitalLng": -61.22742,
+  "continente": "America",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "VEN",
+  "nombre": "Venezuela",
+  "capital": "Caracas",
+  "capitalLat": 10.48801,
+  "capitalLng": -66.87919,
+  "continente": "America",
+  "dificultad": "FACIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "VNM",
+  "nombre": "Vietnam",
+  "capital": "Hanói",
+  "capitalLat": 21.0245,
+  "capitalLng": 105.84117,
+  "continente": "Asia",
+  "dificultad": "MEDIO",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "VUT",
+  "nombre": "Vanuatu",
+  "capital": "Port Vila",
+  "capitalLat": -17.73648,
+  "capitalLng": 168.31366,
+  "continente": "Oceania",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "WSM",
+  "nombre": "Samoa",
+  "capital": "Apia",
+  "capitalLat": -13.83333,
+  "capitalLng": -171.76666,
+  "continente": "Oceania",
+  "dificultad": "DIFICIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "YEM",
+  "nombre": "Yemen",
+  "capital": "Saná",
+  "capitalLat": 15.35472,
+  "capitalLng": 44.20667,
+  "continente": "Asia",
+  "dificultad": "FACIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "ZAF",
+  "nombre": "Sudáfrica",
+  "capital": "Pretoria",
+  "capitalLat": -25.74486,
+  "capitalLng": 28.18783,
+  "continente": "Africa",
+  "dificultad": "FACIL",
+  "datoCurioso": "Aquí viven los cinco grandes animales de África: león, elefante, rinoceronte, búfalo y leopardo."
+ },
+ {
+  "id": "ZMB",
+  "nombre": "Zambia",
+  "capital": "Lusaka",
+  "capitalLat": -15.40669,
+  "capitalLng": 28.28713,
+  "continente": "Africa",
+  "dificultad": "FACIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ },
+ {
+  "id": "ZWE",
+  "nombre": "Zimbabue",
+  "capital": "Harare",
+  "capitalLat": -17.82772,
+  "capitalLng": 31.05337,
+  "continente": "Africa",
+  "dificultad": "FACIL",
+  "datoCurioso": "Un país que puedes explorar en el mapa del mundo."
+ }
+]
