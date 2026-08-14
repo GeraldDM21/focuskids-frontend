@@ -172,34 +172,35 @@
           <div class="fox-resultado-trophy">{{ estado === 'completado' ? '🎉' : '⏰' }}</div>
         </div>
         <h2 class="resultado-titulo">{{ estado === 'completado' ? '¡Lo lograste!' : '¡Se acabó el tiempo!' }}</h2>
+        <p class="ronda-feedback-sub">Completaste {{ rondaActual }} de {{ MAX_RONDAS }} rondas</p>
         <div class="estrellas">
-          <span class="estrella"        [class.estrella-on]="piezasColocadas >= slots.length * 0.4">⭐</span>
-          <span class="estrella grande" [class.estrella-on]="piezasColocadas >= slots.length * 0.7">⭐</span>
-          <span class="estrella"        [class.estrella-on]="piezasColocadas >= slots.length">⭐</span>
+          <span class="estrella"        [class.estrella-on]="piezasColocadasSesion >= piezasObjetivoSesion * 0.4">⭐</span>
+          <span class="estrella grande" [class.estrella-on]="piezasColocadasSesion >= piezasObjetivoSesion * 0.7">⭐</span>
+          <span class="estrella"        [class.estrella-on]="piezasColocadasSesion >= piezasObjetivoSesion">⭐</span>
         </div>
         <div class="score-ring">
           <svg viewBox="0 0 120 120">
             <circle cx="60" cy="60" r="50" class="ring-bg"/>
             <circle cx="60" cy="60" r="50" class="ring-fill"
               [style.stroke-dasharray]="314"
-              [style.stroke-dashoffset]="314-(314*(piezasColocadas/(slots.length||1)))"/>
+              [style.stroke-dashoffset]="314-(314*(piezasColocadasSesion/(piezasObjetivoSesion||1)))"/>
           </svg>
           <div class="score-texto">
-            <div class="score-num">{{ piezasColocadas }}/{{ slots.length }}</div>
+            <div class="score-num">{{ piezasColocadasSesion }}/{{ piezasObjetivoSesion }}</div>
             <div class="score-lbl">piezas</div>
           </div>
         </div>
-        @if (estado === 'completado' && puntosBonus > 0) {
-          <div class="ia-badge" style="color:#4ade80">⚡ +{{ puntosBonus }} puntos bonus por rapidez</div>
+        @if (estado === 'completado' && puntosBonusSesion > 0) {
+          <div class="ia-badge" style="color:#4ade80">⚡ +{{ puntosBonusSesion }} puntos bonus por rapidez</div>
         }
         <div class="foxy-msg-final">
           <img class="foxy-msg-avatar" src="mascotas/tigre-portrait.png" alt="Tigre">
           <div class="foxy-msg-bubble">{{ mascotMsg }}</div>
         </div>
         <div class="metricas-row">
-          <div class="metrica"><div class="m-icon">🧩</div><div class="m-val verde">{{ piezasColocadas }}</div><div class="m-lbl">Encajadas</div></div>
-          <div class="metrica"><div class="m-icon">🔄</div><div class="m-val azul">{{ rotaciones }}</div><div class="m-lbl">Rotaciones</div></div>
-          <div class="metrica"><div class="m-icon">❌</div><div class="m-val rojo">{{ fallidos }}</div><div class="m-lbl">Fallidos</div></div>
+          <div class="metrica"><div class="m-icon">🧩</div><div class="m-val verde">{{ piezasColocadasSesion }}</div><div class="m-lbl">Encajadas</div></div>
+          <div class="metrica"><div class="m-icon">🔄</div><div class="m-val azul">{{ rotacionesSesion }}</div><div class="m-lbl">Rotaciones</div></div>
+          <div class="metrica"><div class="m-icon">❌</div><div class="m-val rojo">{{ fallidosSesion }}</div><div class="m-lbl">Fallidos</div></div>
         </div>
         <div class="btns-final">
           <button class="btn-repetir" (click)="jugarDeNuevo()">🔄 Jugar de nuevo</button>

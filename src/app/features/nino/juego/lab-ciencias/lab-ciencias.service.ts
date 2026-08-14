@@ -341,6 +341,216 @@ const EXPERIMENTOS: ExperimentoLab[] = [
       EXPERTO:
         'La difusión surge del movimiento térmico molecular y reduce los gradientes de concentración hasta aproximarse a una distribución uniforme.'
     }
+  },
+  {
+    id: 'gotas-color-aceite',
+
+    titulo: 'Gotas que no se mezclan',
+
+    objetivo:
+      'Logra que el colorante forme gotitas dentro del aceite, sin mezclarse.',
+
+    pista:
+      'Busca un líquido resbaloso y algo con color.',
+
+    combinacionesCorrectas: {
+      FACIL: [
+        'aceite',
+        'colorante'
+      ],
+
+      MEDIO: [
+        'aceite',
+        'colorante',
+        'agua'
+      ],
+
+      DIFICIL: [
+        'aceite',
+        'colorante',
+        'vinagre'
+      ],
+
+      EXPERTO: [
+        'aceite',
+        'colorante',
+        'agua',
+        'vinagre'
+      ]
+    },
+
+    resultadoExito:
+      '¡El colorante se quedó en gotitas de color flotando en el aceite!',
+
+    emojiResultado: '🫧',
+
+    narracion:
+      '¡Mira esto! El colorante está hecho con agua, y el agua y el aceite no se llevan bien. ' +
+      'Por eso, en vez de mezclarse, el colorante forma bolitas de color que flotan solitas dentro del aceite. ' +
+      '¡Parecen canicas de colores!',
+
+    pregunta: {
+      texto: 'Según Uni, ¿por qué el colorante no se mezcla con el aceite?',
+      opciones: [
+        { texto: 'Porque el colorante lleva agua y el agua no se mezcla con el aceite', emoji: '💧', correcta: true  },
+        { texto: 'Porque el colorante es muy pesado',   emoji: '🏋️', correcta: false },
+        { texto: 'Porque el aceite está muy frío',      emoji: '🧊', correcta: false }
+      ]
+    },
+
+    explicacionCientifica: {
+      FACIL:
+        'El colorante lleva agua adentro. Como el agua y el aceite no se mezclan, el colorante forma gotitas separadas.',
+
+      MEDIO:
+        'El agua del colorante y el aceite no se mezclan por ser líquidos distintos. Por eso el colorante flota en gotas dentro del aceite.',
+
+      DIFICIL:
+        'El agua (polar) y el aceite (no polar) no se disuelven entre sí, así que el colorante disuelto en agua queda atrapado en pequeñas gotas dentro del aceite.',
+
+      EXPERTO:
+        'La incompatibilidad de polaridades impide la miscibilidad; la tensión superficial hace que la fase acuosa coloreada minimice su área de contacto formando gotas esféricas dentro de la fase oleosa.'
+    }
+  },
+  {
+    id: 'polvo-desaparece',
+
+    titulo: 'El polvo que desaparece',
+
+    objetivo:
+      'Logra que el bicarbonato se disuelva por completo en el agua, sin burbujas.',
+
+    pista:
+      'Busca un polvo y un líquido transparente, sin nada ácido.',
+
+    combinacionesCorrectas: {
+      FACIL: [
+        'bicarbonato',
+        'agua'
+      ],
+
+      MEDIO: [
+        'bicarbonato',
+        'agua',
+        'sal'
+      ],
+
+      DIFICIL: [
+        'bicarbonato',
+        'agua',
+        'colorante'
+      ],
+
+      EXPERTO: [
+        'bicarbonato',
+        'agua',
+        'sal',
+        'colorante'
+      ]
+    },
+
+    resultadoExito:
+      '¡El bicarbonato se disolvió por completo y el agua sigue tranquila, sin burbujas!',
+
+    emojiResultado: '🥛',
+
+    narracion:
+      '¡Esta vez es distinto! Si mezclas bicarbonato solo con agua, el polvito se disuelve despacito y desaparece, ' +
+      'pero no aparecen burbujas como cuando lo mezclamos con vinagre. ' +
+      'Eso es porque el agua no es un ácido. ¡Uni te reta a comprobarlo!',
+
+    pregunta: {
+      texto: 'Uni dijo que esta vez no salieron burbujas. ¿Qué le faltó a la mezcla para burbujear como en el globo?',
+      opciones: [
+        { texto: 'Un líquido ácido, como el vinagre', emoji: '🧴', correcta: true  },
+        { texto: 'Más agua',                          emoji: '💧', correcta: false },
+        { texto: 'Agitar más fuerte',                 emoji: '💪', correcta: false }
+      ]
+    },
+
+    explicacionCientifica: {
+      FACIL:
+        'El bicarbonato se disuelve en el agua sin hacer burbujas, porque el agua sola no es un ácido.',
+
+      MEDIO:
+        'El bicarbonato se separa en partículas muy pequeñas dentro del agua. Sin un ácido como el vinagre, no hay reacción ni burbujas.',
+
+      DIFICIL:
+        'Disolverse (mezclarse sin cambiar de sustancia) es distinto de reaccionar (formar una sustancia nueva). Aquí solo hay disolución, por eso no hay gas.',
+
+      EXPERTO:
+        'La disolución del bicarbonato en agua es un proceso físico sin reacción ácido-base; solo al introducir un ácido como el ácido acético se libera CO₂ gaseoso.'
+    }
+  },
+  {
+    id: 'sal-no-desaparece',
+
+    titulo: 'La sal que no desaparece',
+
+    objetivo:
+      'Descubre qué pasa cuando pones sal en aceite en vez de en agua.',
+
+    pista:
+      'Busca un cristal blanco y un líquido resbaloso, sin agua.',
+
+    combinacionesCorrectas: {
+      FACIL: [
+        'sal',
+        'aceite'
+      ],
+
+      MEDIO: [
+        'sal',
+        'aceite',
+        'colorante'
+      ],
+
+      DIFICIL: [
+        'sal',
+        'aceite',
+        'agua'
+      ],
+
+      EXPERTO: [
+        'sal',
+        'aceite',
+        'colorante',
+        'agua'
+      ]
+    },
+
+    resultadoExito:
+      '¡La sal se quedó hundida en el fondo, no se disolvió en el aceite!',
+
+    emojiResultado: '🧂',
+
+    narracion:
+      '¿Recuerdas que la sal desaparecía en el agua? Pues en el aceite pasa algo distinto: ' +
+      'los granitos de sal se hunden y se quedan enteros en el fondo, ¡no se disuelven! ' +
+      'El aceite no es capaz de esconder la sal como lo hacía el agua.',
+
+    pregunta: {
+      texto: '¿Por qué la sal no se disolvió esta vez, si en el agua sí se disolvía?',
+      opciones: [
+        { texto: 'Porque el aceite no es agua',       emoji: '🫗', correcta: true  },
+        { texto: 'Porque la sal cambió de sabor',     emoji: '👅', correcta: false },
+        { texto: 'Porque el aceite estaba muy caliente', emoji: '🔥', correcta: false }
+      ]
+    },
+
+    explicacionCientifica: {
+      FACIL:
+        'La sal se disuelve en agua, pero no en aceite. Por eso en el aceite se queda hundida como granitos enteros.',
+
+      MEDIO:
+        'El aceite no puede separar las partículas de sal como lo hace el agua, así que la sal no se disuelve y se hunde.',
+
+      DIFICIL:
+        'La sal es un compuesto iónico que se disuelve en solventes polares como el agua, pero el aceite (no polar) no puede rodear sus iones.',
+
+      EXPERTO:
+        'La disolución de un sólido iónico requiere un solvente polar que hidrate los iones; el aceite, al ser no polar, no genera esa interacción y la sal permanece como fase sólida separada.'
+    }
   }
 ];
 

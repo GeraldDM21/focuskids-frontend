@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { NgIf } from '@angular/common';
@@ -171,7 +171,8 @@ import { AuthService } from '../../../core/services/auth.service';
                   <button mat-icon-button matSuffix type="button" (click)="hideConfirm = !hideConfirm">
                     <mat-icon>{{ hideConfirm ? 'visibility_off' : 'visibility' }}</mat-icon>
                   </button>
-                  <mat-error *ngIf="form.hasError('passwordMismatch') && form.get('confirmPassword')?.touched">
+                  <mat-error *ngIf="form.get('confirmPassword')?.hasError('required')">Requerido</mat-error>
+                  <mat-error *ngIf="form.get('confirmPassword')?.hasError('passwordMismatch')">
                     No coinciden
                   </mat-error>
                 </mat-form-field>
@@ -257,7 +258,7 @@ import { AuthService } from '../../../core/services/auth.service';
           <!-- ── PASO 3: ÉXITO ── -->
           <ng-container *ngIf="step === 3">
             <div class="success-state">
-              <div class="success-ico">📧</div>
+              <div class="success-ico">🎉</div>
               <h2>¡Cuenta creada!</h2>
               <p>{{ successMsg }}</p>
               <a routerLink="/auth/login" class="btn-primary" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px">
@@ -627,7 +628,12 @@ export class RegisterComponent {
   step = 1;
   rolSeleccionado: 'PADRE' | 'DOCENTE' | '' = '';
 
-  constructor(private fb: FormBuilder, private auth: AuthService, private router: Router) {
+  constructor(
+    private fb: FormBuilder,
+    private auth: AuthService,
+    private router: Router,
+    private cdr: ChangeDetectorRef
+  ) {
     this.form = this.fb.group({
       nombre:          ['', Validators.required],
       apellido:        [''],
@@ -641,12 +647,36 @@ export class RegisterComponent {
       gradoGrupo:      [''],
       aceptaTerminos:  [false, Validators.requiredTrue]
     }, { validators: this.passwordMatchValidator });
+
+    // El validador de arriba solo marca el FormGroup como inválido, pero
+    // Material solo muestra <mat-error> según el estado del FormControl
+    // individual (confirmPassword), no del grupo. Por eso aquí, cada vez
+    // que cambie password o confirmPassword, se refleja el error
+    // directamente en el control de confirmPassword para que sí se vea.
+    this.form.get('password')?.valueChanges.subscribe(() => this.actualizarCoincidenciaPassword());
+    this.form.get('confirmPassword')?.valueChanges.subscribe(() => this.actualizarCoincidenciaPassword());
   }
 
   private passwordMatchValidator(group: AbstractControl): ValidationErrors | null {
     const pass    = group.get('password')?.value;
     const confirm = group.get('confirmPassword')?.value;
     return pass && confirm && pass !== confirm ? { passwordMismatch: true } : null;
+  }
+
+  private actualizarCoincidenciaPassword(): void {
+    const confirmControl = this.form.get('confirmPassword');
+    if (!confirmControl) return;
+
+    const pass    = this.form.get('password')?.value;
+    const confirm = confirmControl.value;
+    const { passwordMismatch, ...otrosErrores } = confirmControl.errors || {};
+
+    if (pass && confirm && pass !== confirm) {
+      confirmControl.setErrors({ ...otrosErrores, passwordMismatch: true });
+    } else {
+      const quedan = Object.keys(otrosErrores).length ? otrosErrores : null;
+      confirmControl.setErrors(quedan);
+    }
   }
 
   goStep2() {
@@ -693,15 +723,22 @@ export class RegisterComponent {
     this.auth.register(payload).subscribe({
       next: (response) => {
         this.loading = false;
-        this.successMsg = response.mensaje || 'Cuenta creada. Revisa tu correo para verificarla.';
+        this.successMsg = response.mensaje || 'Cuenta creada exitosamente. Ya puedes iniciar sesión.';
         this.step = 3;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.loading = false;
+        if (err?.name === 'TimeoutError') {
+          this.errorMsg = 'El servidor está tardando demasiado en responder. Puede que tu cuenta sí se haya creado — intenta iniciar sesión, o vuelve a intentarlo en un momento.';
+          this.cdr.detectChanges();
+          return;
+        }
         const campos = err?.error?.campos;
         this.errorMsg = err?.error?.error
           || (campos ? Object.values(campos)[0] as string : null)
           || 'Error al crear la cuenta. Intente de nuevo.';
+        this.cdr.detectChanges();
       }
     });
   }
