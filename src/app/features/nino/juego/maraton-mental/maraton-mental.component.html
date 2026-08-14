@@ -12,6 +12,22 @@
     <span class="mm-bpp mm-bpp7">✧</span><span class="mm-bpp mm-bpp8">3</span>
   </div>
 
+  <!-- ── Partículas temáticas (estados de juego) ───────────────────────── -->
+  @if (estado !== 'inicio' && estado !== 'cargando') {
+    <div class="mm-particles" aria-hidden="true">
+      <span class="mmp mmp-1">🧠</span>
+      <span class="mmp mmp-2">⚡</span>
+      <span class="mmp mmp-3">⭐</span>
+      <span class="mmp mmp-4">🔢</span>
+      <span class="mmp mmp-5">🎨</span>
+      <span class="mmp mmp-6">✨</span>
+      <span class="mmp mmp-7">🧠</span>
+      <span class="mmp mmp-8">⭐</span>
+      <span class="mmp mmp-9">🔢</span>
+      <span class="mmp mmp-10">✨</span>
+    </div>
+  }
+
   @if (estado === 'inicio') {
     <div class="mm-pantalla-inicio">
       <img class="mm-bg-escena" src="/mascotas/koby-escena.png" alt="Escena de Koby en el espacio">
@@ -70,11 +86,29 @@
 
   @if (estado === 'calibracion_a' || estado === 'calibracion_b') {
     <div class="mm-calibracion">
-      <button type="button" class="mm-btn-salir-juego" (click)="salirConResultados()">← Salir</button>
-      <div class="mm-banner-info">
-        🔎 Ronda de práctica {{ calibracionRondaActual }}/{{ config?.rondasCalibracionPorTarea }}
-        — primero cada tarea por separado
+      <div class="mm-game-header">
+        <button type="button" class="mm-btn-salir-juego" (click)="salirConResultados()">← Salir</button>
+        <div class="mm-gh-centro">
+          <div class="mm-timer-bar-wrap">
+            <div class="mm-timer-bar"
+              [style.width.%]="tiempoRestanteCalibPct"
+              [class.mm-timer-urgente]="tiempoRestanteCalibPct < 30">
+            </div>
+          </div>
+          <span class="mm-tiempo-label">⏱ {{ tiempoFormateadoCalib }}</span>
+        </div>
+        <div class="mm-gh-badges">
+          <div class="mm-hbadge mm-hbadge-ronda">
+            {{ estado === 'calibracion_a' ? '🔢' : '🎨' }} Ronda {{ calibracionRondaActual }}/{{ config?.rondasCalibracionPorTarea }}
+          </div>
+          <div class="mm-hbadge mm-hbadge-verde">⭐ {{ aciertosParciales }}</div>
+          <div class="mm-hbadge mm-hbadge-rojo">✕ {{ erroresParciales }}</div>
+          <button type="button" class="mm-btn-voz-mini" (click)="toggleVoz()" [title]="voiceEnabled ? 'Silenciar' : 'Activar voz'">
+            {{ voiceEnabled ? '🔊' : '🔇' }}
+          </button>
+        </div>
       </div>
+      <div class="mm-banner-info">🔎 Primero practica cada tarea por separado</div>
 
       <div class="mm-zona mm-zona-sola" [class.mm-zona-a]="estado === 'calibracion_a'" [class.mm-zona-b]="estado === 'calibracion_b'">
 
@@ -131,15 +165,24 @@
 
   @if (estado === 'dual') {
     <div class="mm-dual-wrap">
-      <div class="mm-dual-header">
+      <div class="mm-game-header">
         <button type="button" class="mm-btn-salir-juego" (click)="salirConResultados()">← Salir</button>
-        <div class="mm-ronda-info">Ronda {{ rondaDualActual }}/{{ config?.rondasDuales }}</div>
-        <div class="mm-timer-bar-wrap">
-          <div
-            class="mm-timer-bar"
-            [style.width.%]="tiempoRestantePct"
-            [class.mm-timer-urgente]="tiempoRestantePct < 25"
-          ></div>
+        <div class="mm-gh-centro">
+          <div class="mm-timer-bar-wrap">
+            <div class="mm-timer-bar"
+              [style.width.%]="tiempoRestantePct"
+              [class.mm-timer-urgente]="tiempoRestantePct < 25">
+            </div>
+          </div>
+          <span class="mm-tiempo-label">⏱ {{ tiempoFormateadoDual }}</span>
+        </div>
+        <div class="mm-gh-badges">
+          <div class="mm-hbadge mm-hbadge-ronda">🧠 Ronda {{ rondaDualActual }}/{{ config?.rondasDuales }}</div>
+          <div class="mm-hbadge mm-hbadge-verde">⭐ {{ aciertosParciales }}</div>
+          <div class="mm-hbadge mm-hbadge-rojo">✕ {{ erroresParciales }}</div>
+          <button type="button" class="mm-btn-voz-mini" (click)="toggleVoz()" [title]="voiceEnabled ? 'Silenciar' : 'Activar voz'">
+            {{ voiceEnabled ? '🔊' : '🔇' }}
+          </button>
         </div>
       </div>
 

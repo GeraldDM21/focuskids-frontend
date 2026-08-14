@@ -53,9 +53,11 @@
 .mm-btn-volver-inicio:hover { transform: translateY(-2px); background: rgba(255,255,255,.12); }
 
 .mm-btn-salir-juego {
-  padding: 8px 14px; border: 1px solid rgba(239,68,68,.4); border-radius: 12px;
-  background: rgba(239,68,68,.12); color: #fca5a5; font-size: 13px; font-weight: 700;
+  display: flex; align-items: center; gap: 6px; white-space: nowrap; flex-shrink: 0;
+  padding: 9px 16px; border: 1.5px solid rgba(239,68,68,.45); border-radius: 14px;
+  background: rgba(239,68,68,.14); color: #fca5a5; font-size: 13px; font-weight: 800;
   cursor: pointer; transition: background .2s ease, transform .2s ease;
+  box-shadow: 0 2px 12px rgba(239,68,68,.2);
 }
 .mm-btn-salir-juego:hover { background: rgba(239,68,68,.28); transform: scale(1.04); }
 
@@ -154,7 +156,7 @@
 }
 
 /* ── Zonas (calibración y dual) ────────────────────────────────────── */
-.mm-calibracion { width: 100%; max-width: 600px; display: flex; flex-direction: column; align-items: center; }
+.mm-calibracion { position: relative; z-index: 1; width: 100%; max-width: 600px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
 
 .mm-zona {
   position: relative; border-radius: 22px; padding: 24px 20px; width: 100%; box-sizing: border-box;
@@ -192,19 +194,50 @@
 .mm-color-btn:disabled { opacity: .4; cursor: default; }
 
 /* ── Transición ─────────────────────────────────────────────────────── */
-.mm-transicion { text-align: center; margin-top: 100px; }
+.mm-transicion { position: relative; z-index: 1; text-align: center; margin-top: 100px; }
 .mm-transicion-emoji { font-size: 72px; margin-bottom: 12px; animation: mmPulse 1s ease-in-out infinite; }
 @keyframes mmPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.12); } }
 .mm-transicion h2 { font-size: 22px; margin: 0 0 8px; }
 .mm-transicion p { color: rgba(255,255,255,.7); }
 
 /* ── Fase dual ──────────────────────────────────────────────────────── */
-.mm-dual-wrap { width: 100%; max-width: 1080px; }
-.mm-dual-header { display: flex; align-items: center; gap: 16px; margin-bottom: 8px; }
-.mm-ronda-info { font-weight: 800; font-size: 13px; white-space: nowrap; color: rgba(255,255,255,.75); }
-.mm-timer-bar-wrap { flex: 1; height: 10px; border-radius: 6px; background: rgba(255,255,255,.12); overflow: hidden; }
+.mm-dual-wrap { position: relative; z-index: 1; width: 100%; max-width: 1080px; }
+/* ── Header de juego unificado (calibración + dual) ─────────────── */
+.mm-game-header {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 14px;
+  background: rgba(0,0,0,.55); backdrop-filter: blur(14px);
+  border-radius: 18px; border: 1px solid rgba(255,255,255,.1);
+  padding: 10px 14px; width: 100%; box-sizing: border-box;
+}
+.mm-gh-centro {
+  flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0;
+}
+.mm-timer-bar-wrap { width: 100%; height: 8px; border-radius: 6px; background: rgba(255,255,255,.12); overflow: hidden; }
 .mm-timer-bar { height: 100%; background: linear-gradient(90deg,#34d399,#059669); border-radius: 6px; transition: width .1s linear; }
 .mm-timer-urgente { background: linear-gradient(90deg,#f87171,#ef4444); }
+.mm-tiempo-label { font-size: 11px; font-weight: 800; color: rgba(255,255,255,.65); letter-spacing: .5px; }
+.mm-gh-badges {
+  display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+}
+.mm-hbadge {
+  display: flex; align-items: center; gap: 4px;
+  padding: 5px 10px; border-radius: 10px; font-size: 12px; font-weight: 800;
+  white-space: nowrap;
+}
+.mm-hbadge-ronda { background: rgba(99,102,241,.2); border: 1px solid rgba(99,102,241,.4); color: #a5b4fc; }
+.mm-hbadge-verde { background: rgba(52,211,153,.15); border: 1px solid rgba(52,211,153,.4); color: #6ee7b7; }
+.mm-hbadge-rojo  { background: rgba(239,68,68,.15);  border: 1px solid rgba(239,68,68,.4);  color: #fca5a5; }
+.mm-btn-voz-mini {
+  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.18);
+  border-radius: 50%; width: 32px; height: 32px; font-size: 15px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background .2s; flex-shrink: 0;
+}
+.mm-btn-voz-mini:hover { background: rgba(255,255,255,.18); }
+
+/* Alias para retrocompat — usado solo en .mm-dual-wrap internamente */
+.mm-dual-header { display: none; }
+.mm-ronda-info  { display: none; }
 
 .mm-aviso-ajuste {
   background: rgba(251,191,36,.14); border: 1px solid rgba(251,191,36,.4); color: #fde68a;
@@ -346,7 +379,7 @@
 /* ══ PANTALLA RESULTADO — ESTILO UNIFICADO ══════════════════════════════════ */
 .pantalla-resultados {
   min-height: 100vh; display: flex; align-items: center; justify-content: center;
-  padding: 24px; position: relative;
+  padding: 24px; position: relative; z-index: 1;
 }
 .resultados-card {
   background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.13);
@@ -407,3 +440,27 @@
 .btn-volver:hover { background: rgba(255,255,255,.13); color: #f1f5f9; }
 .btn-ia { width: 100%; background: rgba(250,204,21,.12); border: 1.5px solid rgba(250,204,21,.4); color: #fbbf24; border-radius: 14px; padding: 14px 8px; font-size: 14px; font-weight: 700; cursor: pointer; margin-bottom: 8px; transition: all .2s; box-sizing: border-box; }
 .btn-ia:hover { background: rgba(250,204,21,.22); transform: translateY(-2px); }
+
+/* ── Zona sola (calibración: una tarea a la vez) ─────────────────── */
+.mm-zona-sola { max-width: 480px; margin: 0 auto; width: 100%; }
+
+/* ── Partículas flotantes durante el juego ───────────────────────── */
+.mm-particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+.mmp {
+  position: absolute; font-size: 20px; opacity: 0.16;
+  animation: mmpFloat var(--d, 14s) ease-in-out infinite var(--dl, 0s);
+  filter: blur(0.4px);
+}
+.mmp-1  { top:  6%; left:  7%; font-size: 26px; --d: 13s; --dl: 0s;  animation-name: mmpDriftR; }
+.mmp-2  { top: 18%; left: 90%; font-size: 18px; --d: 16s; --dl: 2s;  animation-name: mmpDriftL; }
+.mmp-3  { top: 35%; left:  3%; font-size: 22px; --d: 11s; --dl: 4s;  animation-name: mmpDriftR; }
+.mmp-4  { top: 55%; left: 85%; font-size: 24px; --d: 14s; --dl: 1s;  animation-name: mmpDriftL; }
+.mmp-5  { top: 72%; left: 12%; font-size: 20px; --d: 18s; --dl: 3s;  animation-name: mmpDriftR; }
+.mmp-6  { top: 88%; left: 78%; font-size: 16px; --d: 10s; --dl: 6s;  animation-name: mmpFloat;  }
+.mmp-7  { top: 22%; left: 48%; font-size: 18px; --d: 15s; --dl: 5s;  animation-name: mmpDriftR; }
+.mmp-8  { top: 65%; left: 55%; font-size: 20px; --d: 12s; --dl: 7s;  animation-name: mmpDriftL; }
+.mmp-9  { top: 44%; left: 25%; font-size: 16px; --d: 17s; --dl: 8s;  animation-name: mmpFloat;  }
+.mmp-10 { top: 80%; left: 42%; font-size: 22px; --d: 13s; --dl: 9s;  animation-name: mmpDriftR; }
+@keyframes mmpFloat  { 0%,100%{transform:translateY(0) rotate(0deg)} 50%{transform:translateY(-18px) rotate(5deg)} }
+@keyframes mmpDriftR { 0%,100%{transform:translate(0,0) rotate(0deg)} 40%{transform:translate(20px,-18px) rotate(12deg)} 70%{transform:translate(12px,-8px) rotate(-6deg)} }
+@keyframes mmpDriftL { 0%,100%{transform:translate(0,0) rotate(0deg)} 40%{transform:translate(-20px,-14px) rotate(-10deg)} 70%{transform:translate(-10px,-5px) rotate(5deg)} }

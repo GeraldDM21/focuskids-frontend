@@ -82,9 +82,31 @@ export class MaratonMentalComponent implements OnInit, OnDestroy {
   tiempoRestanteMs = 0;
   tiempoRondaTotalMs = 0;
 
+  // Calibración — countdown por estímulo
+  tiempoRestanteCalibMs = 0;
+  private tiempoRondaCalibMs = 0;
+  private calibracionCountdownInterval: ReturnType<typeof setInterval> | null = null;
+
   get tiempoRestantePct(): number {
     return this.tiempoRondaTotalMs ? (this.tiempoRestanteMs / this.tiempoRondaTotalMs) * 100 : 100;
   }
+
+  get tiempoRestanteCalibPct(): number {
+    return this.tiempoRondaCalibMs ? (this.tiempoRestanteCalibMs / this.tiempoRondaCalibMs) * 100 : 100;
+  }
+
+  get tiempoFormateadoDual(): string {
+    const s = Math.max(0, Math.ceil(this.tiempoRestanteMs / 1000));
+    return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+  }
+
+  get tiempoFormateadoCalib(): string {
+    const s = Math.max(0, Math.ceil(this.tiempoRestanteCalibMs / 1000));
+    return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+  }
+
+  get aciertosParciales(): number { return this.aciertosTotales; }
+  get erroresParciales(): number { return Math.max(0, this.intentosTotales - this.aciertosTotales); }
 
   // ── Resultado final ───────────────────────────────────────────────────
   resultadoFinal: MaratonResultadoResponse | null = null;
@@ -295,6 +317,12 @@ export class MaratonMentalComponent implements OnInit, OnDestroy {
     this.inicioEstimuloMs = Date.now();
     this.sesionJuegoService.marcarElementoAparece();
     if (this.calibracionTimeout) clearTimeout(this.calibracionTimeout);
+    this.tiempoRondaCalibMs = this.config.tiempoRondaMs;
+    this.tiempoRestanteCalibMs = this.config.tiempoRondaMs;
+    if (this.calibracionCountdownInterval) clearInterval(this.calibracionCountdownInterval);
+    this.calibracionCountdownInterval = this.setIntervalCd(() => {
+      this.tiempoRestanteCalibMs = Math.max(0, this.tiempoRondaCalibMs - (Date.now() - this.inicioEstimuloMs));
+    }, 100);
     this.calibracionTimeout = this.setTimeoutCd(() => this.onTimeoutCalibracion(), this.config.tiempoRondaMs);
   }
 
@@ -316,6 +344,7 @@ export class MaratonMentalComponent implements OnInit, OnDestroy {
   private resolverCalibracion(correcta: boolean, fueTimeout: boolean): void {
     this.respondiendoCalibracion = true;
     if (this.calibracionTimeout) clearTimeout(this.calibracionTimeout);
+    if (this.calibracionCountdownInterval) { clearInterval(this.calibracionCountdownInterval); this.calibracionCountdownInterval = null; }
 
     const tiempoMs = fueTimeout ? null : Date.now() - this.inicioEstimuloMs;
     if (tiempoMs !== null) this.sesionJuegoService.trackRespuestaMs(tiempoMs);
@@ -680,6 +709,7 @@ export class MaratonMentalComponent implements OnInit, OnDestroy {
   // ── Limpieza ───────────────────────────────────────────────────────────
   private limpiarTemporizadores(): void {
     if (this.calibracionTimeout) clearTimeout(this.calibracionTimeout);
+    if (this.calibracionCountdownInterval) clearInterval(this.calibracionCountdownInterval);
     if (this.roundTimeout) clearTimeout(this.roundTimeout);
     if (this.roundCountdownInterval) clearInterval(this.roundCountdownInterval);
     if (this.avanceTimeout) clearTimeout(this.avanceTimeout);
