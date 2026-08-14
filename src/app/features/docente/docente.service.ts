@@ -161,13 +161,19 @@ export class DocenteService {
 
   // ── Configuración / notificaciones in-app (CA-05) ───────────────────────
   getConfiguracionDocente(usuarioId: number) {
-    return this.http.get<{ docenteId: number; notificacionesInAppActivas: boolean }>(
+    return this.http.get<{ docenteId: number; notificacionesInAppActivas: boolean; preferenciaResumenSemanal: boolean }>(
       `${this.api}/docente/configuracion?usuarioId=${usuarioId}`,
     );
   }
   toggleNotificacionesInApp(usuarioId: number, activo: boolean) {
     return this.http.patch<{ notificacionesInAppActivas: boolean }>(
       `${this.api}/docente/notificaciones-in-app?usuarioId=${usuarioId}`,
+      { activo },
+    );
+  }
+  toggleResumenSemanal(usuarioId: number, activo: boolean) {
+    return this.http.patch<{ preferenciaResumenSemanal: boolean }>(
+      `${this.api}/docente/resumen-semanal?usuarioId=${usuarioId}`,
       { activo },
     );
   }

@@ -544,6 +544,29 @@ const MISIONES_DEF = [
               }
             </div>
           </div>
+          <div class="cfg-card">
+            <h3 class="cfg-title">📧 Correos y notificaciones</h3>
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <div class="toggle-label">Resumen semanal de alumnos</div>
+                <div class="toggle-desc">Recibe cada lunes un correo con el progreso semanal de tu clase</div>
+              </div>
+              <button class="toggle-btn" [class.toggle-on]="preferenciaResumenSemanal"
+                      (click)="cambiarResumenSemanal()">
+                <span class="toggle-thumb"></span>
+              </button>
+            </div>
+            <div class="toggle-row" style="margin-top:16px">
+              <div class="toggle-info">
+                <div class="toggle-label">Notificaciones in-app</div>
+                <div class="toggle-desc">Muestra el badge de la campana cuando la IA detecta una regresión. Las alertas se siguen registrando aunque esté apagado.</div>
+              </div>
+              <button class="toggle-btn" [class.toggle-on]="notificacionesInAppActivas"
+                      (click)="cambiarNotificacionesInApp()">
+                <span class="toggle-thumb"></span>
+              </button>
+            </div>
+          </div>
         </div>
       }
 
@@ -1874,6 +1897,15 @@ const MISIONES_DEF = [
     .cfg-wrap { display:flex; flex-direction:column; gap:16px; max-width:540px; }
     .cfg-card { background:white; border-radius:16px; padding:22px; box-shadow:0 2px 10px rgba(21,128,61,.07); }
     .cfg-title { font-size:14px; font-weight:800; color:#14532D; margin-bottom:16px; }
+    .toggle-row { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+    .toggle-info { flex:1; min-width:0; }
+    .toggle-label { font-size:14px; font-weight:600; color:#1E293B; }
+    .toggle-desc { font-size:12px; color:#64748B; margin-top:2px; line-height:1.4; }
+    .toggle-btn { width:48px; height:26px; border-radius:13px; background:#CBD5E1; border:none; cursor:pointer; position:relative; transition:background .2s; flex-shrink:0; padding:0; }
+    .toggle-btn.toggle-on { background:#4F46E5; }
+    .toggle-btn:disabled { opacity:.55; cursor:not-allowed; }
+    .toggle-thumb { position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%; background:white; transition:left .2s; display:block; box-shadow:0 1px 4px rgba(0,0,0,.2); }
+    .toggle-btn.toggle-on .toggle-thumb { left:25px; }
     .cfg-avatar { width:60px; height:60px; border-radius:50%; background:#F59E0B; display:flex; align-items:center; justify-content:center; font-size:26px; font-weight:800; color:white; margin-bottom:16px; }
     .cfg-field { display:flex; flex-direction:column; gap:5px; margin-bottom:14px; }
     .cfg-field label { font-size:12px; font-weight:700; color:#6B7280; }
@@ -1981,6 +2013,7 @@ export class DocenteDashboardComponent implements OnInit {
   gradoGrupo = '';
   // CA-05 (Notificaciones in-app): controla si el badge de la campana se muestra.
   notificacionesInAppActivas = true;
+  preferenciaResumenSemanal = true;
   guardandoNotifInApp = false;
 
   estudiantes: Estudiante[] = [];
@@ -2156,6 +2189,7 @@ export class DocenteDashboardComponent implements OnInit {
       .subscribe((cfg) => {
         if (cfg) {
           this.notificacionesInAppActivas = cfg.notificacionesInAppActivas;
+          this.preferenciaResumenSemanal = cfg.preferenciaResumenSemanal ?? true;
           this.cdr.detectChanges();
         }
       });
@@ -2185,6 +2219,16 @@ export class DocenteDashboardComponent implements OnInit {
         this.guardandoNotifInApp = false;
         this.cdr.detectChanges();
       },
+    });
+  }
+
+  cambiarResumenSemanal(): void {
+    const uid = this.auth.user()?.usuarioId;
+    if (!uid) return;
+    const nuevo = !this.preferenciaResumenSemanal;
+    this.docSvc.toggleResumenSemanal(uid, nuevo).subscribe({
+      next: () => { this.preferenciaResumenSemanal = nuevo; this.cdr.detectChanges(); },
+      error: () => { this.cdr.detectChanges(); },
     });
   }
 
