@@ -11,6 +11,7 @@ import {
   JuegoOpcion,
 } from '../../historial-sesiones.service';
 import { SesionJuegoService, SessionClickEvent } from '../../../core/services/sesion-juego.service';
+import { FechaHoraPickerComponent } from '../../../features/docente/dashboard/fecha-hora-picker.component';
 
 const NIVELES = [
   { val: 'FACIL', lbl: 'Fácil' },
@@ -22,7 +23,7 @@ const NIVELES = [
 @Component({
   selector: 'app-historial-sesiones',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, FechaHoraPickerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="hs-root">
@@ -37,9 +38,14 @@ const NIVELES = [
             </p>
           </div>
         </div>
-        <button class="btn-export" [disabled]="exportando" (click)="exportarPdf()">
-          {{ exportando ? '⏳ Generando…' : '⬇ Exportar a PDF' }}
-        </button>
+        <div class="export-btns">
+          <button class="btn-export" [disabled]="exportando || exportandoExcel" (click)="exportarPdf()">
+            {{ exportando ? '⏳ Generando…' : '⬇ PDF' }}
+          </button>
+          <button class="btn-export btn-export-excel" [disabled]="exportando || exportandoExcel" (click)="exportarExcel()">
+            {{ exportandoExcel ? '⏳ Generando…' : '⬇ Excel' }}
+          </button>
+        </div>
       </div>
 
       <!-- ══ FILTROS (CA-02) ══ -->
@@ -66,14 +72,20 @@ const NIVELES = [
 
           <div class="filtro-group">
             <label class="filtro-label">Desde</label>
-            <input class="filtro-input" type="text" placeholder="DD/MM/AAAA" maxlength="10"
-                   [(ngModel)]="filtroFechaDesde" (input)="onFechaInput()"/>
+            <app-fecha-hora-picker
+              [fecha]="filtroFechaDesde"
+              (fechaChange)="filtroFechaDesde = $event; buscar()"
+              [mostrarHora]="false"
+            ></app-fecha-hora-picker>
           </div>
 
           <div class="filtro-group">
             <label class="filtro-label">Hasta</label>
-            <input class="filtro-input" type="text" placeholder="DD/MM/AAAA" maxlength="10"
-                   [(ngModel)]="filtroFechaHasta" (input)="onFechaInput()"/>
+            <app-fecha-hora-picker
+              [fecha]="filtroFechaHasta"
+              (fechaChange)="filtroFechaHasta = $event; buscar()"
+              [mostrarHora]="false"
+            ></app-fecha-hora-picker>
           </div>
 
           <div class="filtro-group">
@@ -372,6 +384,17 @@ const NIVELES = [
       }
       .btn-export:not(:disabled):hover {
         box-shadow: 0 6px 18px rgba(79, 70, 229, 0.35);
+      }
+      .export-btns {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .btn-export-excel {
+        background: linear-gradient(135deg, #16a34a, #15803d);
+      }
+      .btn-export-excel:not(:disabled):hover {
+        box-shadow: 0 6px 18px rgba(22, 163, 74, 0.35);
       }
 
       /* ── Filtros ── */
@@ -775,6 +798,7 @@ export class HistorialSesionesComponent implements OnInit {
   sesiones: SesionHistorial[] = [];
   loading = true;
   exportando = false;
+  exportandoExcel = false;
 
   // Filtros (CA-02)
   filtroJuegoId: number | null = null;
@@ -852,8 +876,8 @@ export class HistorialSesionesComponent implements OnInit {
       page: this.paginaActual,
       juegoId: this.filtroJuegoId,
       nivel: this.filtroNivel || undefined,
-      fechaDesde: this.parseFecha(this.filtroFechaDesde) ? this.parseFecha(this.filtroFechaDesde) + 'T00:00:00' : undefined,
-      fechaHasta: this.parseFecha(this.filtroFechaHasta) ? this.parseFecha(this.filtroFechaHasta) + 'T23:59:59' : undefined,
+      fechaDesde: this.filtroFechaDesde ? this.filtroFechaDesde + 'T00:00:00' : undefined,
+      fechaHasta: this.filtroFechaHasta ? this.filtroFechaHasta + 'T23:59:59' : undefined,
       soloCompletadas: this.soloCompletadas ? true : undefined,
     };
 
@@ -995,12 +1019,8 @@ export class HistorialSesionesComponent implements OnInit {
     const filtros = {
       juegoId: this.filtroJuegoId,
       nivel: this.filtroNivel || undefined,
-      fechaDesde: this.parseFecha(this.filtroFechaDesde)
-        ? this.parseFecha(this.filtroFechaDesde) + 'T00:00:00'
-        : undefined,
-      fechaHasta: this.parseFecha(this.filtroFechaHasta)
-        ? this.parseFecha(this.filtroFechaHasta) + 'T23:59:59'
-        : undefined,
+      fechaDesde: this.filtroFechaDesde ? this.filtroFechaDesde + 'T00:00:00' : undefined,
+      fechaHasta: this.filtroFechaHasta ? this.filtroFechaHasta + 'T23:59:59' : undefined,
     };
 
     this.historialService.exportarPdf(this.perfilId, filtros).subscribe({
@@ -1016,6 +1036,35 @@ export class HistorialSesionesComponent implements OnInit {
       },
       error: () => {
         this.exportando = false;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  exportarExcel(): void {
+    this.exportandoExcel = true;
+    this.cdr.detectChanges();
+
+    const filtros = {
+      juegoId: this.filtroJuegoId,
+      nivel: this.filtroNivel || undefined,
+      fechaDesde: this.filtroFechaDesde ? this.filtroFechaDesde + 'T00:00:00' : undefined,
+      fechaHasta: this.filtroFechaHasta ? this.filtroFechaHasta + 'T23:59:59' : undefined,
+    };
+
+    this.historialService.exportarExcel(this.perfilId, filtros).subscribe({
+      next: (blob: Blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `historial-sesiones-${new Date().toISOString().slice(0, 10)}.xlsx`;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.exportandoExcel = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.exportandoExcel = false;
         this.cdr.detectChanges();
       },
     });
@@ -1068,19 +1117,6 @@ export class HistorialSesionesComponent implements OnInit {
       this.filtroFechaDesde ||
       this.filtroFechaHasta
     );
-  }
-
-  /** Convierte DD/MM/AAAA → YYYY-MM-DD para el backend. Devuelve '' si el formato no es válido. */
-  private parseFecha(s: string): string {
-    if (!s || !/^\d{2}\/\d{2}\/\d{4}$/.test(s)) return '';
-    const [dd, mm, yyyy] = s.split('/');
-    return `${yyyy}-${mm}-${dd}`;
-  }
-
-  /** Dispara buscar() solo cuando la fecha está vacía o completa (DD/MM/AAAA). */
-  onFechaInput(): void {
-    const ok = (v: string) => !v || /^\d{2}\/\d{2}\/\d{4}$/.test(v);
-    if (ok(this.filtroFechaDesde) && ok(this.filtroFechaHasta)) this.buscar();
   }
 
   /** Genera el array de páginas visibles (máx 7 botones alrededor de la actual). */

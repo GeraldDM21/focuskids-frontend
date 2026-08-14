@@ -1081,6 +1081,10 @@ export class LaberintoComponent implements OnInit, OnDestroy {
     this.finalizarSesion();
   }
 
+  onAreaClick(event: MouseEvent): void {
+    this.sesionJuegoService.trackAreaClick(event, event.currentTarget as HTMLElement);
+  }
+
   volver(): void { this.router.navigate(['/nino/juegos']); }
 
   // ── Helpers de plantilla ─────────────────────────────────────────────────

@@ -1175,6 +1175,10 @@ export class RitmoPatronComponent implements OnInit, OnDestroy {
     }
   }
 
+  onAreaClick(event: MouseEvent): void {
+    this.sesionJuegoService.trackAreaClick(event, event.currentTarget as HTMLElement);
+  }
+
   volver(): void { this.router.navigate(['/nino/juegos']); }
 
   get puntuacion(): number {

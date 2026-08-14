@@ -107,4 +107,17 @@ export class HistorialSesionesService {
       responseType: 'blob'
     });
   }
+
+  /** Exporta a Excel (.xlsx) el historial con los filtros actualmente aplicados. */
+  exportarExcel(perfilId: number, filtros: Omit<HistorialFiltros, 'page'>) {
+    let params = new HttpParams();
+    if (filtros.juegoId != null) params = params.set('juegoId', filtros.juegoId.toString());
+    if (filtros.nivel)           params = params.set('nivel', filtros.nivel);
+    if (filtros.fechaDesde)      params = params.set('fechaDesde', filtros.fechaDesde);
+    if (filtros.fechaHasta)      params = params.set('fechaHasta', filtros.fechaHasta);
+    return this.http.get(`${this.api}/reportes/perfil/${perfilId}/historial/exportar-excel`, {
+      params,
+      responseType: 'blob'
+    });
+  }
 }
