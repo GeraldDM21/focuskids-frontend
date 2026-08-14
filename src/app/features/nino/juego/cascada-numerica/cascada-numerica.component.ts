@@ -418,6 +418,7 @@ export class CascadaNumericaComponent implements OnInit, OnDestroy {
     );
 
     this.tiempoInicioOperacion = Date.now();
+    this.sesionJuegoService.marcarElementoAparece();  // CA-08
 
     this.timerCaida = setTimeout(() => {
       this.registrarOmision();
