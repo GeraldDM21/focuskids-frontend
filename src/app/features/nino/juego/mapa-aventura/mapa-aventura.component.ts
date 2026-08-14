@@ -2,6 +2,7 @@ import { Component, OnDestroy, OnInit, ChangeDetectorRef, ChangeDetectionStrateg
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { SesionJuegoService } from '../../../../core/services/sesion-juego.service';
+import { NivelAsignadoService } from '../../../../core/services/nivel-asignado.service';
 import { ChildProfileService } from '../../../padre/perfiles/child-profile.service';
 import { Juego, NivelDificultad } from '../../../../core/models/juego.model';
 import { MascotComponent, MascotMood } from '../../../../shared/components/mascot/mascot.component';
@@ -12,7 +13,7 @@ import {
 } from './mapa-aventura.model';
 import { sinEmojis as sinEmojisUtil } from '../../../../shared/utils/tts-texto.util';
 
-type Estado = 'inicio' | 'seleccion-modo' | 'seleccion-dificultad' | 'jugando' | 'resultados';
+type Estado = 'inicio' | 'seleccion-modo' | 'jugando' | 'resultados';
 interface ConfettiPiece { id: number; left: number; color: string; delay: number; dur: number; size: number; }
 
 const MAX_PREGUNTAS = 10;
@@ -114,118 +115,124 @@ const TIEMPO_MAX_MS = 8 * 60 * 1000; // maximo 8 minutos
         </div>
       }
 
-      <!-- ══ SELECCIÓN DE DIFICULTAD ═════════════════════════ -->
-      @if (estado === 'seleccion-dificultad') {
-        <div class="pantalla-inicio">
-          <img class="bg-escena" src="mascotas/buddy-escena.png" alt="Mapa del mundo de Buddy">
-          <div class="inicio-velo"></div>
-
-          <button type="button" class="btn-volver-inicio" (click)="estado = 'seleccion-modo'">← Volver</button>
-
-          <div class="buddy-habla">
-            <div class="habla-bubble">
-              <p class="habla-saludo">🐶 ¿Qué nivel quieres jugar?</p>
-              <p class="habla-intro">El nivel se mantiene igual toda la partida</p>
-            </div>
-            <div class="habla-tail"></div>
-          </div>
-
-          <div class="inicio-panel">
-            <h1 class="titulo-juego"><span class="titulo-blanco">Elige la dificultad</span></h1>
-            <div class="opciones-grandes opciones-tres">
-              <button class="opcion-grande nivel-facil" (click)="elegirDificultad('FACIL')">
-                <span class="og-ico">🌱</span>
-                <span class="og-titulo">Fácil</span>
-                <span class="og-desc">Países muy conocidos</span>
-              </button>
-              <button class="opcion-grande nivel-medio" (click)="elegirDificultad('MEDIO')">
-                <span class="og-ico">⭐</span>
-                <span class="og-titulo">Medio</span>
-                <span class="og-desc">Un poco más difícil</span>
-              </button>
-              <button class="opcion-grande nivel-dificil" (click)="elegirDificultad('DIFICIL')">
-                <span class="og-ico">🏆</span>
-                <span class="og-titulo">Difícil</span>
-                <span class="og-desc">Para expertos en geografía</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      }
 
       <!-- ══ JUGANDO ═════════════════════════════════════════ -->
       @if (estado === 'jugando') {
         <div class="pantalla-juego">
+          <div class="juego-layout">
+            <div class="juego-principal">
 
-          <div class="game-header">
-            <button class="btn-salir" (click)="terminarSesion()">
-              <span class="salir-icon">←</span>
-              <span class="salir-txt">Salir</span>
-            </button>
-
-            <div class="header-centro">
-              <div class="progreso-wrap">
-                <div class="progreso-barra">
-                  <div class="progreso-fill" [style.width.%]="(rondas/MAX_PREGUNTAS)*100"></div>
-                </div>
-                <span class="progreso-label">{{ rondas }}/{{ MAX_PREGUNTAS }}</span>
-              </div>
-              <span class="timer-label" [class.timer-urgente]="tiempoRestanteMs < 60000">⏱️ {{ tiempoFormateado }}</span>
-            </div>
-
-            <div class="header-stats">
-              <div class="stat-badge badge-oro">
-                <span class="badge-ico">⭐</span>
-                <span class="badge-num">{{ aciertos }}</span>
-              </div>
-              <div class="stat-badge badge-rojo">
-                <span class="badge-ico">💔</span>
-                <span class="badge-num">{{ errores }}</span>
-              </div>
-              <button class="btn-voz-hdr" (click)="toggleVoz()" [title]="voiceEnabled ? 'Silenciar' : 'Activar voz'">
-                {{ voiceEnabled ? '🔊' : '🔇' }}
-              </button>
-            </div>
-          </div>
-
-          <app-mascot [game]="'juego10'" [mood]="mascotMood" [message]="mascotMsg"></app-mascot>
-
-          <div class="pregunta-row">
-            <div class="pregunta-box" [class.pregunta-correcta]="resultado === 'correcto'" [class.pregunta-incorrecta]="resultado === 'incorrecto'">
-              {{ tituloPregunta }}
-            </div>
-            <button class="btn-repetir-audio" (click)="repetirPregunta()" title="Escuchar la pregunta de nuevo">🔊</button>
-          </div>
-
-          <!-- Mapa real (Leaflet), zoom automático a la zona del país objetivo -->
-          <app-mapa-leaflet [pais]="preguntaActual?.pais ?? null" [modo]="modoElegido ?? MODO_PAIS"></app-mapa-leaflet>
-
-          <!-- Opciones de respuesta (país o capital, siempre 4 opciones) -->
-          @if (preguntaActual) {
-            <div class="opciones-grid">
-              @for (op of preguntaActual.opciones; track op) {
-                <button class="opcion-btn"
-                  [class.correcta]="respondido && op === respuestaCorrectaTexto"
-                  [class.incorrecta]="respondido && op === opcionElegida && op !== respuestaCorrectaTexto"
-                  [disabled]="respondido"
-                  (click)="clicOpcion(op, $event)">
-                  {{ op }}
+              <div class="game-header">
+                <button class="btn-salir" (click)="terminarSesion()">
+                  <span class="salir-icon">←</span>
+                  <span class="salir-txt">Salir</span>
                 </button>
-              }
-            </div>
-          }
 
-          <!-- Revelación: bandera + dato curioso, sirve de apoyo tanto si acertó como si falló -->
-          @if (respondido && preguntaActual) {
-            <div class="reveal-card" [class.reveal-correcta]="resultado === 'correcto'" [class.reveal-incorrecta]="resultado === 'incorrecto'">
-              <img class="reveal-bandera" [src]="'https://flagcdn.com/w160/' + $any(preguntaActual.pais).cca2 + '.png'" [alt]="'Bandera de ' + preguntaActual.pais.nombre">
-              <div class="reveal-texto">
-                <div class="reveal-nombre">{{ preguntaActual.pais.nombre }} <span class="reveal-capital">· {{ preguntaActual.pais.capital }}</span></div>
-                <div class="reveal-dato">{{ preguntaActual.pais.datoCurioso }}</div>
+                <div class="header-centro">
+                  <div class="progreso-wrap">
+                    <div class="progreso-barra">
+                      <div class="progreso-fill" [style.width.%]="(rondas/MAX_PREGUNTAS)*100"></div>
+                    </div>
+                    <span class="progreso-label">{{ rondas }}/{{ MAX_PREGUNTAS }}</span>
+                  </div>
+                  <span class="timer-label" [class.timer-urgente]="tiempoRestanteMs < 60000">⏱️ {{ tiempoFormateado }}</span>
+                </div>
+
+                <div class="header-stats">
+                  <div class="stat-badge badge-oro">
+                    <span class="badge-ico">⭐</span>
+                    <span class="badge-num">{{ aciertos }}</span>
+                  </div>
+                  <div class="stat-badge badge-rojo">
+                    <span class="badge-ico">💔</span>
+                    <span class="badge-num">{{ errores }}</span>
+                  </div>
+                  <button class="btn-voz-hdr" (click)="toggleVoz()" [title]="voiceEnabled ? 'Silenciar' : 'Activar voz'">
+                    {{ voiceEnabled ? '🔊' : '🔇' }}
+                  </button>
+                </div>
               </div>
-            </div>
-          }
 
+              <app-mascot [game]="'juego10'" [mood]="mascotMood" [message]="mascotMsg"></app-mascot>
+
+              <div class="pregunta-row">
+                <div class="pregunta-box" [class.pregunta-correcta]="resultado === 'correcto'" [class.pregunta-incorrecta]="resultado === 'incorrecto'">
+                  {{ tituloPregunta }}
+                </div>
+                <button class="btn-repetir-audio" (click)="repetirPregunta()" title="Escuchar la pregunta de nuevo">🔊</button>
+              </div>
+
+              <!-- Mapa real (Leaflet): zoom automático a la zona del país al empezar cada pregunta,
+                   pero el niño puede arrastrar y hacer zoom libremente para explorar. -->
+              <app-mapa-leaflet [pais]="preguntaActual?.pais ?? null" [modo]="modoElegido ?? MODO_PAIS"></app-mapa-leaflet>
+
+              <!-- Opciones de respuesta (país o capital, siempre 4 opciones) -->
+              @if (preguntaActual) {
+                <div class="opciones-grid">
+                  @for (op of preguntaActual.opciones; track op) {
+                    <button class="opcion-btn"
+                      [class.correcta]="respondido && op === respuestaCorrectaTexto"
+                      [class.incorrecta]="respondido && op === opcionElegida && op !== respuestaCorrectaTexto"
+                      [disabled]="respondido"
+                      (click)="clicOpcion(op, $event)">
+                      {{ op }}
+                    </button>
+                  }
+                </div>
+              }
+
+              <!-- Revelación: bandera + dato curioso, sirve de apoyo tanto si acertó como si falló -->
+              @if (respondido && preguntaActual) {
+                <div class="reveal-card" [class.reveal-correcta]="resultado === 'correcto'" [class.reveal-incorrecta]="resultado === 'incorrecto'">
+                  <img class="reveal-bandera" [src]="'https://flagcdn.com/w160/' + $any(preguntaActual.pais).cca2 + '.png'" [alt]="'Bandera de ' + preguntaActual.pais.nombre">
+                  <div class="reveal-texto">
+                    <div class="reveal-nombre">{{ preguntaActual.pais.nombre }} <span class="reveal-capital">· {{ preguntaActual.pais.capital }}</span></div>
+                    <div class="reveal-dato">{{ preguntaActual.pais.datoCurioso }}</div>
+                  </div>
+                </div>
+              }
+
+            </div>
+
+            <!-- ── Panel de pistas: bandera/idioma/continente (modo país) o lugar icónico/idioma/continente (modo capital) ── -->
+            @if (preguntaActual) {
+              <aside class="pistas-panel">
+                <div class="pistas-card">
+                  <h3 class="pistas-titulo">🔎 Pistas</h3>
+
+                  @if (modoElegido === MODO_PAIS) {
+                    <div class="pista-bandera-wrap">
+                      <img class="pista-bandera" [src]="'https://flagcdn.com/w160/' + $any(preguntaActual.pais).cca2 + '.png'" [alt]="'Bandera de ' + preguntaActual.pais.nombre">
+                    </div>
+                  } @else {
+                    <div class="pista-fila">
+                      <span class="pista-ico">🏛️</span>
+                      <div>
+                        <div class="pista-lbl">Lugar icónico</div>
+                        <div class="pista-val">{{ preguntaActual.pais.monumentoIconico }}</div>
+                      </div>
+                    </div>
+                  }
+
+                  <div class="pista-fila">
+                    <span class="pista-ico">🗣️</span>
+                    <div>
+                      <div class="pista-lbl">Idioma</div>
+                      <div class="pista-val">{{ preguntaActual.pais.idioma }}</div>
+                    </div>
+                  </div>
+
+                  <div class="pista-fila">
+                    <span class="pista-ico">🌐</span>
+                    <div>
+                      <div class="pista-lbl">Continente</div>
+                      <div class="pista-val">{{ preguntaActual.pais.continente }}</div>
+                    </div>
+                  </div>
+                </div>
+              </aside>
+            }
+          </div>
         </div>
       }
 
@@ -407,7 +414,31 @@ const TIEMPO_MAX_MS = 8 * 60 * 1000; // maximo 8 minutos
     .nivel-dificil:hover{ border-color: #f87171; }
 
     /* ══ JUGANDO ══ */
-    .pantalla-juego { width: 100%; max-width: 640px; padding: 16px 16px 32px; position: relative; }
+    .pantalla-juego { width: 100%; max-width: 900px; padding: 16px 16px 32px; position: relative; }
+
+    /* ── Layout de dos columnas: juego + panel de pistas ── */
+    .juego-layout { display: flex; align-items: flex-start; gap: 20px; }
+    .juego-principal { flex: 1; min-width: 0; max-width: 640px; }
+    .pistas-panel { width: 220px; flex-shrink: 0; }
+    @media (max-width: 860px) {
+      .juego-layout { flex-direction: column; }
+      .juego-principal { max-width: 100%; width: 100%; }
+      .pistas-panel { width: 100%; }
+    }
+
+    .pistas-card {
+      background: rgba(255,255,255,.06); border: 1.5px solid rgba(255,255,255,.14);
+      border-radius: 18px; padding: 16px; position: sticky; top: 16px;
+    }
+    @media (max-width: 860px) { .pistas-card { position: static; } }
+    .pistas-titulo { font-size: 13px; font-weight: 800; color: #93c5fd; margin-bottom: 12px; letter-spacing: .3px; }
+    .pista-bandera-wrap { display: flex; justify-content: center; margin-bottom: 12px; }
+    .pista-bandera { width: 100%; max-width: 140px; height: auto; border-radius: 8px; box-shadow: 0 4px 14px rgba(0,0,0,.35); }
+    .pista-fila { display: flex; align-items: flex-start; gap: 9px; margin-bottom: 10px; }
+    .pista-fila:last-child { margin-bottom: 0; }
+    .pista-ico { font-size: 17px; flex-shrink: 0; margin-top: 1px; }
+    .pista-lbl { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .4px; }
+    .pista-val { font-size: 13px; font-weight: 700; color: #e2e8f0; line-height: 1.3; }
 
     .game-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); border-radius: 18px; padding: 10px 12px; backdrop-filter: blur(10px); }
     .btn-salir { display: flex; align-items: center; gap: 5px; background: rgba(239,68,68,.12); border: 1.5px solid rgba(239,68,68,.3); color: #f87171; border-radius: 12px; padding: 7px 12px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: all .2s; flex-shrink: 0; }
@@ -576,7 +607,13 @@ export class MapaAventuraComponent implements OnInit, OnDestroy {
 
   // Selección del niño para esta partida
   modoElegido: TipoPregunta | null = null;
-  dificultadElegida: Dificultad | null = null;
+  // El nivel ya NO lo elige el niño manualmente: el docente/padre puede fijarlo
+  // por juego desde su panel ("niveles bloqueados"); si no hay nada fijado se usa
+  // la recomendación del motor de IA según su desempeño histórico, y si tampoco
+  // hay recomendación (niño nuevo, sin historial) arranca en FACIL por defecto.
+  dificultadElegida: Dificultad | null = 'FACIL';
+  private nivelListo = false;
+  private nivelResuelto = false; // evita resolver el nivel más de una vez
 
   // Motor de preguntas
   private bolsa: BolsaPaises | null = null;
@@ -625,6 +662,7 @@ export class MapaAventuraComponent implements OnInit, OnDestroy {
     private router: Router,
     private cdr: ChangeDetectorRef,
     private sesionJuegoService: SesionJuegoService,
+    private nivelAsignadoService: NivelAsignadoService,
     private profileService: ChildProfileService,
   ) {}
 
@@ -634,6 +672,7 @@ export class MapaAventuraComponent implements OnInit, OnDestroy {
 
     this.profileService.activeProfile$.subscribe(state => {
       this.perfilId = state.profileId;
+      this.intentarResolverNivel();
     });
     this.cargarJuegoYNiveles();
 
@@ -657,8 +696,42 @@ export class MapaAventuraComponent implements OnInit, OnDestroy {
       this.juegoActual = juego;
       this.sesionJuegoService.obtenerNiveles(juego.id).subscribe(niveles => {
         this.nivelesDisponibles = niveles;
+        this.intentarResolverNivel();
         this.cdr.detectChanges();
       });
+    });
+  }
+
+  // Resuelve el nivel efectivo de esta partida: bloqueo del docente/padre >
+  // recomendación del motor de IA > FACIL por defecto. Necesita tanto el
+  // perfilId (del padre activo) como el juegoActual (resuelto async por
+  // nombre), así que se intenta cada vez que cualquiera de los dos llega.
+  private intentarResolverNivel(): void {
+    if (this.nivelResuelto || !this.perfilId || !this.juegoActual) return;
+    this.nivelResuelto = true;
+
+    this.nivelAsignadoService.listarPorPerfil(this.perfilId).subscribe({
+      next: asignados => {
+        const bloqueo = asignados.find(a => a.juego?.id === this.juegoActual!.id);
+        if (bloqueo) {
+          this.dificultadElegida = bloqueo.nivel as Dificultad;
+          this.nivelListo = true;
+          this.cdr.detectChanges();
+          return;
+        }
+        // Sin bloqueo del docente/padre: probar la recomendación de la IA.
+        this.sesionJuegoService.obtenerRecomendacion(this.perfilId!, this.juegoActual!.id).subscribe({
+          next: rec => {
+            if (rec?.nivelRecomendado?.nivel) {
+              this.dificultadElegida = rec.nivelRecomendado.nivel as Dificultad;
+            }
+            this.nivelListo = true;
+            this.cdr.detectChanges();
+          },
+          error: () => { this.nivelListo = true; this.cdr.detectChanges(); },
+        });
+      },
+      error: () => { this.nivelListo = true; this.cdr.detectChanges(); },
     });
   }
 
@@ -760,15 +833,18 @@ export class MapaAventuraComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
-  elegirModo(modo: TipoPregunta): void {
+  // El nivel ya no lo elige el niño: se resolvió en segundo plano desde que
+  // entró al juego (bloqueo del docente/padre o recomendación de la IA). Si
+  // por alguna razón todavía no llegó esa respuesta, esperamos un instante
+  // antes de arrancar (mismo patrón que la espera de `datosListos`).
+  async elegirModo(modo: TipoPregunta): Promise<void> {
     this.modoElegido = modo;
-    this.estado = 'seleccion-dificultad';
-    this.hablar('¿Qué nivel quieres jugar? Fácil, medio o difícil.');
-    this.cdr.detectChanges();
-  }
-
-  elegirDificultad(dificultad: Dificultad): void {
-    this.dificultadElegida = dificultad;
+    if (!this.nivelListo) {
+      await new Promise<void>(resolve => {
+        const check = () => this.nivelListo ? resolve() : setTimeout(check, 100);
+        check();
+      });
+    }
     this.iniciarPartida();
   }
 

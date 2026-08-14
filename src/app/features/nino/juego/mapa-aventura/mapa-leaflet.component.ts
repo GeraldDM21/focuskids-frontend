@@ -16,10 +16,11 @@ import { Pais, TipoPregunta } from './mapa-aventura.model';
  * Mapa real (OpenStreetMap vía CARTO, sin etiquetas de texto) que:
  *  - resalta la zona real del país objetivo (geometría real, no una figura decorativa)
  *  - en modo CAPITAL, además coloca un marcador en la capital (sin texto/tooltip)
- *  - hace zoom automático a la región correspondiente
+ *  - hace zoom automático a la región correspondiente al empezar cada pregunta
  * Nunca escribe el nombre del país ni de la capital sobre el mapa: la respuesta
- * nunca se revela ahí. El niño no puede arrastrar ni hacer zoom manual — el
- * mapa siempre queda centrado exactamente donde lo pone el juego.
+ * nunca se revela ahí. El niño SÍ puede arrastrar y hacer zoom libremente para
+ * explorar (dragging/zoom manual habilitados) — cada pregunta nueva vuelve a
+ * centrar el mapa automáticamente sin importar dónde lo haya dejado el niño.
  */
 @Component({
   selector: 'app-mapa-leaflet',
@@ -66,13 +67,13 @@ export class MapaLeafletComponent implements AfterViewInit, OnChanges, OnDestroy
 
   ngAfterViewInit(): void {
     this.map = L.map(this.mapHost.nativeElement, {
-      zoomControl: false,
-      dragging: false,
-      scrollWheelZoom: false,
-      doubleClickZoom: false,
-      boxZoom: false,
-      keyboard: false,
-      touchZoom: false,
+      zoomControl: true,
+      dragging: true,
+      scrollWheelZoom: true,
+      doubleClickZoom: true,
+      boxZoom: true,
+      keyboard: true,
+      touchZoom: true,
       attributionControl: true,
     }).setView([15, 10], 2);
 

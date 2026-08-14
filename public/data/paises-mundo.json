@@ -8,7 +8,9 @@
   "continente": "America",
   "dificultad": "FACIL",
   "datoCurioso": "Un país que puedes explorar en el mapa del mundo.",
-  "cca2": "cr"
+  "cca2": "cr",
+  "idioma": "Español",
+  "monumentoIconico": "Teatro Nacional"
  },
  {
   "id": "MEX",
@@ -19,7 +21,9 @@
   "continente": "America",
   "dificultad": "FACIL",
   "datoCurioso": "Aquí está Chichén Itzá, una gran pirámide construida por los mayas.",
-  "cca2": "mx"
+  "cca2": "mx",
+  "idioma": "Español",
+  "monumentoIconico": "Palacio de Bellas Artes"
  },
  {
   "id": "ESP",
@@ -30,7 +34,9 @@
   "continente": "Europa",
   "dificultad": "FACIL",
   "datoCurioso": "Aquí se baila el flamenco, un baile muy famoso en el mundo.",
-  "cca2": "es"
+  "cca2": "es",
+  "idioma": "Español",
+  "monumentoIconico": "Palacio Real de Madrid"
  },
  {
   "id": "USA",
@@ -41,7 +47,9 @@
   "continente": "America",
   "dificultad": "FACIL",
   "datoCurioso": "Aquí está el Gran Cañón, uno de los cañones más grandes del mundo.",
-  "cca2": "us"
+  "cca2": "us",
+  "idioma": "Inglés",
+  "monumentoIconico": "Capitolio de Estados Unidos"
  },
  {
   "id": "CAN",
@@ -52,7 +60,9 @@
   "continente": "America",
   "dificultad": "FACIL",
   "datoCurioso": "Tiene más lagos que cualquier otro país del mundo.",
-  "cca2": "ca"
+  "cca2": "ca",
+  "idioma": "Inglés y francés",
+  "monumentoIconico": "Torre de la Paz"
  },
  {
   "id": "BRA",
@@ -63,7 +73,9 @@
   "continente": "America",
   "dificultad": "FACIL",
   "datoCurioso": "Aquí está la selva amazónica, la selva tropical más grande del mundo.",
-  "cca2": "br"
+  "cca2": "br",
+  "idioma": "Portugués",
+  "monumentoIconico": "Catedral de Brasília"
  },
  {
   "id": "ARG",
@@ -74,7 +86,9 @@
   "continente": "America",
   "dificultad": "FACIL",
   "datoCurioso": "Aquí está la cascada del Iguazú, una de las más espectaculares del mundo.",
-  "cca2": "ar"
+  "cca2": "ar",
+  "idioma": "Español",
+  "monumentoIconico": "Obelisco de Buenos Aires"
  },
  {
   "id": "COL",
@@ -85,7 +99,9 @@
   "continente": "America",
   "dificultad": "FACIL",
   "datoCurioso": "Un país que puedes explorar en el mapa del mundo.",
-  "cca2": "co"
+  "cca2": "co",
+  "idioma": "Español",
+  "monumentoIconico": "Catedral Primada de Bogotá"
  },
  {
   "id": "PAN",
@@ -96,7 +112,9 @@
   "continente": "America",
   "dificultad": "FACIL",
   "datoCurioso": "Un país que puedes explorar en el mapa del mundo.",
-  "cca2": "pa"
+  "cca2": "pa",
+  "idioma": "Español",
+  "monumentoIconico": "Catedral Metropolitana de Panamá"
  },
  {
   "id": "NIC",
@@ -107,7 +125,9 @@
   "continente": "America",
   "dificultad": "FACIL",
   "datoCurioso": "Un país que puedes explorar en el mapa del mundo.",
-  "cca2": "ni"
+  "cca2": "ni",
+  "idioma": "Español",
+  "monumentoIconico": "Catedral de Managua"
  },
  {
   "id": "HND",
@@ -118,7 +138,9 @@
   "continente": "America",
   "dificultad": "FACIL",
   "datoCurioso": "Un país que puedes explorar en el mapa del mundo.",
-  "cca2": "hn"
+  "cca2": "hn",
+  "idioma": "Español",
+  "monumentoIconico": "Catedral de Tegucigalpa"
  },
  {
   "id": "GTM",
@@ -129,7 +151,9 @@
   "continente": "America",
   "dificultad": "FACIL",
   "datoCurioso": "Un país que puedes explorar en el mapa del mundo.",
-  "cca2": "gt"
+  "cca2": "gt",
+  "idioma": "Español",
+  "monumentoIconico": "Palacio Nacional de la Cultura"
  },
  {
   "id": "SLV",
@@ -140,7 +164,9 @@
   "continente": "America",
   "dificultad": "FACIL",
   "datoCurioso": "Un país que puedes explorar en el mapa del mundo.",
-  "cca2": "sv"
+  "cca2": "sv",
+  "idioma": "Español",
+  "monumentoIconico": "Catedral Metropolitana de San Salvador"
  },
  {
   "id": "CUB",
@@ -151,7 +177,9 @@
   "continente": "America",
   "dificultad": "FACIL",
   "datoCurioso": "Un país que puedes explorar en el mapa del mundo.",
-  "cca2": "cu"
+  "cca2": "cu",
+  "idioma": "Español",
+  "monumentoIconico": "Capitolio de La Habana"
  },
  {
   "id": "DOM",
@@ -162,7 +190,9 @@
   "continente": "America",
   "dificultad": "FACIL",
   "datoCurioso": "Un país que puedes explorar en el mapa del mundo.",
-  "cca2": "do"
+  "cca2": "do",
+  "idioma": "Español",
+  "monumentoIconico": "Catedral Primada de América"
  },
  {
   "id": "FRA",
@@ -173,7 +203,9 @@
   "continente": "Europa",
   "dificultad": "FACIL",
   "datoCurioso": "Aquí está la Torre Eiffel, uno de los monumentos más visitados del mundo.",
-  "cca2": "fr"
+  "cca2": "fr",
+  "idioma": "Francés",
+  "monumentoIconico": "Torre Eiffel"
  },
  {
   "id": "ITA",
@@ -184,7 +216,9 @@
   "continente": "Europa",
   "dificultad": "FACIL",
   "datoCurioso": "Aquí está el Coliseo Romano, un antiguo estadio de casi 2000 años.",
-  "cca2": "it"
+  "cca2": "it",
+  "idioma": "Italiano",
+  "monumentoIconico": "Coliseo Romano"
  },
  {
   "id": "GBR",
@@ -195,7 +229,9 @@
   "continente": "Europa",
   "dificultad": "FACIL",
   "datoCurioso": "Aquí está el reloj Big Ben, uno de los más famosos del mundo.",
-  "cca2": "gb"
+  "cca2": "gb",
+  "idioma": "Inglés",
+  "monumentoIconico": "Big Ben"
  },
  {
   "id": "DEU",
@@ -206,7 +242,9 @@
   "continente": "Europa",
   "dificultad": "FACIL",
   "datoCurioso": "Aquí se celebra una fiesta muy famosa llamada Oktoberfest.",
-  "cca2": "de"
+  "cca2": "de",
+  "idioma": "Alemán",
+  "monumentoIconico": "Puerta de Brandeburgo"
  },
  {
   "id": "CHN",
@@ -217,7 +255,9 @@
   "continente": "Asia",
   "dificultad": "FACIL",
   "datoCurioso": "Aquí está la Gran Muralla China, que se puede recorrer por miles de kilómetros.",
-  "cca2": "cn"
+  "cca2": "cn",
+  "idioma": "Chino mandarín",
+  "monumentoIconico": "Ciudad Prohibida"
  },
  {
   "id": "JPN",
@@ -228,7 +268,9 @@
   "continente": "Asia",
   "dificultad": "FACIL",
   "datoCurioso": "Aquí hay muchos volcanes, entre ellos el monte Fuji.",
-  "cca2": "jp"
+  "cca2": "jp",
+  "idioma": "Japonés",
+  "monumentoIconico": "Torre de Tokio"
  },
  {
   "id": "RUS",
@@ -239,7 +281,9 @@
   "continente": "Europa",
   "dificultad": "FACIL",
   "datoCurioso": "Es el país más grande del mundo, tan ancho que abarca once husos horarios.",
-  "cca2": "ru"
+  "cca2": "ru",
+  "idioma": "Ruso",
+  "monumentoIconico": "Catedral de San Basilio"
  },
  {
   "id": "IND",
@@ -250,7 +294,9 @@
   "continente": "Asia",
   "dificultad": "FACIL",
   "datoCurioso": "Aquí está el Taj Mahal, un palacio de mármol blanco muy famoso.",
-  "cca2": "in"
+  "cca2": "in",
+  "idioma": "Hindi e inglés",
+  "monumentoIconico": "Puerta de la India"
  },
  {
   "id": "EGY",
@@ -261,7 +307,9 @@
   "continente": "Africa",
   "dificultad": "FACIL",
   "datoCurioso": "Aquí están las pirámides de Guiza, unas de las construcciones más antiguas del mundo.",
-  "cca2": "eg"
+  "cca2": "eg",
+  "idioma": "Árabe",
+  "monumentoIconico": "Pirámides de Guiza"
  },
  {
   "id": "AUS",
@@ -272,7 +320,9 @@
   "continente": "Oceania",
   "dificultad": "FACIL",
   "datoCurioso": "Aquí viven canguros y koalas, animales que casi no se ven en ningún otro lugar.",
-  "cca2": "au"
+  "cca2": "au",
+  "idioma": "Inglés",
+  "monumentoIconico": "Casa del Parlamento"
  },
  {
   "id": "PER",
@@ -283,7 +333,9 @@
   "continente": "America",
   "dificultad": "MEDIO",
   "datoCurioso": "Aquí está Machu Picchu, una antigua ciudad inca en las montañas.",
-  "cca2": "pe"
+  "cca2": "pe",
+  "idioma": "Español",
+  "monumentoIconico": "Catedral de Lima"
  },
  {
   "id": "CHL",
@@ -294,7 +346,9 @@
   "continente": "America",
   "dificultad": "MEDIO",
   "datoCurioso": "Un país que puedes explorar en el mapa del mundo.",
-  "cca2": "cl"
+  "cca2": "cl",
+  "idioma": "Español",
+  "monumentoIconico": "Cerro San Cristóbal"
  },
  {
   "id": "VEN",
@@ -305,7 +359,9 @@
   "continente": "America",
   "dificultad": "MEDIO",
   "datoCurioso": "Un país que puedes explorar en el mapa del mundo.",
-  "cca2": "ve"
+  "cca2": "ve",
+  "idioma": "Español",
+  "monumentoIconico": "Panteón Nacional"
  },
  {
   "id": "ECU",
@@ -316,7 +372,9 @@
   "continente": "America",
   "dificultad": "MEDIO",
   "datoCurioso": "Un país que puedes explorar en el mapa del mundo.",
-  "cca2": "ec"
+  "cca2": "ec",
+  "idioma": "Español",
+  "monumentoIconico": "Basílica del Voto Nacional"
  },
  {
   "id": "BOL",
@@ -327,7 +385,9 @@
   "continente": "America",
   "dificultad": "MEDIO",
   "datoCurioso": "Un país que puedes explorar en el mapa del mundo.",
-  "cca2": "bo"
+  "cca2": "bo",
+  "idioma": "Español",
+  "monumentoIconico": "Casa de la Libertad"
  },
  {
   "id": "PRY",
@@ -338,7 +398,9 @@
   "continente": "America",
   "dificultad": "MEDIO",
   "datoCurioso": "Un país que puedes explorar en el mapa del mundo.",
-  "cca2": "py"
+  "cca2": "py",
+  "idioma": "Español y guaraní",
+  "monumentoIconico": "Panteón Nacional de los Héroes"
  },
  {
   "id": "URY",
@@ -349,7 +411,9 @@
   "continente": "America",
   "dificultad": "MEDIO",
   "datoCurioso": "Un país que puedes explorar en el mapa del mundo.",
-  "cca2": "uy"
+  "cca2": "uy",
+  "idioma": "Español",
+  "monumentoIconico": "Palacio Salvo"
  },
  {
   "id": "JAM",
@@ -360,7 +424,9 @@
   "continente": "America",
   "dificultad": "MEDIO",
   "datoCurioso": "Un país que puedes explorar en el mapa del mundo.",
-  "cca2": "jm"
+  "cca2": "jm",
+  "idioma": "Inglés",
+  "monumentoIconico": "Devon House"
  },
  {
   "id": "HTI",
@@ -371,7 +437,9 @@
   "continente": "America",
   "dificultad": "MEDIO",
   "datoCurioso": "Un país que puedes explorar en el mapa del mundo.",
-  "cca2": "ht"
+  "cca2": "ht",
+  "idioma": "Francés y criollo haitiano",
+  "monumentoIconico": "Palacio Nacional"
  },
  {
   "id": "PRT",
@@ -382,7 +450,9 @@
   "continente": "Europa",
   "dificultad": "MEDIO",
   "datoCurioso": "Un país que puedes explorar en el mapa del mundo.",
-  "cca2": "pt"
+  "cca2": "pt",
+  "idioma": "Portugués",
+  "monumentoIconico": "Torre de Belém"
  },
  {
   "id": "GRC",
@@ -393,7 +463,9 @@
   "continente": "Europa",
   "dificultad": "MEDIO",
   "datoCurioso": "Aquí nacieron los Juegos Olímpicos, hace miles de años.",
-  "cca2": "gr"
+  "cca2": "gr",
+  "idioma": "Griego",
+  "monumentoIconico": "Partenón"
  },
  {
   "id": "NLD",
@@ -404,7 +476,9 @@
   "continente": "Europa",
   "dificultad": "MEDIO",
   "datoCurioso": "Aquí hay campos enormes de tulipanes de muchos colores.",
-  "cca2": "nl"
+  "cca2": "nl",
+  "idioma": "Neerlandés",
+  "monumentoIconico": "Palacio Real de Ámsterdam"
  },
  {
   "id": "CHE",
@@ -415,7 +489,9 @@
   "continente": "Europa",
   "dificultad": "MEDIO",
   "datoCurioso": "Aquí hay montañas muy altas cubiertas de nieve, los Alpes.",
-  "cca2": "ch"
+  "cca2": "ch",
+  "idioma": "Alemán, francés, italiano y romanche",
+  "monumentoIconico": "Torre del Reloj (Zytglogge)"
  },
  {
   "id": "SWE",
@@ -426,7 +502,9 @@
   "continente": "Europa",
   "dificultad": "MEDIO",
   "datoCurioso": "Un país que puedes explorar en el mapa del mundo.",
-  "cca2": "se"
+  "cca2": "se",
+  "idioma": "Sueco",
+  "monumentoIconico": "Palacio Real de Estocolmo"
  },
  {
   "id": "NOR",
@@ -437,7 +515,9 @@
   "continente": "Europa",
   "dificultad": "MEDIO",
   "datoCurioso": "Un país que puedes explorar en el mapa del mundo.",
-  "cca2": "no"
+  "cca2": "no",
+  "idioma": "Noruego",
+  "monumentoIconico": "Palacio Real de Oslo"
  },
  {
   "id": "TUR",
@@ -448,7 +528,9 @@
   "continente": "Asia",
   "dificultad": "MEDIO",
   "datoCurioso": "Tiene territorio en dos continentes: Europa y Asia.",
-  "cca2": "tr"
+  "cca2": "tr",
+  "idioma": "Turco",
+  "monumentoIconico": "Mausoleo de Atatürk"
  },
  {
   "id": "KOR",
@@ -459,7 +541,9 @@
   "continente": "Asia",
   "dificultad": "MEDIO",
   "datoCurioso": "Aquí nació el K-pop, un estilo de música muy popular.",
-  "cca2": "kr"
+  "cca2": "kr",
+  "idioma": "Coreano",
+  "monumentoIconico": "Palacio Gyeongbokgung"
  },
  {
   "id": "SAU",
@@ -470,7 +554,9 @@
   "continente": "Asia",
   "dificultad": "MEDIO",
   "datoCurioso": "Aquí hay grandes desiertos de arena.",
-  "cca2": "sa"
+  "cca2": "sa",
+  "idioma": "Árabe",
+  "monumentoIconico": "Torre Kingdom Centre"
  },
  {
   "id": "ARE",
@@ -481,7 +567,9 @@
   "continente": "Asia",
   "dificultad": "MEDIO",
   "datoCurioso": "Un país que puedes explorar en el mapa del mundo.",
-  "cca2": "ae"
+  "cca2": "ae",
+  "idioma": "Árabe",
+  "monumentoIconico": "Mezquita Sheikh Zayed"
  },
  {
   "id": "ISR",
@@ -492,7 +580,9 @@
   "continente": "Asia",
   "dificultad": "MEDIO",
   "datoCurioso": "Aquí está el mar Muerto, un lago tan salado que es fácil flotar en él.",
-  "cca2": "il"
+  "cca2": "il",
+  "idioma": "Hebreo",
+  "monumentoIconico": "Muro de los Lamentos"
  },
  {
   "id": "THA",
@@ -503,7 +593,9 @@
   "continente": "Asia",
   "dificultad": "MEDIO",
   "datoCurioso": "Aquí viven muchos elefantes, un animal muy importante en su cultura.",
-  "cca2": "th"
+  "cca2": "th",
+  "idioma": "Tailandés",
+  "monumentoIconico": "Gran Palacio de Bangkok"
  },
  {
   "id": "IDN",
@@ -514,7 +606,9 @@
   "continente": "Asia",
   "dificultad": "MEDIO",
   "datoCurioso": "Está formado por más de 17000 islas.",
-  "cca2": "id"
+  "cca2": "id",
+  "idioma": "Indonesio",
+  "monumentoIconico": "Monumento Nacional (Monas)"
  },
  {
   "id": "PHL",
@@ -525,7 +619,9 @@
   "continente": "Asia",
   "dificultad": "MEDIO",
   "datoCurioso": "Un país que puedes explorar en el mapa del mundo.",
-  "cca2": "ph"
+  "cca2": "ph",
+  "idioma": "Filipino e inglés",
+  "monumentoIconico": "Fuerte Santiago"
  },
  {
   "id": "MAR",
@@ -536,7 +632,9 @@
   "continente": "Africa",
   "dificultad": "MEDIO",
   "datoCurioso": "Un país que puedes explorar en el mapa del mundo.",
-  "cca2": "ma"
+  "cca2": "ma",
+  "idioma": "Árabe",
+  "monumentoIconico": "Torre Hasán"
  },
  {
   "id": "NZL",
@@ -547,7 +645,9 @@
   "continente": "Oceania",
   "dificultad": "MEDIO",
   "datoCurioso": "Aquí se filmaron las películas de El Señor de los Anillos.",
-  "cca2": "nz"
+  "cca2": "nz",
+  "idioma": "Inglés y maorí",
+  "monumentoIconico": "Casa del Parlamento (The Beehive)"
  },
  {
   "id": "ZAF",
@@ -558,7 +658,9 @@
   "continente": "Africa",
   "dificultad": "DIFICIL",
   "datoCurioso": "Aquí viven los cinco grandes animales de África: león, elefante, rinoceronte, búfalo y leopardo.",
-  "cca2": "za"
+  "cca2": "za",
+  "idioma": "Afrikáans, inglés y otros idiomas oficiales",
+  "monumentoIconico": "Union Buildings"
  },
  {
   "id": "KEN",
@@ -569,7 +671,9 @@
   "continente": "Africa",
   "dificultad": "DIFICIL",
   "datoCurioso": "Cada año miles de animales cruzan sus llanuras en una gran migración.",
-  "cca2": "ke"
+  "cca2": "ke",
+  "idioma": "Suajili e inglés",
+  "monumentoIconico": "Torre KICC"
  },
  {
   "id": "NGA",
@@ -580,7 +684,9 @@
   "continente": "Africa",
   "dificultad": "DIFICIL",
   "datoCurioso": "Un país que puedes explorar en el mapa del mundo.",
-  "cca2": "ng"
+  "cca2": "ng",
+  "idioma": "Inglés",
+  "monumentoIconico": "Mezquita Nacional de Abuja"
  },
  {
   "id": "ETH",
@@ -591,7 +697,9 @@
   "continente": "Africa",
   "dificultad": "DIFICIL",
   "datoCurioso": "Un país que puedes explorar en el mapa del mundo.",
-  "cca2": "et"
+  "cca2": "et",
+  "idioma": "Amárico",
+  "monumentoIconico": "Catedral de la Santísima Trinidad"
  },
  {
   "id": "DZA",
@@ -602,7 +710,9 @@
   "continente": "Africa",
   "dificultad": "DIFICIL",
   "datoCurioso": "Un país que puedes explorar en el mapa del mundo.",
-  "cca2": "dz"
+  "cca2": "dz",
+  "idioma": "Árabe",
+  "monumentoIconico": "Monumento del Mártir"
  },
  {
   "id": "TUN",
@@ -613,7 +723,9 @@
   "continente": "Africa",
   "dificultad": "DIFICIL",
   "datoCurioso": "Un país que puedes explorar en el mapa del mundo.",
-  "cca2": "tn"
+  "cca2": "tn",
+  "idioma": "Árabe",
+  "monumentoIconico": "Mezquita Zitouna"
  },
  {
   "id": "VNM",
@@ -624,7 +736,9 @@
   "continente": "Asia",
   "dificultad": "DIFICIL",
   "datoCurioso": "Un país que puedes explorar en el mapa del mundo.",
-  "cca2": "vn"
+  "cca2": "vn",
+  "idioma": "Vietnamita",
+  "monumentoIconico": "Mausoleo de Ho Chi Minh"
  },
  {
   "id": "MYS",
@@ -635,7 +749,9 @@
   "continente": "Asia",
   "dificultad": "DIFICIL",
   "datoCurioso": "Un país que puedes explorar en el mapa del mundo.",
-  "cca2": "my"
+  "cca2": "my",
+  "idioma": "Malayo",
+  "monumentoIconico": "Torres Petronas"
  },
  {
   "id": "SGP",
@@ -646,7 +762,9 @@
   "continente": "Asia",
   "dificultad": "DIFICIL",
   "datoCurioso": "Un país que puedes explorar en el mapa del mundo.",
-  "cca2": "sg"
+  "cca2": "sg",
+  "idioma": "Inglés, malayo, chino mandarín y tamil",
+  "monumentoIconico": "Marina Bay Sands"
  },
  {
   "id": "PAK",
@@ -657,7 +775,9 @@
   "continente": "Asia",
   "dificultad": "DIFICIL",
   "datoCurioso": "Un país que puedes explorar en el mapa del mundo.",
-  "cca2": "pk"
+  "cca2": "pk",
+  "idioma": "Urdu e inglés",
+  "monumentoIconico": "Mezquita Faisal"
  },
  {
   "id": "BGD",
@@ -668,7 +788,9 @@
   "continente": "Asia",
   "dificultad": "DIFICIL",
   "datoCurioso": "Un país que puedes explorar en el mapa del mundo.",
-  "cca2": "bd"
+  "cca2": "bd",
+  "idioma": "Bengalí",
+  "monumentoIconico": "Casa Nacional del Parlamento"
  },
  {
   "id": "IRN",
@@ -679,7 +801,9 @@
   "continente": "Asia",
   "dificultad": "DIFICIL",
   "datoCurioso": "Un país que puedes explorar en el mapa del mundo.",
-  "cca2": "ir"
+  "cca2": "ir",
+  "idioma": "Persa (farsi)",
+  "monumentoIconico": "Torre Azadi"
  },
  {
   "id": "IRQ",
@@ -690,7 +814,9 @@
   "continente": "Asia",
   "dificultad": "DIFICIL",
   "datoCurioso": "Un país que puedes explorar en el mapa del mundo.",
-  "cca2": "iq"
+  "cca2": "iq",
+  "idioma": "Árabe",
+  "monumentoIconico": "Monumento de las Espadas Cruzadas"
  },
  {
   "id": "POL",
@@ -701,7 +827,9 @@
   "continente": "Europa",
   "dificultad": "DIFICIL",
   "datoCurioso": "Un país que puedes explorar en el mapa del mundo.",
-  "cca2": "pl"
+  "cca2": "pl",
+  "idioma": "Polaco",
+  "monumentoIconico": "Castillo Real de Varsovia"
  },
  {
   "id": "AUT",
@@ -712,7 +840,9 @@
   "continente": "Europa",
   "dificultad": "DIFICIL",
   "datoCurioso": "Un país que puedes explorar en el mapa del mundo.",
-  "cca2": "at"
+  "cca2": "at",
+  "idioma": "Alemán",
+  "monumentoIconico": "Palacio de Schönbrunn"
  },
  {
   "id": "BEL",
@@ -723,7 +853,9 @@
   "continente": "Europa",
   "dificultad": "DIFICIL",
   "datoCurioso": "Un país que puedes explorar en el mapa del mundo.",
-  "cca2": "be"
+  "cca2": "be",
+  "idioma": "Neerlandés, francés y alemán",
+  "monumentoIconico": "Atomium"
  },
  {
   "id": "IRL",
@@ -734,7 +866,9 @@
   "continente": "Europa",
   "dificultad": "DIFICIL",
   "datoCurioso": "Un país que puedes explorar en el mapa del mundo.",
-  "cca2": "ie"
+  "cca2": "ie",
+  "idioma": "Irlandés e inglés",
+  "monumentoIconico": "Castillo de Dublín"
  },
  {
   "id": "DNK",
@@ -745,7 +879,9 @@
   "continente": "Europa",
   "dificultad": "DIFICIL",
   "datoCurioso": "Un país que puedes explorar en el mapa del mundo.",
-  "cca2": "dk"
+  "cca2": "dk",
+  "idioma": "Danés",
+  "monumentoIconico": "La Sirenita"
  },
  {
   "id": "FIN",
@@ -756,7 +892,9 @@
   "continente": "Europa",
   "dificultad": "DIFICIL",
   "datoCurioso": "Un país que puedes explorar en el mapa del mundo.",
-  "cca2": "fi"
+  "cca2": "fi",
+  "idioma": "Finés y sueco",
+  "monumentoIconico": "Catedral de Helsinki"
  },
  {
   "id": "ISL",
@@ -767,7 +905,9 @@
   "continente": "Europa",
   "dificultad": "DIFICIL",
   "datoCurioso": "Aquí hay volcanes, géiseres y auroras boreales.",
-  "cca2": "is"
+  "cca2": "is",
+  "idioma": "Islandés",
+  "monumentoIconico": "Iglesia de Hallgrímskirkja"
  },
  {
   "id": "UKR",
@@ -778,7 +918,9 @@
   "continente": "Europa",
   "dificultad": "DIFICIL",
   "datoCurioso": "Un país que puedes explorar en el mapa del mundo.",
-  "cca2": "ua"
+  "cca2": "ua",
+  "idioma": "Ucraniano",
+  "monumentoIconico": "Catedral de Santa Sofía"
  },
  {
   "id": "MNG",
@@ -789,7 +931,9 @@
   "continente": "Asia",
   "dificultad": "DIFICIL",
   "datoCurioso": "Un país que puedes explorar en el mapa del mundo.",
-  "cca2": "mn"
+  "cca2": "mn",
+  "idioma": "Mongol",
+  "monumentoIconico": "Monasterio Gandan"
  },
  {
   "id": "NPL",
@@ -800,7 +944,9 @@
   "continente": "Asia",
   "dificultad": "DIFICIL",
   "datoCurioso": "Un país que puedes explorar en el mapa del mundo.",
-  "cca2": "np"
+  "cca2": "np",
+  "idioma": "Nepalí",
+  "monumentoIconico": "Estupa de Boudanath"
  },
  {
   "id": "KHM",
@@ -811,7 +957,9 @@
   "continente": "Asia",
   "dificultad": "DIFICIL",
   "datoCurioso": "Un país que puedes explorar en el mapa del mundo.",
-  "cca2": "kh"
+  "cca2": "kh",
+  "idioma": "Jemer (camboyano)",
+  "monumentoIconico": "Palacio Real de Phnom Penh"
  },
  {
   "id": "JOR",
@@ -822,6 +970,8 @@
   "continente": "Asia",
   "dificultad": "DIFICIL",
   "datoCurioso": "Un país que puedes explorar en el mapa del mundo.",
-  "cca2": "jo"
+  "cca2": "jo",
+  "idioma": "Árabe",
+  "monumentoIconico": "Ciudadela de Amán"
  }
 ]

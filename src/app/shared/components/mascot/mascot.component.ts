@@ -46,7 +46,7 @@ export const MASCOTAS: Record<string, MascotConfig> = {
     emoji: '🐶',
     name: 'Buddy',
     color: '#3B82F6',
-    imageSrc: '/mascotas/buddy-portrait.png',
+    imageSrc: '/mascotas/buddy-avatar.png',
   },
   juego11: { emoji: '🐻', name: 'Bruno', color: '#78716C' },
   juego12: { emoji: '🐭', name: 'Milo', color: '#A855F7' },

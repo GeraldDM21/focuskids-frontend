@@ -14,6 +14,8 @@ export interface Pais {
   continente: Continente;
   dificultad: Dificultad;
   datoCurioso: string;
+  idioma: string;            // idioma(s) oficial(es) o principal(es)
+  monumentoIconico: string;  // edificio/monumento representativo de la capital
 }
 
 export interface Pregunta {
@@ -38,6 +40,8 @@ interface PaisRaw {
   continente: string;
   dificultad: Dificultad;
   datoCurioso: string;
+  idioma: string;
+  monumentoIconico: string;
 }
 
 const CONTINENTE_MAP: Record<string, Continente> = {
