@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { SopaLetrasService } from './sopa-letras.service';
@@ -18,6 +18,17 @@ type Estado = 'inicio' | 'jugando' | 'completado' | 'tiempo-agotado';
   styleUrls: ['./sopa-letras.component.css']
 })
 export class SopaLetrasComponent implements OnInit, OnDestroy {
+
+  // ── Filtro de contenido inapropiado ──────────────────────────────────────
+  private readonly MALAS_PALABRAS: string[] = [
+    // Español general
+    'PUTA','PUTO','PENE','CULO','CACA','MIERDA','VERGA','JODER','POLLA',
+    'PICHA','IDIOTA','CABRON','PENDEJO','FOLLAR','FOLLA','TETA','TETAS',
+    'SEXO','MARICA','PEDO','NALGA','NALGAS','ZORRA','ZORRAS','PITO',
+    'COGER','COGE','OJETE','CULERO','HIJUEPUTA','MALPARIDO','PERRA',
+    // Inglés básico por si acaso
+    'FUCK','SHIT','COCK','DICK','CUNT','BITCH','PORN','SEXY',
+  ];
 
   // Estado general
   estado: Estado = 'inicio';
@@ -140,6 +151,7 @@ export class SopaLetrasComponent implements OnInit, OnDestroy {
     private router: Router,
     private route: ActivatedRoute,
     private sesionJuegoService: SesionJuegoService,
+    private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
@@ -257,6 +269,82 @@ export class SopaLetrasComponent implements OnInit, OnDestroy {
         }
       }
     }
+
+    this.limpiarGrilla(size);
+  }
+
+  /**
+   * Escanea la grilla en las 8 direcciones posibles y reemplaza letras de relleno
+   * que formen malas palabras. Las celdas que pertenecen a palabras del juego
+   * están protegidas y nunca se modifican.
+   */
+  private limpiarGrilla(size: number): void {
+    const LETRAS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+    // Celdas protegidas (forman parte de las palabras del juego)
+    const protegidas = new Set<string>();
+    for (const pw of this.palabrasColocadas) {
+      for (const celda of pw.celdas) {
+        protegidas.add(`${celda.row},${celda.col}`);
+      }
+    }
+
+    // Las 8 direcciones posibles
+    const DIRS = [
+      { dr: 0,  dc: 1  }, // →
+      { dr: 0,  dc: -1 }, // ←
+      { dr: 1,  dc: 0  }, // ↓
+      { dr: -1, dc: 0  }, // ↑
+      { dr: 1,  dc: 1  }, // ↘
+      { dr: 1,  dc: -1 }, // ↙
+      { dr: -1, dc: 1  }, // ↗
+      { dr: -1, dc: -1 }, // ↖
+    ];
+
+    let sucia = true;
+    let intentos = 0;
+
+    while (sucia && intentos < 100) {
+      sucia = false;
+      intentos++;
+
+      for (const mala of this.MALAS_PALABRAS) {
+        for (let r = 0; r < size; r++) {
+          for (let c = 0; c < size; c++) {
+            for (const { dr, dc } of DIRS) {
+
+              // Verificar si la mala palabra empieza en (r,c) en esta dirección
+              let coincide = true;
+              const celdas: { row: number; col: number }[] = [];
+
+              for (let i = 0; i < mala.length; i++) {
+                const nr = r + dr * i;
+                const nc = c + dc * i;
+                if (nr < 0 || nr >= size || nc < 0 || nc >= size) { coincide = false; break; }
+                if (this.grid[nr][nc] !== mala[i])                  { coincide = false; break; }
+                celdas.push({ row: nr, col: nc });
+              }
+
+              if (coincide) {
+                sucia = true;
+                // Reemplazar la primera celda no protegida con una letra diferente
+                for (const celda of celdas) {
+                  if (!protegidas.has(`${celda.row},${celda.col}`)) {
+                    let nueva: string;
+                    do {
+                      nueva = LETRAS[Math.floor(Math.random() * LETRAS.length)];
+                    } while (nueva === this.grid[celda.row][celda.col]);
+                    this.grid[celda.row][celda.col] = nueva;
+                    break;
+                  }
+                }
+              }
+
+            }
+          }
+        }
+      }
+    }
   }
 
   private colocarPalabra(palabra: string, size: number): void {
@@ -309,6 +397,7 @@ export class SopaLetrasComponent implements OnInit, OnDestroy {
         this.setMascot('encourage', '¡Se acabó el tiempo! 😢 ¡Inténtalo de nuevo, tú puedes!', 5000);
         this.finalizarSesion('tiempo-agotado');
       }
+      this.cdr.detectChanges(); // Forzar actualización en modo zoneless
     }, 250); // Verifica cada 250ms para mayor precision
   }
 
