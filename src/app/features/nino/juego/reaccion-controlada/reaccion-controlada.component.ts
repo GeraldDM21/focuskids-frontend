@@ -1,8 +1,7 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 
-// Ajusta estas rutas relativas a la ubicación real de reaccion-controlada dentro del proyecto.
 import { GameFeedbackComponent } from '../../../../shared/game-feedback/game-feedback.component';
 import { MascotComponent } from '../../../../shared/components/mascot/mascot.component';
 
@@ -12,9 +11,9 @@ import { ChildProfileService } from '../../../padre/perfiles/child-profile.servi
 import {
   ComparacionSesion,
   ConfettiPiece,
-  DefinicionEstimulo,
   EnsayoResultado,
   EstadoJuego,
+  EstimuloEnVuelo,
   MascotMood,
   MetricasSesion,
   TipoEstimulo,
@@ -33,19 +32,17 @@ const TOTAL_ENSAYOS_SESION = 20;
 export class ReaccionControladaComponent implements OnInit, OnDestroy {
 
   @ViewChild('feedback') feedback!: GameFeedbackComponent;
+  @ViewChild('botonReaccion') botonReaccion?: ElementRef<HTMLButtonElement>;
 
-  // ── Estado de pantalla ──────────────────────────────────────────────────
   estado: EstadoJuego = 'inicio';
   nivelActual = 1;
 
-  // ── Mascota Froggy ──────────────────────────────────────────────────────
   mascotMood: MascotMood = 'idle';
-  mascotMsg = '¡Hola! Soy Froggy 🐸 ¡Vamos a entrenar tu control!';
+  mascotMsg = '¡Hola! Soy Bruno 🐻 ¡Vamos a entrenar tu control!';
 
-  // ── Ensayo en curso ──────────────────────────────────────────────────────
   ensayoIndex = 0;
   readonly totalEnsayosSesion = TOTAL_ENSAYOS_SESION;
-  estimuloActual: DefinicionEstimulo | null = null;
+  estimuloActual: EstimuloEnVuelo | null = null;
   estimuloVisible = false;
   yaPresiono = false;
   tiempoInicioEstimulo = 0;
@@ -55,23 +52,17 @@ export class ReaccionControladaComponent implements OnInit, OnDestroy {
   private timerEstimulo: ReturnType<typeof setTimeout> | null = null;
   private timerVentana: ReturnType<typeof setTimeout> | null = null;
   private sesionActiva = false;
-
-  // Identificador único del ensayo activo. Evita que un timer "viejo" (de un
-  // ensayo ya resuelto) cierre por error el ensayo siguiente.
   private trialId = 0;
+  private ventanaActualMs = 0;
 
-  // ── Backend / métricas ────────────────────────────────────────────────────
   private readonly JUEGO_ID = 8;
   private sesionBackendId: number | null = null;
   private nivelFacilId: number | null = null;
   private profileId: number | null = null;
 
-  // ── Resultados finales ───────────────────────────────────────────────────
   metricasFinal: MetricasSesion | null = null;
   comparacionSesion: ComparacionSesion | null = null;
   confettiPieces: ConfettiPiece[] = [];
-
-  readonly LETRAS = ['A', 'B', 'C', 'D'];
 
   constructor(
     private router: Router,
@@ -85,7 +76,6 @@ export class ReaccionControladaComponent implements OnInit, OnDestroy {
     this.childProfileService.activeProfile$.subscribe(state => {
       this.profileId = state.profileId;
     });
-    // Cargar niveles y preseleccionar el recomendado por IA (CA-03)
     this.sesionJuegoService.obtenerNiveles(this.JUEGO_ID).subscribe({
       next: niveles => {
         this.nivelFacilId = niveles[0]?.id ?? null;
@@ -113,8 +103,6 @@ export class ReaccionControladaComponent implements OnInit, OnDestroy {
     this.detenerTimers();
   }
 
-  // ── Getters de UI ─────────────────────────────────────────────────────────
-
   get aciertosGoParciales(): number {
     return this.resultados.filter(r => r.tipo === 'go' && r.correcto).length;
   }
@@ -136,16 +124,25 @@ export class ReaccionControladaComponent implements OnInit, OnDestroy {
     const idx = this.metricasFinal?.indiceImpulsividad ?? 100;
     return idx <= 15 ? '¡Control de impulsos excelente!' :
       idx <= 35 ? '¡Muy buen autocontrol!' :
-        idx <= 60 ? '¡Buen esfuerzo, Froggy está orgulloso!' :
+        idx <= 60 ? '¡Buen esfuerzo, Bruno está orgulloso!' :
           '¡Sigue practicando, cada intento cuenta!';
   }
 
-  // ── Flujo principal ───────────────────────────────────────────────────────
+  @HostListener('window:keydown', ['$event'])
+  manejarTeclado(event: KeyboardEvent): void {
+    if (event.code !== 'Space' && event.key !== ' ') return;
+    if (this.estado !== 'juego') return;
+    event.preventDefault();
+    if (event.repeat) return;
+
+    const rect = this.botonReaccion?.nativeElement.getBoundingClientRect();
+    const x = rect ? rect.left + rect.width / 2 : 0;
+    const y = rect ? rect.top + rect.height / 2 : 0;
+    this.registrarRespuesta(x, y);
+  }
 
   iniciarJuego(): void {
     const sesionAnterior = this.reaccionService.obtenerSesionAnterior();
-    // CA-04: la frecuencia de estímulos inhibidores de esta sesión se ajusta
-    // según el índice de impulsividad detectado la sesión previa.
     this.probabilidadNoGo = sesionAnterior
       ? this.reaccionService.ajustarFrecuenciaNoGo(sesionAnterior.indiceImpulsividad)
       : 0.20;
@@ -160,10 +157,9 @@ export class ReaccionControladaComponent implements OnInit, OnDestroy {
     this.sesionActiva = true;
     this.sesionBackendId = null;
     this.estado = 'juego';
-    this.setMascota('thinking', '¡Atrápalas cuando veas la mosca 🪰, pero quieta con la abeja 🐝!');
+    this.setMascota('thinking', '¡Atrápala cuando veas la abeja 🐝, pero quieto con la mosca 🪰!');
     this.cdr.detectChanges();
 
-    // Backend session (CA-04)
     if (this.profileId != null && this.nivelFacilId != null) {
       this.sesionJuegoService.iniciarSesion({
         perfilId: this.profileId,
@@ -172,7 +168,7 @@ export class ReaccionControladaComponent implements OnInit, OnDestroy {
       }).subscribe({
         next: sesion => {
           this.sesionBackendId = sesion.id ?? null;
-          if (sesion.id) this.sesionJuegoService.comenzarTracking(sesion.id);  // CA-04
+          if (sesion.id) this.sesionJuegoService.comenzarTracking(sesion.id);
         },
         error: () => { /* continúa sin backend */ }
       });
@@ -181,7 +177,6 @@ export class ReaccionControladaComponent implements OnInit, OnDestroy {
     this.programarSiguienteEstimulo();
   }
 
-  // CA-01: espera un intervalo variable (500ms–1500ms) antes del próximo estímulo.
   private programarSiguienteEstimulo(): void {
     if (!this.sesionActiva) return;
 
@@ -197,51 +192,48 @@ export class ReaccionControladaComponent implements OnInit, OnDestroy {
   private mostrarEstimulo(): void {
     if (!this.sesionActiva) return;
 
-    // Cancela cualquier timer de ventana que hubiera quedado pendiente de un
-    // ensayo anterior antes de abrir uno nuevo (defensa adicional al token).
     if (this.timerVentana) { clearTimeout(this.timerVentana); this.timerVentana = null; }
 
     const idDeEsteEnsayo = ++this.trialId;
     const tipo: TipoEstimulo = this.reaccionService.decidirTipoEstimulo(this.probabilidadNoGo);
-    this.estimuloActual = this.reaccionService.obtenerDefinicion(tipo);
+    this.estimuloActual = this.reaccionService.obtenerEstimuloEnVuelo(tipo);
     this.estimuloVisible = true;
     this.yaPresiono = false;
     this.tiempoInicioEstimulo = Date.now();
-    this.sesionJuegoService.marcarElementoAparece();  // CA-08
+    this.ventanaActualMs = this.reaccionService.ventanaRespuestaMs(this.estimuloActual);
+    this.sesionJuegoService.marcarElementoAparece();
     this.cdr.detectChanges();
 
-    const ventana = this.reaccionService.ventanaLimiteMs(tipo);
-    this.timerVentana = setTimeout(() => this.cerrarEnsayo(idDeEsteEnsayo), ventana);
+    this.timerVentana = setTimeout(() => this.cerrarEnsayo(idDeEsteEnsayo), this.ventanaActualMs);
   }
 
-  // El niño presiona el botón de reacción mientras el estímulo está visible.
   presionarBoton(event: PointerEvent): void {
-    if (!this.estimuloVisible || this.yaPresiono || !this.estimuloActual) return;
+    event.preventDefault();
+    this.registrarRespuesta(event.clientX, event.clientY);
+  }
+
+  private registrarRespuesta(clientX: number, clientY: number): void {
+    if (this.estado !== 'juego' || !this.estimuloVisible || this.yaPresiono || !this.estimuloActual) return;
     this.yaPresiono = true;
 
-    // Clave del fix: se cancela el timer de ventana de ESTE ensayo de inmediato,
-    // para que no quede vivo y cierre por error un ensayo futuro.
     if (this.timerVentana) { clearTimeout(this.timerVentana); this.timerVentana = null; }
 
     const tiempoReaccionMs = Date.now() - this.tiempoInicioEstimulo;
     const esGo = this.estimuloActual.tipo === 'go';
 
-    this.sesionJuegoService.trackClick(  // CA-07
-      event.clientX,
-      event.clientY,
+    this.sesionJuegoService.trackClick(
+      clientX,
+      clientY,
       this.estimuloActual.emoji,
       esGo
     );
     if (esGo) {
-      this.sesionJuegoService.trackRespuestaMs(tiempoReaccionMs);  // CA-05
+      this.sesionJuegoService.trackRespuestaMs(tiempoReaccionMs);
     }
 
     this.registrarEnsayo(this.estimuloActual.tipo, true, tiempoReaccionMs);
   }
 
-  // Se cumplió la ventana de respuesta sin que el niño presionara.
-  // Recibe el id del ensayo para el que se programó este timer: si para cuando
-  // dispara ya estamos en otro ensayo (id distinto), se ignora sin efecto.
   private cerrarEnsayo(idDelEnsayo: number): void {
     this.timerVentana = null;
     if (idDelEnsayo !== this.trialId) return;
@@ -253,7 +245,13 @@ export class ReaccionControladaComponent implements OnInit, OnDestroy {
   }
 
   private registrarEnsayo(tipo: TipoEstimulo, presiono: boolean, tiempoReaccionMs: number | null): void {
-    const resultado = this.reaccionService.evaluarEnsayo(this.ensayoIndex, tipo, presiono, tiempoReaccionMs);
+    const resultado = this.reaccionService.evaluarEnsayo(
+      this.ensayoIndex,
+      tipo,
+      presiono,
+      tiempoReaccionMs,
+      this.ventanaActualMs,
+    );
     this.resultados.push(resultado);
 
     this.estimuloVisible = false;
@@ -261,12 +259,12 @@ export class ReaccionControladaComponent implements OnInit, OnDestroy {
     this.ensayoIndex++;
 
     if (resultado.correcto) {
-      this.setMascota('celebrate', this.pick(['¡Genial! 🎉', '¡Así se hace! 🐸', '¡Excelente control! ⭐']));
+      this.setMascota('celebrate', this.pick(['¡Genial! 🎉', '¡Así se hace! 🐻', '¡Excelente control! ⭐']));
       this.feedback?.showCorrect();
     } else {
       this.setMascota('encourage', tipo === 'nogo'
-        ? '¡Cuidado con la abeja! Espera la próxima 🐝'
-        : '¡Casi! Prepárate para la próxima mosca 🪰');
+        ? '¡Cuidado con la mosca! Espera la próxima 🪰'
+        : '¡Casi! Prepárate para la próxima abeja 🐝');
       this.feedback?.showIncorrect();
     }
 
@@ -281,7 +279,6 @@ export class ReaccionControladaComponent implements OnInit, OnDestroy {
     const metricas = this.reaccionService.calcularMetricas(this.resultados);
     this.metricasFinal = metricas;
 
-    // CA-03: fire-and-forget metrics finalization
     if (this.sesionBackendId != null) {
       const totalGo = this.resultados.filter(r => r.tipo === 'go').length;
       const aciertosGo = this.resultados.filter(r => r.tipo === 'go' && r.correcto).length;
@@ -294,7 +291,6 @@ export class ReaccionControladaComponent implements OnInit, OnDestroy {
     }
 
     const sesionAnterior = this.reaccionService.obtenerSesionAnterior();
-    // CA-05: notificación positiva si el SSRT mejora más de un 15% vs la sesión anterior.
     this.comparacionSesion = this.reaccionService.compararConSesionAnterior(metricas.ssrtMs, sesionAnterior);
 
     this.reaccionService.guardarSesion({
@@ -305,14 +301,13 @@ export class ReaccionControladaComponent implements OnInit, OnDestroy {
       probabilidadNoGo: this.probabilidadNoGo,
     });
 
-    // CA-06: los datos de impulsividad quedan listos para viajar al dashboard del padre/tutor.
     this.reaccionService.enviarMetricasADashboard(metricas);
 
     this.confettiPieces = this.reaccionService.generarConfeti();
     this.estado = 'resultados';
 
     const msg = this.comparacionSesion.mejoraSignificativa
-      ? `¡Mejoraste tu tiempo de control un ${this.comparacionSesion.mejoraSSRTPorc}% desde la última vez! 🐸💚`
+      ? `¡Mejoraste tu tiempo de control un ${this.comparacionSesion.mejoraSSRTPorc}% desde la última vez! 🐻💚`
       : this.tituloFinal;
     this.setMascota('celebrate', msg);
     this.cdr.detectChanges();
@@ -320,7 +315,7 @@ export class ReaccionControladaComponent implements OnInit, OnDestroy {
 
   jugarDeNuevo(): void {
     this.estado = 'inicio';
-    this.setMascota('idle', '¡Hola! Soy Froggy 🐸 ¡Vamos a entrenar tu control!');
+    this.setMascota('idle', '¡Hola! Soy Bruno 🐻 ¡Vamos a entrenar tu control!');
     this.cdr.detectChanges();
   }
 
@@ -332,8 +327,6 @@ export class ReaccionControladaComponent implements OnInit, OnDestroy {
     this.detenerTimers();
     this.router.navigate(['/nino/juegos']);
   }
-
-  // ── Helpers ──────────────────────────────────────────────────────────────
 
   private detenerTimers(): void {
     this.sesionActiva = false;

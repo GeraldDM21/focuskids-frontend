@@ -4,6 +4,7 @@ import {
   ConfettiPiece,
   DefinicionEstimulo,
   EnsayoResultado,
+  EstimuloEnVuelo,
   MetricasSesion,
   SesionGuardada,
   TipoEstimulo,
@@ -11,24 +12,22 @@ import {
 
 const CLAVE_STORAGE = 'reaccion-controlada:ultima-sesion';
 
-//ventanas de respuesta
-// - GO: tiempo generoso para presionar tras aparecer la mosca
-// - NOGO: 300ms — si presiona dentro de este lapso, es falsa alarma
-const VENTANA_GO_MS = 900;
-const VENTANA_NOGO_MS = 300;
+const INTERVALO_MIN_MS = 700;
+const INTERVALO_MAX_MS = 1700;
 
-//intervalo inter-estímulo variable para evitar anticipación
-const INTERVALO_MIN_MS = 500;
-const INTERVALO_MAX_MS = 1500;
-
-//rango permitido para la frecuencia de estímulos inhibidores
 const FRECUENCIA_NOGO_MIN = 0.2;
 const FRECUENCIA_NOGO_MAX = 0.4;
 
-export const ESTIMULO_GO: DefinicionEstimulo = { tipo: 'go', emoji: '🪰', label: '¡Atrápala!' };
+const VUELO_MIN_MS = 1600;
+const VUELO_MAX_MS = 3000;
+
+const GRACIA_RESPUESTA_MS = 150;
+const TIEMPO_REACCION_FALLBACK_MS = 900;
+
+export const ESTIMULO_GO: DefinicionEstimulo = { tipo: 'go', emoji: '🐝', label: '¡Atrápala!' };
 export const ESTIMULO_NOGO: DefinicionEstimulo = {
   tipo: 'nogo',
-  emoji: '🐝',
+  emoji: '🪰',
   label: '¡No la toques!',
 };
 
@@ -38,17 +37,22 @@ export class ReaccionControladaService {
     return Math.round(INTERVALO_MIN_MS + Math.random() * (INTERVALO_MAX_MS - INTERVALO_MIN_MS));
   }
 
-  // decide el tipo de estímulo del próximo ensayo según la probabilidad de No-Go vigente.
   decidirTipoEstimulo(probabilidadNoGo: number): TipoEstimulo {
     return Math.random() < probabilidadNoGo ? 'nogo' : 'go';
   }
 
-  obtenerDefinicion(tipo: TipoEstimulo): DefinicionEstimulo {
-    return tipo === 'go' ? ESTIMULO_GO : ESTIMULO_NOGO;
+  obtenerEstimuloEnVuelo(tipo: TipoEstimulo): EstimuloEnVuelo {
+    const base = tipo === 'go' ? ESTIMULO_GO : ESTIMULO_NOGO;
+    return {
+      ...base,
+      top: 10 + Math.random() * 62,
+      duracionMs: Math.round(VUELO_MIN_MS + Math.random() * (VUELO_MAX_MS - VUELO_MIN_MS)),
+      direccion: Math.random() < 0.5 ? 'ltr' : 'rtl',
+    };
   }
 
-  ventanaLimiteMs(tipo: TipoEstimulo): number {
-    return tipo === 'go' ? VENTANA_GO_MS : VENTANA_NOGO_MS;
+  ventanaRespuestaMs(estimulo: EstimuloEnVuelo): number {
+    return estimulo.duracionMs + GRACIA_RESPUESTA_MS;
   }
 
   evaluarEnsayo(
@@ -56,10 +60,8 @@ export class ReaccionControladaService {
     tipo: TipoEstimulo,
     presiono: boolean,
     tiempoReaccionMs: number | null,
+    ventanaLimiteMs: number,
   ): EnsayoResultado {
-    const ventanaLimiteMs = this.ventanaLimiteMs(tipo);
-    // GO:   correcto si presionó dentro de la ventana.
-    // NOGO: correcto si NO presionó dentro de los 300ms
     const correcto = tipo === 'go' ? presiono : !presiono;
 
     return {
@@ -91,8 +93,7 @@ export class ReaccionControladaService {
       .map((r) => r.tiempoReaccionMs as number);
     const tiempoReaccionPromedioGoMs = tiemposGo.length
       ? Math.round(tiemposGo.reduce((a, b) => a + b, 0) / tiemposGo.length)
-      : VENTANA_GO_MS;
-
+      : TIEMPO_REACCION_FALLBACK_MS;
 
     const factorInhibicion = ensayosNoGo.length ? inhibicionesCorrectas / ensayosNoGo.length : 1;
     const ssrtMs = Math.max(
@@ -142,12 +143,11 @@ export class ReaccionControladaService {
     };
   }
 
-  // TODO: reemplazar por una llamada real al servicio del dashboard del
   guardarSesion(sesion: SesionGuardada): void {
     try {
       localStorage.setItem(CLAVE_STORAGE, JSON.stringify(sesion));
     } catch {
-      /* almacenamiento no disponible: se ignora silenciosamente */
+      /* noop */
     }
   }
 
@@ -161,12 +161,11 @@ export class ReaccionControladaService {
   }
 
   enviarMetricasADashboard(metricas: MetricasSesion): void {
-    // TODO: conectar con focuskids_backend cuando exista el endpoint de métricas.
     console.log('[ReaccionControlada] Métricas listas para el dashboard:', metricas);
   }
 
   generarConfeti(): ConfettiPiece[] {
-    const colores = ['#4ade80', '#22c55e', '#a3e635', '#fde047', '#38bdf8', '#34d399'];
+    const colores = ['#f59e0b', '#fbbf24', '#fcd34d', '#fde68a', '#d97706', '#b45309'];
     return Array.from({ length: 32 }, (_, i) => ({
       id: i,
       left: Math.random() * 100,

@@ -1,8 +1,8 @@
 export type EstadoJuego = 'inicio' | 'juego' | 'resultados';
 export type MascotMood = 'idle' | 'thinking' | 'celebrate' | 'encourage';
 
-
 export type TipoEstimulo = 'go' | 'nogo';
+export type DireccionVuelo = 'ltr' | 'rtl';
 
 export interface DefinicionEstimulo {
   tipo: TipoEstimulo;
@@ -10,11 +10,17 @@ export interface DefinicionEstimulo {
   label: string;
 }
 
+export interface EstimuloEnVuelo extends DefinicionEstimulo {
+  top: number;
+  duracionMs: number;
+  direccion: DireccionVuelo;
+}
+
 export interface EnsayoResultado {
   indice: number;
   tipo: TipoEstimulo;
   presiono: boolean;
-  tiempoReaccionMs: number | null; // null si nunca presionó
+  tiempoReaccionMs: number | null;
   correcto: boolean;
   ventanaLimiteMs: number;
   timestamp: number;
@@ -34,7 +40,6 @@ export interface MetricasSesion {
   indiceImpulsividad: number;
 }
 
-
 export interface SesionGuardada {
   fecha: number;
   ssrtMs: number;
@@ -45,10 +50,9 @@ export interface SesionGuardada {
 
 export interface ComparacionSesion {
   huboSesionAnterior: boolean;
-  mejoraSSRTPorc: number; // % de mejora respecto a la sesión anterior (positivo = mejora)
+  mejoraSSRTPorc: number;
   mejoraSignificativa: boolean;
 }
-
 
 export interface ConfettiPiece {
   id: number;
