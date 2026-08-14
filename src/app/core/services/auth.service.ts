@@ -22,10 +22,12 @@ export class AuthService {
     private storage: StorageService,
     private router: Router
   ) {
-    const savedUser = this.storage.getUser();
-    if (savedUser && this.storage.getToken()) {
-      this._user.set(savedUser);
-    }
+    // A propósito NO se restaura la sesión guardada al abrir/recargar la
+    // app: se pidió que siempre haya que iniciar sesión de nuevo, en vez de
+    // quedar logueado indefinidamente entre visitas. Se limpia cualquier
+    // token viejo para que tampoco quede flotando y se use por accidente
+    // (el interceptor lo toma directo de storage, no de este signal).
+    this.storage.clear();
   }
 
   login(request: LoginRequest) {
@@ -44,7 +46,12 @@ export class AuthService {
   register(request: RegisterRequest) {
     // No inicia sesión automáticamente: la cuenta queda inactiva
     // hasta que el usuario verifique su correo.
-    return this.http.post<AuthResponse>(`${this.apiUrl}/register`, request);
+    // timeout: igual que login() — si el backend no responde en 15s (antes
+    // podía tardar mucho más esperando el envío del correo de verificación),
+    // se corta y se muestra un error en vez de dejar "Creando cuenta…" pegado.
+    return this.http.post<AuthResponse>(`${this.apiUrl}/register`, request).pipe(
+      timeout(15000)
+    );
   }
 
   verify(token: string) {
