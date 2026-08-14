@@ -11,64 +11,35 @@
   </div>
 
   @if (estado === 'inicio') {
-  <div class="rc-pantalla-inicio">
-    <div class="rc-orb rc-orb-1"></div>
-    <div class="rc-orb rc-orb-2"></div>
+  <div class="pantalla-inicio">
+    <img class="bg-escena" src="/mascotas/bruno-escena.png" alt="Escena de Bruno">
+    <div class="inicio-velo"></div>
+    <button type="button" class="btn-volver-inicio" (click)="volver()">← Volver</button>
 
-    <div class="rc-inicio-content">
-      <div class="rc-hero-mascota">
-        <div class="rc-sparkles">
-          <span class="rc-sp rc-sp-1">🐝</span>
-          <span class="rc-sp rc-sp-2">🍯</span>
-          <span class="rc-sp rc-sp-3">🐻</span>
-          <span class="rc-sp rc-sp-4">✨</span>
+    <div class="mascota-habla">
+      <div class="habla-bubble">
+        <p class="habla-saludo">¡Hola! Soy <strong>Bruno</strong> 🐻</p>
+        <p class="habla-intro">Para jugar Reacción Controlada:</p>
+        <div class="habla-pasos">
+          <div class="habla-paso"><span class="h-ico">🐝</span><span>Presiona cuando veas la abeja</span></div>
+          <div class="habla-paso"><span class="h-ico">🪰</span><span>No presiones si aparece la mosca</span></div>
+          <div class="habla-paso"><span class="h-ico">⚡</span><span>¡Vuelan a distinta velocidad!</span></div>
+          <div class="habla-paso"><span class="h-ico">⌨️</span><span>También puedes usar la barra espaciadora</span></div>
         </div>
-        <div class="rc-ring"><div class="rc-avatar">🐻</div></div>
-        <div class="rc-bubble-inicio">
-          ¡Hola! Soy <strong>Bruno</strong> 🐻<br>
-          Atrapa la abeja 🐝 cuando la veas, ¡pero no toques a la mosca 🪰!
-        </div>
+        <p class="habla-animo">¡Entrena tu autocontrol conmigo! 🍯</p>
       </div>
+      <div class="habla-tail"></div>
+    </div>
 
-      <h1 class="rc-titulo-juego">
-        <span class="rc-titulo-grad">Reacción</span><span class="rc-titulo-blanco"> Controlada</span>
+    <div class="inicio-panel">
+      <h1 class="titulo-juego">
+        <span class="titulo-parte1">Reacción</span><span class="titulo-parte2"> Controlada</span>
       </h1>
-      <p class="rc-subtitulo-juego">Entrena tu control de impulsos junto a Bruno</p>
-
-      <div class="rc-instrucciones-grid">
-        <div class="rc-instr-card rc-instr-verde">
-          <span class="rc-instr-num">1</span>
-          <div class="rc-instr-emoji">🐝</div>
-          <div class="rc-instr-text">Presiona el botón (o la barra espaciadora) cuando veas la abeja</div>
-        </div>
-        <div class="rc-instr-card rc-instr-rojo">
-          <span class="rc-instr-num">2</span>
-          <div class="rc-instr-emoji">🪰</div>
-          <div class="rc-instr-text">No presiones si aparece la mosca</div>
-        </div>
-        <div class="rc-instr-card rc-instr-amarillo">
-          <span class="rc-instr-num">3</span>
-          <div class="rc-instr-emoji">⚡</div>
-          <div class="rc-instr-text">¡Vuelan a distinta velocidad, mantente atento!</div>
-        </div>
-        <div class="rc-instr-card rc-instr-azul">
-          <span class="rc-instr-num">4</span>
-          <div class="rc-instr-emoji">🧠</div>
-          <div class="rc-instr-text">Entrena tu control de impulsos</div>
-        </div>
-      </div>
-
-      <div class="rc-nivel-indicador">
-        <span class="rc-nivel-dot" [class.activo]="nivelActual >= 1">⭐</span>
-        <span class="rc-nivel-dot" [class.activo]="nivelActual >= 2">⭐</span>
-        <span class="rc-nivel-dot" [class.activo]="nivelActual >= 3">⭐</span>
-        <span class="rc-nivel-txt">Nivel {{ nivelActual }}</span>
-      </div>
-
-      <div class="rc-inicio-footer">
-        <button class="rc-btn-empezar" (click)="iniciarJuego()">
-          <span>🐻</span> ¡Empezar a jugar!
-          <span class="rc-btn-shine"></span>
+      <p class="titulo-sub">Entrena tu control de impulsos junto a Bruno</p>
+      <div class="inicio-botones">
+        <button class="btn-empezar" (click)="iniciarJuego()">🐾 ¡Empezar a jugar!</button>
+        <button class="btn-voz" (click)="toggleVoz()" [title]="voiceEnabled ? 'Silenciar a Bruno' : 'Activar voz de Bruno'">
+          {{ voiceEnabled ? '🗣️' : '🤐' }}
         </button>
       </div>
     </div>
@@ -77,6 +48,21 @@
 
   @if (estado === 'juego') {
   <div class="rc-pantalla-juego">
+    <img class="rc-juego-bg" src="/mascotas/bruno-escena.png" alt="" aria-hidden="true">
+
+    <!-- Partículas de fondo -->
+    <div class="rc-particles" aria-hidden="true">
+      <span class="rcp rcp-1">🐝</span>
+      <span class="rcp rcp-2">🍯</span>
+      <span class="rcp rcp-3">🐝</span>
+      <span class="rcp rcp-4">✨</span>
+      <span class="rcp rcp-5">🍯</span>
+      <span class="rcp rcp-6">🐝</span>
+      <span class="rcp rcp-7">🌸</span>
+      <span class="rcp rcp-8">✨</span>
+      <span class="rcp rcp-9">🐝</span>
+      <span class="rcp rcp-10">🍀</span>
+    </div>
 
     <app-game-feedback #feedback></app-game-feedback>
 
@@ -143,7 +129,7 @@
     </div>
     <div class="resultados-card">
       <div class="fox-resultado-hero">
-        <div class="rc-mascot-emoji">🐻</div>
+        <img class="foxy-resultado-img" src="/mascotas/bruno-portrait.png" alt="Bruno">
         <div class="fox-resultado-trophy">{{ trofeoEmoji }}</div>
       </div>
       <h2 class="resultado-titulo">{{ tituloFinal }}</h2>
@@ -168,7 +154,7 @@
       <div class="ia-badge">🎉 ¡Mejoraste tu control un {{ comparacionSesion?.mejoraSSRTPorc }}% desde la última sesión!</div>
       }
       <div class="foxy-msg-final">
-        <div class="rc-mascot-emoji-sm">🐻</div>
+        <img class="foxy-msg-avatar" src="/mascotas/bruno-portrait.png" alt="Bruno">
         <div class="foxy-msg-bubble">{{ mascotMsg }}</div>
       </div>
       <div class="metricas-row">

@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { sinEmojis } from '../../../../shared/utils/tts-texto.util';
 
 import { GameFeedbackComponent } from '../../../../shared/game-feedback/game-feedback.component';
 import { MascotComponent } from '../../../../shared/components/mascot/mascot.component';
@@ -64,6 +65,9 @@ export class ReaccionControladaComponent implements OnInit, OnDestroy {
   comparacionSesion: ComparacionSesion | null = null;
   confettiPieces: ConfettiPiece[] = [];
 
+  voiceEnabled = true;
+  private brunoVoice: SpeechSynthesisVoice | null = null;
+
   constructor(
     private router: Router,
     private cdr: ChangeDetectorRef,
@@ -73,6 +77,8 @@ export class ReaccionControladaComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    this.cargarVozBruno();
+    this.speak('¡Hola! Soy Bruno. Atrapa la abeja cuando la veas, pero no toques la mosca.');
     this.childProfileService.activeProfile$.subscribe(state => {
       this.profileId = state.profileId;
     });
@@ -101,6 +107,7 @@ export class ReaccionControladaComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.detenerTimers();
+    window.speechSynthesis?.cancel();
   }
 
   get aciertosGoParciales(): number {
@@ -342,9 +349,56 @@ export class ReaccionControladaComponent implements OnInit, OnDestroy {
   private setMascota(mood: MascotMood, msg: string): void {
     this.mascotMood = mood;
     this.mascotMsg = msg;
+    this.speak(msg);
   }
 
   private pick(arr: string[]): string {
     return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  toggleVoz(): void {
+    this.voiceEnabled = !this.voiceEnabled;
+    if (!this.voiceEnabled) window.speechSynthesis?.cancel();
+  }
+
+  private cargarVozBruno(): void {
+    const seleccionar = () => {
+      const voces = window.speechSynthesis?.getVoices() ?? [];
+      const candidatas = [
+        voces.find(v => v.name.includes('Sabina')),
+        voces.find(v => v.name.includes('Paulina')),
+        voces.find(v => v.name.includes('Monica')),
+        voces.find(v => v.name.includes('Helena')),
+        voces.find(v => v.name.includes('Laura')),
+        voces.find(v => v.name.includes('Elvira')),
+        voces.find(v => v.lang === 'es-MX'),
+        voces.find(v => v.lang === 'es-ES'),
+        voces.find(v => v.lang.startsWith('es')),
+      ];
+      this.brunoVoice = candidatas.find(v => !!v) ?? null;
+    };
+    if (window.speechSynthesis?.getVoices().length) {
+      seleccionar();
+    } else {
+      window.speechSynthesis?.addEventListener('voiceschanged', seleccionar, { once: true });
+    }
+  }
+
+  private speak(texto: string): void {
+    if (!this.voiceEnabled || !window.speechSynthesis) return;
+    try {
+      window.speechSynthesis.cancel();
+      const utt = new SpeechSynthesisUtterance(sinEmojis(texto));
+      if (this.brunoVoice) {
+        utt.voice = this.brunoVoice;
+        utt.lang  = this.brunoVoice.lang;
+      } else {
+        utt.lang = 'es-ES';
+      }
+      utt.rate   = 0.92;
+      utt.pitch  = 1.0;
+      utt.volume = 0.9;
+      window.speechSynthesis.speak(utt);
+    } catch {}
   }
 }
