@@ -310,6 +310,11 @@ export class CascadaNumericaComponent implements OnInit, OnDestroy {
       this.audioCtx = null;
     }
   }
+  /** CA-11: Captura posición de click para heatmap de interacción. */
+  onAreaClick(event: MouseEvent): void {
+    this.sesionJuegoService.trackAreaClick(event, event.currentTarget as HTMLElement);
+  }
+
 
   private reiniciarEstadisticas(
     reiniciarBackend = true

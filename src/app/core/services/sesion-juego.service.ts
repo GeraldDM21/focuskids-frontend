@@ -237,6 +237,32 @@ export class SesionJuegoService implements OnDestroy {
     return this.http.post<SessionClickEvent>(`${this.sesionesUrl}/${sesionId}/eventos`, evento);
   }
 
+  /**
+   * CA-11: Registra la posición del click relativa al contenedor del juego (0-100%).
+   * Usado para generar el heatmap de interacción visible en el dashboard del docente.
+   * Solo envía si hay sesión activa.
+   */
+  trackAreaClick(event: MouseEvent, containerEl: HTMLElement): void {
+    if (this.sesionId === null) return;
+    const rect = containerEl.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return;
+    const xPct = Math.max(0, Math.min(100, Math.round(((event.clientX - rect.left) / rect.width) * 100)));
+    const yPct = Math.max(0, Math.min(100, Math.round(((event.clientY - rect.top) / rect.height) * 100)));
+    const evento: SessionClickEvent = {
+      clickX: xPct,
+      clickY: yPct,
+      elementoId: 'AREA',
+      timestampMs: Date.now(),
+      fueAcierto: true,
+    };
+    this.registrarEvento(this.sesionId, evento).subscribe({ error: () => {} });
+  }
+
+  /** Obtiene los eventos de click de una sesión para mostrar heatmap en el dashboard. */
+  getEventosSesion(sesionId: number): Observable<SessionClickEvent[]> {
+    return this.http.get<SessionClickEvent[]>(`${this.sesionesUrl}/${sesionId}/eventos`);
+  }
+
   // ══ Recomendación de nivel IA ═════════════════════════════════════════════
 
   /**

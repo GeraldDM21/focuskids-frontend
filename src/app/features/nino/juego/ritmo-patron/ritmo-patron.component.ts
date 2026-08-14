@@ -20,7 +20,7 @@ interface ConfettiPiece { id: number; left: number; color: string; delay: number
   imports: [CommonModule, MascotComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="game-wrapper">
+    <div class="game-wrapper" (click)="onAreaClick($event)">
 
       <!-- ── Fondo animado (persistente en todos los estados) ─────────────── -->
       <div class="rp-bg-orb rp-o1" aria-hidden="true"></div>

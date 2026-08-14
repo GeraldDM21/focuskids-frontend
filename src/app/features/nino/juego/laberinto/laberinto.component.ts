@@ -38,7 +38,7 @@ const MASCOTA_MSGS: Record<Mood, string[]> = {
   imports: [CommonModule, GameFeedbackComponent, VolumeControlComponent, MascotComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="game-wrapper">
+    <div class="game-wrapper" (click)="onAreaClick($event)">
 
       <!-- ── Fondo animado (persistente en todos los estados) ─────────────── -->
       <div class="lc-dots" aria-hidden="true"></div>

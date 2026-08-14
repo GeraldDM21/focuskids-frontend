@@ -189,6 +189,11 @@ export class SopaLetrasComponent implements OnInit, OnDestroy {
     window.speechSynthesis?.cancel();
     this.audioCtx?.close();
   }
+  /** CA-11: Captura posición de click para heatmap de interacción. */
+  onAreaClick(event: MouseEvent): void {
+    this.sesionJuegoService.trackAreaClick(event, event.currentTarget as HTMLElement);
+  }
+
 
   // ── INICIO ──────────────────────────────────────────────────────────────
 

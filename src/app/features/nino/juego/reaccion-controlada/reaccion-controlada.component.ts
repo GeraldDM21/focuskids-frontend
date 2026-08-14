@@ -332,6 +332,11 @@ export class ReaccionControladaComponent implements OnInit, OnDestroy {
     this.detenerTimers();
     this.router.navigate(['/nino/juegos']);
   }
+  /** CA-11: Captura posición de click para heatmap de interacción. */
+  onAreaClick(event: MouseEvent): void {
+    this.sesionJuegoService.trackAreaClick(event, event.currentTarget as HTMLElement);
+  }
+
 
   // ── Helpers ──────────────────────────────────────────────────────────────
 

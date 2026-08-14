@@ -177,6 +177,11 @@ export class FocoExtremoComponent implements OnInit, OnDestroy {
     window.speechSynthesis?.cancel();
     this.audioCtx?.close();
   }
+  /** CA-11: Captura posición de click para heatmap de interacción. */
+  onAreaClick(event: MouseEvent): void {
+    this.sesionJuegoService.trackAreaClick(event, event.currentTarget as HTMLElement);
+  }
+
 
   iniciarJuego(nivel: Nivel = this.nivelActual): void {
     this.detenerTimer();

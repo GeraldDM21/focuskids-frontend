@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -10,6 +10,7 @@ import {
   ComparacionSesion,
   JuegoOpcion,
 } from '../../historial-sesiones.service';
+import { SesionJuegoService, SessionClickEvent } from '../../../core/services/sesion-juego.service';
 
 const NIVELES = [
   { val: 'FACIL', lbl: 'Fácil' },
@@ -236,6 +237,17 @@ const NIVELES = [
                             </div>
                           </div>
                         </div>
+                      }
+                    </div>
+
+                    <!-- ── Heatmap de interacción CA-11 ── -->
+                    <div class="heatmap-wrap">
+                      <h4 class="comp-title">🔥 Mapa de interacción</h4>
+                      @if (cargandoEventos) {
+                        <div class="detalle-loading"><div class="spinner spinner-sm"></div></div>
+                      } @else {
+                        <p class="heatmap-hint">Distribución de clicks durante la sesión (rojo = zona más clickeada)</p>
+                        <canvas #heatmapCanvas class="heatmap-canvas" width="600" height="320"></canvas>
                       }
                     </div>
                   }
@@ -601,6 +613,26 @@ const NIVELES = [
         padding: 0 18px 18px;
         border-top: 1px solid #f1f5f9;
       }
+      /* ── Heatmap CA-11 ── */
+      .heatmap-wrap {
+        margin-top: 18px;
+        padding-top: 14px;
+        border-top: 1px solid #d1fae5;
+      }
+      .heatmap-canvas {
+        display: block;
+        width: 100%;
+        max-width: 600px;
+        height: auto;
+        border-radius: 10px;
+        border: 1.5px solid #d1fae5;
+        margin-top: 8px;
+      }
+      .heatmap-hint {
+        font-size: 11.5px;
+        color: #6b7280;
+        margin: 3px 0 0;
+      }
       .detalle-loading {
         display: flex;
         justify-content: center;
@@ -761,6 +793,12 @@ export class HistorialSesionesComponent implements OnInit {
   comparacion: ComparacionSesion | null = null;
   cargandoComparacion = false;
 
+  // Heatmap de clicks (CA-11)
+  @ViewChild('heatmapCanvas') heatmapCanvasRef?: ElementRef<HTMLCanvasElement>;
+  clickEventos: SessionClickEvent[] = [];
+  cargandoEventos = false;
+  private heatmapPendiente = false;
+
   // CA-03 (Notificaciones in-app): sesiones a resaltar cuando se llega
   // desde "Ver detalle" de una alerta de regresión.
   sesionesResaltadas = new Set<number>();
@@ -769,6 +807,7 @@ export class HistorialSesionesComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private historialService: HistorialSesionesService,
+    private sesionSvc: SesionJuegoService,
     private cdr: ChangeDetectorRef,
   ) {}
 
@@ -859,12 +898,16 @@ export class HistorialSesionesComponent implements OnInit {
     if (this.expandidaId === s.id) {
       this.expandidaId = null;
       this.comparacion = null;
+      this.clickEventos = [];
       this.cdr.detectChanges();
       return;
     }
     this.expandidaId = s.id;
     this.comparacion = null;
+    this.clickEventos = [];
     this.cargandoComparacion = true;
+    this.cargandoEventos = true;
+    this.heatmapPendiente = false;
     this.cdr.detectChanges();
 
     this.historialService
@@ -875,6 +918,74 @@ export class HistorialSesionesComponent implements OnInit {
         this.cargandoComparacion = false;
         this.cdr.detectChanges();
       });
+
+    // CA-11: cargar eventos para heatmap
+    this.sesionSvc
+      .getEventosSesion(s.id)
+      .pipe(catchError(() => of([])))
+      .subscribe((eventos) => {
+        this.clickEventos = eventos;
+        this.cargandoEventos = false;
+        this.heatmapPendiente = true;
+        this.cdr.detectChanges();
+        // Esperar a que el canvas aparezca en el DOM tras detectChanges
+        setTimeout(() => this.renderHeatmap(), 80);
+      });
+  }
+
+  private renderHeatmap(): void {
+    const canvas = this.heatmapCanvasRef?.nativeElement;
+    if (!canvas) return;
+    const eventos = this.clickEventos.filter(
+      (e) => e.elementoId === 'AREA' && e.clickX != null && e.clickY != null,
+    );
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    // Fondo
+    ctx.fillStyle = '#f0fdf4';
+    ctx.fillRect(0, 0, w, h);
+
+    // Guías de cuadrante
+    ctx.strokeStyle = '#d1fae5';
+    ctx.lineWidth = 1;
+    for (let i = 1; i < 4; i++) {
+      ctx.beginPath(); ctx.moveTo((w * i) / 4, 0); ctx.lineTo((w * i) / 4, h); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, (h * i) / 4); ctx.lineTo(w, (h * i) / 4); ctx.stroke();
+    }
+
+    if (eventos.length === 0) {
+      ctx.fillStyle = '#9ca3af';
+      ctx.font = '14px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Sin clicks de posición registrados en esta sesión.', w / 2, h / 2);
+      return;
+    }
+
+    // Puntos de calor
+    const radio = Math.max(20, Math.min(35, w / 18));
+    for (const e of eventos) {
+      const x = (e.clickX! / 100) * w;
+      const y = (e.clickY! / 100) * h;
+      const grad = ctx.createRadialGradient(x, y, 0, x, y, radio);
+      grad.addColorStop(0, 'rgba(220,38,38,0.55)');
+      grad.addColorStop(0.4, 'rgba(251,146,60,0.28)');
+      grad.addColorStop(1, 'rgba(251,146,60,0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(x, y, radio, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Etiqueta
+    ctx.fillStyle = '#15803d';
+    ctx.font = 'bold 12px Inter, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(`${eventos.length} clicks registrados`, 10, h - 8);
+    this.heatmapPendiente = false;
   }
 
   exportarPdf(): void {

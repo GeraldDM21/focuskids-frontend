@@ -354,6 +354,11 @@ export class LabCienciasComponent
 
     window.speechSynthesis?.cancel();
   }
+  /** CA-11: Captura posición de click para heatmap de interacción. */
+  onAreaClick(event: MouseEvent): void {
+    this.sesionJuegoService.trackAreaClick(event, event.currentTarget as HTMLElement);
+  }
+
 
   iniciarJuego(
     nivel: NivelLab = this.nivelActual
