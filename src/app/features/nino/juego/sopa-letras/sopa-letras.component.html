@@ -43,7 +43,7 @@
 
         <!-- Botón jugar -->
         <div class="inicio-botones">
-          <button class="btn-empezar" (click)="iniciarJuego('FACIL')">🔤 ¡Empezar!</button>
+          <button class="btn-empezar" (click)="iniciarJuego()">🔤 ¡Empezar!</button>
           <button class="btn-sonido" (click)="toggleSonido()" [title]="sonidoActivo ? 'Silenciar sonido' : 'Activar sonido'">
             {{ sonidoActivo ? '🔊' : '🔇' }}
           </button>
@@ -175,9 +175,6 @@
             <div class="score-lbl">palabras</div>
           </div>
         </div>
-        @if (subioNivel) {
-          <div class="ia-badge">🤖 Motor IA: nivel subido a <strong>{{ nivelSugerido }}</strong></div>
-        }
         @if (estado === 'tiempo-agotado' && fraseMotivaconalActual) {
           <div class="ia-badge" style="color:#94a3b8">💬 {{ fraseMotivaconalActual }}</div>
         }
@@ -198,9 +195,6 @@
           }
         </div>
         <div class="btns-final">
-          @if (subioNivel && nivelSugerido) {
-            <button class="btn-ia" (click)="subirNivel()">⬆️ Jugar en {{ nivelSugerido }}</button>
-          }
           <button class="btn-repetir" (click)="jugarDeNuevo()">🔄 Jugar de nuevo</button>
           <button class="btn-volver" (click)="volverLobby()">← Volver</button>
         </div>

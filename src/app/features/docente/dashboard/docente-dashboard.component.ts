@@ -1,7 +1,9 @@
 import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { AuthService } from '../../../core/services/auth.service';
 import { Router } from '@angular/router';
+import { environment } from '../../../../environments/environment';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import {
@@ -134,6 +136,9 @@ const MISIONES_DEF = [
           </button>
           <button class="nav-item" [class.active]="tab === 'config'" (click)="tab = 'config'">
             <span>⚙️</span> Configuración
+          </button>
+          <button class="nav-item" [class.active]="tab === 'dificultad'" (click)="tab = 'dificultad'">
+            <span>🎯</span> Dificultad
           </button>
         </nav>
         <div class="sb-user">
@@ -737,7 +742,66 @@ const MISIONES_DEF = [
               </div>
             </div>
           }
-      </div>
+
+      <!-- ══ DIFICULTAD ══ -->
+      @if (!loading && tab === 'dificultad') {
+        <div class="dif-wrap">
+          <div class="dif-header-card">
+            <h3 class="card-title">🎯 Asignar dificultad por alumno</h3>
+            <p class="asig-note">Seleccioná un alumno y establecé el nivel de cada juego. La IA tomará este nivel como punto de partida.</p>
+            @if (estudiantes.length === 0) {
+              <div class="mini-empty" style="margin-top:12px">
+                <span style="font-size:32px">👨‍🎓</span>
+                <p>Aún no tenés alumnos asignados.</p>
+              </div>
+            } @else {
+              <div class="logros-pills">
+                @for (e of estudiantes; track e.id) {
+                  <button class="logro-pill" [class.logro-pill-on]="alumnoSelDif?.id === e.id" (click)="selAlumnoDif(e)">
+                    {{ e.avatar }} {{ e.nombre }}
+                  </button>
+                }
+              </div>
+            }
+          </div>
+
+          @if (alumnoSelDif) {
+            @if (difCargando) {
+              <div class="loader"><div class="spinner"></div></div>
+            } @else {
+              <div class="dif-grid">
+                @for (entry of difEntradas; track entry.juegoId) {
+                  <div class="dif-card">
+                    <div class="dif-card-title">{{ entry.nombre }}</div>
+                    @if (entry.nivelActual) {
+                      <div class="dif-actual">Actual: <strong>{{ entry.nivelActual }}</strong></div>
+                    } @else {
+                      <div class="dif-actual sin-asig">Sin asignación</div>
+                    }
+                    <select class="dif-select" [(ngModel)]="entry.nivelSel" [disabled]="entry.saving">
+                      <option value="FACIL">Fácil</option>
+                      <option value="MEDIO">Medio</option>
+                      <option value="DIFICIL">Difícil</option>
+                      <option value="EXPERTO">Experto</option>
+                    </select>
+                    @if (entry.ok) { <div class="dif-ok">✓ Guardado</div> }
+                    @if (entry.error) { <div class="dif-err">{{ entry.error }}</div> }
+                    <button class="btn-add dif-btn" [disabled]="entry.saving" (click)="guardarNivelJuego(entry)">
+                      {{ entry.saving ? 'Guardando…' : 'Guardar' }}
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+          } @else if (estudiantes.length > 0) {
+            <div class="mini-empty">
+              <span style="font-size:32px">👆</span>
+              <p>Seleccioná un alumno para ver y asignar niveles.</p>
+            </div>
+          }
+        </div>
+      }
+      </div><!-- /main -->
 
       <!-- ══ MODAL EVOLUCIÓN DE ALUMNO ══ -->
       @if (alumnoEnEvolucion) {
@@ -1887,6 +1951,23 @@ const MISIONES_DEF = [
       .modal-close:hover {
         background: #dcfce7;
       }
+
+    /* ── Dificultad ── */
+    .dif-wrap { display:flex; flex-direction:column; gap:16px; padding:20px 22px 32px; overflow-y:auto; flex:1; }
+    .dif-header-card { background:white; border-radius:18px; padding:22px; box-shadow:0 2px 10px rgba(21,128,61,.07); }
+    .dif-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:14px; }
+    .dif-card { background:white; border-radius:16px; padding:18px 16px; box-shadow:0 2px 10px rgba(21,128,61,.07);
+                display:flex; flex-direction:column; gap:10px; }
+    .dif-card-title { font-size:14px; font-weight:800; color:#14532d; }
+    .dif-actual { font-size:12px; color:#6b7280; }
+    .dif-actual.sin-asig { color:#9ca3af; font-style:italic; }
+    .dif-actual strong { color:#15803d; }
+    .dif-select { border:1.5px solid #e5e7eb; border-radius:10px; padding:8px 10px; font-size:13px; color:#1f2937;
+                  background:white; outline:none; font-family:inherit; width:100%; }
+    .dif-select:focus { border-color:#86efac; box-shadow:0 0 0 3px rgba(134,239,172,.15); }
+    .dif-btn { width:100%; padding:9px; font-size:13px; border-radius:10px; }
+    .dif-ok { font-size:12px; color:#15803d; font-weight:700; background:#f0fdf4; border-radius:8px; padding:4px 10px; text-align:center; }
+    .dif-err { font-size:12px; color:#b91c1c; font-weight:700; background:#fef2f2; border-radius:8px; padding:4px 10px; text-align:center; }
     `,
   ],
 })
@@ -1975,6 +2056,20 @@ export class DocenteDashboardComponent implements OnInit {
   erroresPerfil: { nombre?: string; email?: string } = {};
   tocadoPerfil:  { nombre?: boolean; email?: boolean } = {};
 
+  // ── Dificultad tab ──────────────────────────────────────────────────────
+  private readonly iaApi = environment.apiUrl + '/ia/recomendacion';
+  alumnoSelDif: Estudiante | null = null;
+  difCargando = false;
+  difEntradas: Array<{
+    juegoId: number;
+    nombre: string;
+    nivelActual: string;
+    nivelSel: string;
+    saving: boolean;
+    ok: boolean;
+    error: string;
+  }> = [];
+
   constructor(
     public  auth:      AuthService,
     private router:    Router,
@@ -1982,10 +2077,69 @@ export class DocenteDashboardComponent implements OnInit {
     private docSvc:    DocenteService,
     private misionSvc: MisionService,
     private nivelSvc:  NivelAsignadoService,
+    private http:      HttpClient,
   ) {}
 
   irAProgreso(): void {
     this.router.navigate(['/docente/progreso']);
+  }
+
+  selAlumnoDif(e: Estudiante): void {
+    this.alumnoSelDif = e;
+    this.difEntradas = [];
+    if (this.juegosCatalogo.length === 0) return;
+    this.difCargando = true;
+    this.cdr.detectChanges();
+
+    let pendientes = this.juegosCatalogo.length;
+    const entradas: typeof this.difEntradas = this.juegosCatalogo.map(j => ({
+      juegoId: j.id,
+      nombre: j.nombre,
+      nivelActual: '',
+      nivelSel: 'FACIL',
+      saving: false,
+      ok: false,
+      error: '',
+    }));
+
+    this.juegosCatalogo.forEach((j, idx) => {
+      this.http.get<any>(`${this.iaApi}/${e.id}/${j.id}`, { observe: 'response' }).subscribe({
+        next: (res) => {
+          if (res.status !== 204 && res.body) {
+            const nivel: string = res.body.nivelRecomendado?.nivel ?? '';
+            entradas[idx].nivelActual = nivel;
+            entradas[idx].nivelSel = nivel || 'FACIL';
+          }
+          if (--pendientes === 0) { this.difEntradas = entradas; this.difCargando = false; this.cdr.detectChanges(); }
+        },
+        error: () => {
+          if (--pendientes === 0) { this.difEntradas = entradas; this.difCargando = false; this.cdr.detectChanges(); }
+        },
+      });
+    });
+  }
+
+  guardarNivelJuego(entry: typeof this.difEntradas[0]): void {
+    if (!this.alumnoSelDif) return;
+    entry.saving = true;
+    entry.ok = false;
+    entry.error = '';
+    const params = new HttpParams().set('nivel', entry.nivelSel);
+    this.http.put<any>(`${this.iaApi}/${this.alumnoSelDif.id}/${entry.juegoId}/asignar`, null, { params }).subscribe({
+      next: (rec) => {
+        entry.nivelActual = rec.nivelRecomendado?.nivel ?? entry.nivelSel;
+        entry.saving = false;
+        entry.ok = true;
+        setTimeout(() => { entry.ok = false; this.cdr.detectChanges(); }, 2500);
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        entry.saving = false;
+        entry.error = err?.error?.message ?? 'Error al guardar';
+        setTimeout(() => { entry.error = ''; this.cdr.detectChanges(); }, 3000);
+        this.cdr.detectChanges();
+      },
+    });
   }
 
   ngOnInit(): void {

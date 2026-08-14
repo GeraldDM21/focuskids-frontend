@@ -303,9 +303,6 @@
             <div class="score-lbl">hipótesis</div>
           </div>
         </div>
-        @if (nivelSugerido && nivelSugerido !== nivelActual) {
-          <div class="ia-badge">🤖 Motor IA: nivel sugerido <strong>{{ nivelLabel(nivelSugerido) }}</strong></div>
-        }
         @if (errorApi) {
           <div class="ia-badge" style="color:#f87171; border-color:rgba(248,113,113,.3);">⚠️ {{ errorApi }}</div>
         }
@@ -319,9 +316,6 @@
           <div class="metrica"><div class="m-icon">⭐</div><div class="m-val amarillo">{{ puntaje }}</div><div class="m-lbl">Puntaje</div></div>
         </div>
         <div class="btns-final">
-          @if (siguienteNivel) {
-            <button type="button" class="btn-ia" (click)="subirNivel()">⬆️ Subir a {{ nivelLabel(siguienteNivel) }} 🚀</button>
-          }
           <button type="button" class="btn-repetir" (click)="jugarDeNuevo()">🔄 Repetir nivel</button>
           <button type="button" class="btn-volver" (click)="volverLobby()">← Volver</button>
         </div>

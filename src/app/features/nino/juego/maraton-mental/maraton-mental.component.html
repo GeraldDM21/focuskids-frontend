@@ -233,9 +233,6 @@
               <div class="score-lbl">precisión dual</div>
             </div>
           </div>
-          @if (resultadoFinal.nivelSugerido !== resultadoFinal.nivelFinal) {
-            <div class="ia-badge">🤖 Motor IA: nivel sugerido <strong>{{ resultadoFinal.nivelSugerido }}</strong></div>
-          }
           @if (resultadoFinal.tareaMasDebil !== 'NINGUNA') {
             <div class="ia-badge">💪 Reforzar: {{ resultadoFinal.tareaMasDebil === 'A' ? 'Contar Objetos' : 'Identificar Color' }}</div>
           }
@@ -266,9 +263,6 @@
           <div class="ia-badge" style="color:#f87171; border-color:rgba(248,113,113,.3);">{{ errorApi }}</div>
         }
         <div class="btns-final">
-          @if (resultadoFinal && resultadoFinal.nivelSugerido !== resultadoFinal.nivelFinal) {
-            <button type="button" class="btn-ia" (click)="subirNivel()">⬆️ Jugar en {{ resultadoFinal.nivelSugerido }}</button>
-          }
           <button type="button" class="btn-repetir" (click)="jugarDeNuevo()">🔁 Jugar de nuevo</button>
           <button type="button" class="btn-volver" (click)="volverLobby()">← Volver</button>
         </div>
