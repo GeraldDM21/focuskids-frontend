@@ -1,6 +1,5 @@
 <div class="rc-wrapper" (click)="onAreaClick($event)">
 
-  <!-- ── Fondo animado (persistente en todos los estados) ─────────────── -->
   <div class="rc-bg-orb rc-o1" aria-hidden="true"></div>
   <div class="rc-bg-orb rc-o2" aria-hidden="true"></div>
   <div class="rc-bg-orb rc-o3" aria-hidden="true"></div>
@@ -11,7 +10,6 @@
     <span class="rc-bpp rc-bpp7">✗</span><span class="rc-bpp rc-bpp8">▶</span>
   </div>
 
-  <!-- ══ INICIO ══════════════════════════════════════════════════════════ -->
   @if (estado === 'inicio') {
   <div class="rc-pantalla-inicio">
     <div class="rc-orb rc-orb-1"></div>
@@ -20,38 +18,38 @@
     <div class="rc-inicio-content">
       <div class="rc-hero-mascota">
         <div class="rc-sparkles">
-          <span class="rc-sp rc-sp-1">🪰</span>
-          <span class="rc-sp rc-sp-2">💚</span>
-          <span class="rc-sp rc-sp-3">🐸</span>
+          <span class="rc-sp rc-sp-1">🐝</span>
+          <span class="rc-sp rc-sp-2">🍯</span>
+          <span class="rc-sp rc-sp-3">🐻</span>
           <span class="rc-sp rc-sp-4">✨</span>
         </div>
-        <div class="rc-ring"><div class="rc-avatar">🐸</div></div>
+        <div class="rc-ring"><div class="rc-avatar">🐻</div></div>
         <div class="rc-bubble-inicio">
-          ¡Hola! Soy <strong>Froggy</strong> 🐸<br>
-          Atrapa la mosca 🪰 cuando la veas, ¡pero no toques a la abeja 🐝!
+          ¡Hola! Soy <strong>Bruno</strong> 🐻<br>
+          Atrapa la abeja 🐝 cuando la veas, ¡pero no toques a la mosca 🪰!
         </div>
       </div>
 
       <h1 class="rc-titulo-juego">
         <span class="rc-titulo-grad">Reacción</span><span class="rc-titulo-blanco"> Controlada</span>
       </h1>
-      <p class="rc-subtitulo-juego">Entrena tu control de impulsos junto a Froggy</p>
+      <p class="rc-subtitulo-juego">Entrena tu control de impulsos junto a Bruno</p>
 
       <div class="rc-instrucciones-grid">
         <div class="rc-instr-card rc-instr-verde">
           <span class="rc-instr-num">1</span>
-          <div class="rc-instr-emoji">🪰</div>
-          <div class="rc-instr-text">Presiona el botón cuando veas la mosca</div>
+          <div class="rc-instr-emoji">🐝</div>
+          <div class="rc-instr-text">Presiona el botón (o la barra espaciadora) cuando veas la abeja</div>
         </div>
         <div class="rc-instr-card rc-instr-rojo">
           <span class="rc-instr-num">2</span>
-          <div class="rc-instr-emoji">🐝</div>
-          <div class="rc-instr-text">No presiones si aparece la abeja</div>
+          <div class="rc-instr-emoji">🪰</div>
+          <div class="rc-instr-text">No presiones si aparece la mosca</div>
         </div>
         <div class="rc-instr-card rc-instr-amarillo">
           <span class="rc-instr-num">3</span>
           <div class="rc-instr-emoji">⚡</div>
-          <div class="rc-instr-text">¡Tienes solo un instante para reaccionar!</div>
+          <div class="rc-instr-text">¡Vuelan a distinta velocidad, mantente atento!</div>
         </div>
         <div class="rc-instr-card rc-instr-azul">
           <span class="rc-instr-num">4</span>
@@ -69,7 +67,7 @@
 
       <div class="rc-inicio-footer">
         <button class="rc-btn-empezar" (click)="iniciarJuego()">
-          <span>🐸</span> ¡Empezar a jugar!
+          <span>🐻</span> ¡Empezar a jugar!
           <span class="rc-btn-shine"></span>
         </button>
       </div>
@@ -77,13 +75,11 @@
   </div>
   }
 
-  <!-- ══ JUEGO ══════════════════════════════════════════════════════════ -->
   @if (estado === 'juego') {
   <div class="rc-pantalla-juego">
 
     <app-game-feedback #feedback></app-game-feedback>
 
-    <!-- Header -->
     <div class="rc-game-header">
       <button class="rc-btn-salir" (click)="salirConResultados()">
         <span>←</span> <span>Salir</span>
@@ -97,40 +93,44 @@
         </div>
       </div>
       <div class="rc-header-stats">
-        <div class="rc-stat-badge rc-badge-verde"><span class="rc-badge-ico">🪰</span><span class="rc-badge-num">{{ aciertosGoParciales }}</span></div>
-        <div class="rc-stat-badge rc-badge-rojo"><span class="rc-badge-ico">🐝</span><span class="rc-badge-num">{{ falsasAlarmasParciales }}</span></div>
+        <div class="rc-stat-badge rc-badge-verde"><span class="rc-badge-ico">🐝</span><span class="rc-badge-num">{{ aciertosGoParciales }}</span></div>
+        <div class="rc-stat-badge rc-badge-rojo"><span class="rc-badge-ico">🪰</span><span class="rc-badge-num">{{ falsasAlarmasParciales }}</span></div>
       </div>
     </div>
 
-    <!-- Mascota -->
     <app-mascot game="reaccion" [mood]="mascotMood" [message]="mascotMsg"></app-mascot>
 
-    <!-- Escenario del estímulo -->
     <div class="rc-escenario">
-      <div class="rc-estanque">
+      <div class="rc-cielo">
         @if (estimuloVisible && estimuloActual) {
-        <div class="rc-estimulo" [class.rc-estimulo-nogo]="estimuloActual.tipo === 'nogo'">
+        <div class="rc-estimulo"
+             [class.rc-estimulo-nogo]="estimuloActual.tipo === 'nogo'"
+             [class.rc-vuelo-ltr]="estimuloActual.direccion === 'ltr'"
+             [class.rc-vuelo-rtl]="estimuloActual.direccion === 'rtl'"
+             [style.top.%]="estimuloActual.top"
+             [style.animation-duration.ms]="estimuloActual.duracionMs">
           <span class="rc-estimulo-emoji">{{ estimuloActual.emoji }}</span>
           <span class="rc-estimulo-label">{{ estimuloActual.label }}</span>
         </div>
         } @else {
-        <div class="rc-estanque-espera">🌊</div>
+        <div class="rc-cielo-espera">🍃</div>
         }
       </div>
     </div>
 
-    <!-- Botón de reacción -->
     <button
+      #botonReaccion
+      type="button"
       class="rc-btn-reaccion"
       [class.rc-btn-reaccion-disabled]="!estimuloVisible || yaPresiono"
       (pointerdown)="presionarBoton($event)">
-      👅 ¡Atrápala!
+      🐾 ¡Atrápala!
     </button>
+    <p class="rc-hint-teclado">o presiona <kbd>espacio</kbd></p>
 
   </div>
   }
 
-  <!-- ══ RESULTADOS ══════════════════════════════════════════════════════════ -->
   @if (estado === 'resultados' && metricasFinal) {
   <div class="pantalla-resultados">
     <div class="rc-confetti-container">
@@ -143,7 +143,7 @@
     </div>
     <div class="resultados-card">
       <div class="fox-resultado-hero">
-        <div class="rc-mascot-emoji">🐸</div>
+        <div class="rc-mascot-emoji">🐻</div>
         <div class="fox-resultado-trophy">{{ trofeoEmoji }}</div>
       </div>
       <h2 class="resultado-titulo">{{ tituloFinal }}</h2>
@@ -156,8 +156,8 @@
         <svg viewBox="0 0 120 120">
           <circle cx="60" cy="60" r="50" class="ring-bg"/>
           <circle cx="60" cy="60" r="50" class="ring-fill"
-            [style.stroke-dasharray]="314"
-            [style.stroke-dashoffset]="314-(314*(100-metricasFinal.indiceImpulsividad)/100)"/>
+                  [style.stroke-dasharray]="314"
+                  [style.stroke-dashoffset]="314-(314*(100-metricasFinal.indiceImpulsividad)/100)"/>
         </svg>
         <div class="score-texto">
           <div class="score-num">{{ 100 - metricasFinal.indiceImpulsividad }}%</div>
@@ -165,15 +165,15 @@
         </div>
       </div>
       @if (comparacionSesion?.mejoraSignificativa) {
-        <div class="ia-badge">🎉 ¡Mejoraste tu control un {{ comparacionSesion?.mejoraSSRTPorc }}% desde la última sesión!</div>
+      <div class="ia-badge">🎉 ¡Mejoraste tu control un {{ comparacionSesion?.mejoraSSRTPorc }}% desde la última sesión!</div>
       }
       <div class="foxy-msg-final">
-        <div class="rc-mascot-emoji-sm">🐸</div>
+        <div class="rc-mascot-emoji-sm">🐻</div>
         <div class="foxy-msg-bubble">{{ mascotMsg }}</div>
       </div>
       <div class="metricas-row">
         <div class="metrica"><div class="m-icon">🧘</div><div class="m-val verde">{{ 100 - metricasFinal.indiceImpulsividad }}%</div><div class="m-lbl">Autocontrol</div></div>
-        <div class="metrica"><div class="m-icon">🪰</div><div class="m-val azul">{{ metricasFinal.tasaAciertosGo }}%</div><div class="m-lbl">Aciertos Go</div></div>
+        <div class="metrica"><div class="m-icon">🐝</div><div class="m-val azul">{{ metricasFinal.tasaAciertosGo }}%</div><div class="m-lbl">Aciertos Go</div></div>
         <div class="metrica"><div class="m-icon">⚡</div><div class="m-val amarillo">{{ metricasFinal.ssrtMs }}ms</div><div class="m-lbl">SSRT</div></div>
       </div>
       <div class="btns-final">

@@ -11,20 +11,45 @@ export interface MascotConfig {
 }
 
 export const MASCOTAS: Record<string, MascotConfig> = {
-  espejo:   { emoji: '🦊', name: 'Foxy',  color: '#F97316', imageSrc: '/mascotas/foxy-portrait.png' },
-  historia: { emoji: '🐰', name: 'Benny', color: '#EC4899', imageSrc: '/mascotas/benny-portrait.png' },
-  numeros:  { emoji: '🦉', name: 'Ollie', color: '#8B5CF6', imageSrc: '/mascotas/ollie-portrait.png' },
-  laberinto:{ emoji: '🐱', name: 'Michi', color: '#06B6D4', imageSrc: '/mascotas/michi-portrait.png' },
-  sopa:     { emoji: '🐼', name: 'Pandi', color: '#10B981', imageSrc: '/mascotas/pandi-portrait.png' },
-  piezas:   { emoji: '🐯', name: 'Tigre', color: '#EF4444', imageSrc: '/mascotas/tigre-portrait.png' },
-  ritmo:    { emoji: '🐵', name: 'Bongo', color: '#7C3AED', imageSrc: '/mascotas/bongo-portrait.png' },
-  reaccion: { emoji: '🐸', name: 'Froggy', color: '#22C55E' },
-  juego7:   { emoji: '🦁', name: 'Leo',   color: '#F59E0B', imageSrc: '/mascotas/leo-portrait.png' },
-  juego8:   { emoji: '🐨', name: 'Koby',  color: '#6366F1', imageSrc: '/mascotas/koby-portrait.png' },
-  juego9:   { emoji: '🦄', name: 'Uni',   color: '#D946EF', imageSrc: '/mascotas/uni-portrait.png' },
-  juego10:  { emoji: '🐶', name: 'Buddy', color: '#3B82F6', imageSrc: '/mascotas/buddy-portrait.png' },
-  juego11:  { emoji: '🐻', name: 'Bruno', color: '#78716C' },
-  juego12:  { emoji: '🐭', name: 'Milo',  color: '#A855F7' },
+  espejo: { emoji: '🦊', name: 'Foxy', color: '#F97316', imageSrc: '/mascotas/foxy-portrait.png' },
+  historia: {
+    emoji: '🐰',
+    name: 'Benny',
+    color: '#EC4899',
+    imageSrc: '/mascotas/benny-portrait.png',
+  },
+  numeros: {
+    emoji: '🦉',
+    name: 'Ollie',
+    color: '#8B5CF6',
+    imageSrc: '/mascotas/ollie-portrait.png',
+  },
+  laberinto: {
+    emoji: '🐱',
+    name: 'Michi',
+    color: '#06B6D4',
+    imageSrc: '/mascotas/michi-portrait.png',
+  },
+  sopa: { emoji: '🐼', name: 'Pandi', color: '#10B981', imageSrc: '/mascotas/pandi-portrait.png' },
+  piezas: {
+    emoji: '🐯',
+    name: 'Tigre',
+    color: '#EF4444',
+    imageSrc: '/mascotas/tigre-portrait.png',
+  },
+  ritmo: { emoji: '🐵', name: 'Bongo', color: '#7C3AED', imageSrc: '/mascotas/bongo-portrait.png' },
+  reaccion: { emoji: '🐻', name: 'Bruno', color: '#78716C' },
+  juego7: { emoji: '🦁', name: 'Leo', color: '#F59E0B', imageSrc: '/mascotas/leo-portrait.png' },
+  juego8: { emoji: '🐨', name: 'Koby', color: '#6366F1', imageSrc: '/mascotas/koby-portrait.png' },
+  juego9: { emoji: '🦄', name: 'Uni', color: '#D946EF', imageSrc: '/mascotas/uni-portrait.png' },
+  juego10: {
+    emoji: '🐶',
+    name: 'Buddy',
+    color: '#3B82F6',
+    imageSrc: '/mascotas/buddy-portrait.png',
+  },
+  juego11: { emoji: '🐻', name: 'Bruno', color: '#78716C' },
+  juego12: { emoji: '🐭', name: 'Milo', color: '#A855F7' },
 };
 
 @Component({
