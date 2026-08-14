@@ -20,7 +20,12 @@ const SVG_SHAPES: Record<string, string> = {
   diamante:   '<polygon points="50,8 92,50 50,92 8,50"/>',
   pentagono:  '<polygon points="50,8 90,36 76,84 24,84 10,36"/>',
   estrella:   '<polygon points="50,5 62,38 95,38 68,58 78,92 50,72 22,92 32,58 5,38 38,38"/>',
-  cruz:       '<polygon points="35,8 65,8 65,35 92,35 92,65 65,65 65,92 35,92 35,65 8,65 8,35 35,35"/>'
+  cruz:       '<polygon points="35,8 65,8 65,35 92,35 92,65 65,65 65,92 35,92 35,65 8,65 8,35 35,35"/>',
+  // ── Figuras nuevas (más variedad de banco por nivel) ──────────────────
+  ovalo:      '<ellipse cx="50" cy="50" rx="42" ry="26"/>',
+  hexagono:   '<polygon points="50,6 90,28 90,72 50,94 10,72 10,28"/>',
+  corazon:    '<circle cx="32" cy="36" r="24"/><circle cx="68" cy="36" r="24"/><polygon points="50,92 6,42 94,42"/>',
+  flecha:     '<polygon points="8,38 55,38 55,12 94,50 55,88 55,62 8,62"/>'
 };
 
 @Component({
@@ -73,11 +78,28 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
   private endTime = 0;
   private timerInterval: any = null;
 
-  // Stats
+  // Stats de la ronda actual (se reinician cada ronda — alimentan el
+  // contador en vivo del topbar mientras se juega).
   piezasColocadas = 0;
   rotaciones      = 0;
   fallidos        = 0;
   puntosBonus     = 0;
+
+  // Stats acumulados de TODA la sesión (las MAX_RONDAS rondas juntas) — son
+  // los que se muestran en la pantalla final de resultados, no solo los de
+  // la última ronda.
+  piezasColocadasSesion = 0;
+  rotacionesSesion      = 0;
+  fallidosSesion        = 0;
+  puntosBonusSesion     = 0;
+  piezasObjetivoSesion  = 0;
+  private tiempoUsadoSesion = 0;
+
+  /** Evita que una ronda se finalice dos veces (p.ej. si se coloca la
+   *  última pieza justo cuando el timer llega a 0 y ambos eventos casi
+   *  se cruzan) — eso podía duplicar el avance de ronda y hacer que se
+   *  jugaran más de las MAX_RONDAS configuradas. */
+  private finalizandoRonda = false;
 
   requiereRotacion = false;
   nivelSugerido: Nivel | null = null;
@@ -229,7 +251,18 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
     // El niño no puede elegir nivel: si hay un bloqueo del docente/padre, manda siempre.
     if (this.nivelBloqueado) { nivel = this.nivelBloqueado; }
     this.nivelActual     = nivel;
-    if (!esNuevaRonda) { this.rondaActual = 1; }
+    if (!esNuevaRonda) {
+      this.rondaActual = 1;
+      this.finalizandoRonda = false;
+      // Nueva sesión (no una ronda más de la misma sesión) — recién acá se
+      // reinician los acumulados de TODAS las rondas.
+      this.piezasColocadasSesion = 0;
+      this.rotacionesSesion      = 0;
+      this.fallidosSesion        = 0;
+      this.puntosBonusSesion     = 0;
+      this.piezasObjetivoSesion  = 0;
+      this.tiempoUsadoSesion     = 0;
+    }
     const cfg            = this.service.generarConfig(nivel);
     this.requiereRotacion = true; // siempre activo: formas no simétricas empiezan giradas
     this.nivelSugerido   = cfg.siguiente;
@@ -250,6 +283,9 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
     this.slots = cfg.formas.map((forma, i) => ({
       id: `slot-${i}`, forma, ocupado: false, animError: false, animOk: false
     }));
+    // Cada ronda suma sus piezas al objetivo total de la sesión (el nivel no
+    // cambia entre rondas, así que esto crece igual cada vez).
+    this.piezasObjetivoSesion += this.slots.length;
 
     const colores = [...COLORES_PIEZAS].sort(() => Math.random() - 0.5);
     const formasMezcladas = [...cfg.formas].sort(() => Math.random() - 0.5);
@@ -276,20 +312,24 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
       : `¡Ronda ${this.rondaActual} de ${this.MAX_RONDAS}! 🐯`;
     this.cdr.detectChanges();
 
-    // Backend: iniciar sesión (CA-01)
-    this.sesionBackendId = null;
-    if (this.perfilId && this.nivelFacilId) {
-      this.sesionJuegoService.iniciarSesion({
-        perfilId: this.perfilId,
-        juegoId:  this.JUEGO_ID,
-        nivelId:  this.nivelFacilId,
-      }).subscribe({
-        next: sesion => {
-          this.sesionBackendId = sesion.id ?? null;
-          if (sesion.id) this.sesionJuegoService.comenzarTracking(sesion.id);  // CA-04
-        },
-        error: () => {}
-      });
+    // Backend: iniciar sesión (CA-01) — UNA sola vez por sesión completa (las
+    // MAX_RONDAS rondas juntas), no una por cada ronda; antes se creaba (y se
+    // finalizaba) una sesión de backend distinta en cada ronda.
+    if (!esNuevaRonda) {
+      this.sesionBackendId = null;
+      if (this.perfilId && this.nivelFacilId) {
+        this.sesionJuegoService.iniciarSesion({
+          perfilId: this.perfilId,
+          juegoId:  this.JUEGO_ID,
+          nivelId:  this.nivelFacilId,
+        }).subscribe({
+          next: sesion => {
+            this.sesionBackendId = sesion.id ?? null;
+            if (sesion.id) this.sesionJuegoService.comenzarTracking(sesion.id);  // CA-04
+          },
+          error: () => {}
+        });
+      }
     }
     this.sesionJuegoService.marcarElementoAparece();  // CA-08: piezas visibles
     this.iniciarTimer();
@@ -381,13 +421,17 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
     p.rotacion = (p.rotacion + 90) % 360;
     this.piezaSvgMap.set(p.id, this.buildPiezaSvg(p));
     this.rotaciones++;
+    this.rotacionesSesion++;
     this.playRotar();
   }
 
   // ── COLOCAR PIEZA ────────────────────────────────────────────────────────
 
   intentarColocar(slot: SlotData): void {
-    if (!this.piezaSeleccionada || slot.ocupado) return;
+    // Si la ronda ya terminó (p.ej. justo se acabó el tiempo) no se debe
+    // seguir colocando piezas — sin este chequeo, un drop/click que ya
+    // estaba "en camino" podía colarse después de finalizar la ronda.
+    if (this.estado !== 'jugando' || !this.piezaSeleccionada || slot.ocupado) return;
     const pieza  = this.piezaSeleccionada;
     const formaOk = pieza.forma === slot.forma;
     const rotOk   = this.rotacionValida(pieza);
@@ -402,6 +446,7 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
       setTimeout(() => { slot.animOk = false; }, 700);
       this.piezaSeleccionada = null;
       this.piezasColocadas++;
+      this.piezasColocadasSesion++;
       this.hintMsg = '';
       // CA-05/07/09
       this.sesionJuegoService.trackClick(window.innerWidth / 2, window.innerHeight / 2, pieza.forma, true);
@@ -422,6 +467,7 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
       }
     } else if (!formaOk) {
       this.fallidos++;
+      this.fallidosSesion++;
       this.sesionJuegoService.trackClick(window.innerWidth / 2, window.innerHeight / 2, pieza.forma, false);  // CA-07/09
       this.triggerError(slot);
       pieza.seleccionada = false;
@@ -430,6 +476,7 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
     } else {
       // Forma ok pero rotación mal
       this.fallidos++;
+      this.fallidosSesion++;
       this.sesionJuegoService.trackClick(window.innerWidth / 2, window.innerHeight / 2, pieza.forma, false);  // CA-07/09
       this.triggerError(slot);
       this.hintMsg = '¡Rota la pieza! 🔄';
@@ -450,13 +497,19 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
     // Formas no simétricas: siempre se valida la rotación, sin importar el nivel.
     // Las piezas en FACIL/MEDIO comienzan en 0° para que encajen de inmediato;
     // si el jugador las rota, debe volver a 0° para colocarlas.
-    if (pieza.forma === 'rectangulo') return pieza.rotacion === 0 || pieza.rotacion === 180;
-    return pieza.rotacion === 0; // triangulo, pentagono: exactamente 0°
+    // rectángulo y óvalo: figuras "alargadas" con 2 orientaciones válidas (0° y 180°)
+    if (pieza.forma === 'rectangulo' || pieza.forma === 'ovalo') return pieza.rotacion === 0 || pieza.rotacion === 180;
+    return pieza.rotacion === 0; // triangulo, pentagono, hexagono, corazon, flecha: exactamente 0°
   }
 
   // ── FINALIZAR ────────────────────────────────────────────────────────────
 
   private finalizarSesion(nuevoEstado: 'completado' | 'tiempo-agotado', forzarSalida = false): void {
+    // Evita procesar la misma ronda dos veces (ver comentario en la
+    // declaración de finalizandoRonda).
+    if (this.finalizandoRonda) return;
+    this.finalizandoRonda = true;
+
     // Se juegan MAX_RONDAS rondas seguidas antes de mostrar la pantalla final
     // de resultados — salvo que el niño pida salir antes con "Salir".
     const esUltimaRonda = forzarSalida || this.rondaActual >= this.MAX_RONDAS;
@@ -467,16 +520,21 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
     this.stopBgMusic();
     if (nuevoEstado === 'completado' && esUltimaRonda) { this.confettiActivo = true; }
 
-    // CA-03: fire-and-forget con 3 reintentos + localStorage fallback
-    if (this.sesionBackendId) {
-      const puntaje = Math.round((this.piezasColocadas / Math.max(this.slots.length, 1)) * 100);
-      const intentos = this.piezasColocadas + this.fallidos;
-      this.sesionJuegoService.finalizarSesion(this.sesionBackendId, puntaje, intentos, this.piezasColocadas);
+    this.tiempoUsadoSesion += (this.tiempoTotal - this.tiempoRestante);
+
+    // CA-03: fire-and-forget con 3 reintentos + localStorage fallback — solo
+    // al terminar TODA la sesión (todas las rondas), con los totales
+    // acumulados, no una vez por ronda.
+    if (esUltimaRonda && this.sesionBackendId) {
+      const puntaje = Math.round((this.piezasColocadasSesion / Math.max(this.piezasObjetivoSesion, 1)) * 100);
+      const intentos = this.piezasColocadasSesion + this.fallidosSesion;
+      this.sesionJuegoService.finalizarSesion(this.sesionBackendId, puntaje, intentos, this.piezasColocadasSesion);
       this.sesionBackendId = null;
     }
 
     if (nuevoEstado === 'completado') {
       this.puntosBonus = this.tiempoRestante;
+      this.puntosBonusSesion += this.tiempoRestante;
       if (this.tiempoRestante / this.tiempoTotal > 0.5 && this.nivelSugerido && !this.nivelBloqueado) {
         this.subioNivel = true;
       }
@@ -490,22 +548,25 @@ export class PiezasTiempoComponent implements OnInit, OnDestroy {
       this.speak(esUltimaRonda ? '¡Sigue intentando, tú puedes!' : 'Vamos con la siguiente ronda.');
     }
 
-    this.service.guardarSesion({
-      perfilId: this.perfilId,
-      nivel: this.nivelActual,
-      piezasTotales: this.slots.length,
-      piezasColocadas: this.piezasColocadas,
-      rotaciones: this.rotaciones,
-      piezasFallidas: this.fallidos,
-      tiempoUsadoSegundos: this.tiempoTotal - this.tiempoRestante,
-      tiempoTotalSegundos: this.tiempoTotal,
-      puntosBonus: this.puntosBonus,
-      completada: nuevoEstado === 'completado',
-      subioNivel: this.subioNivel
-    });
+    if (esUltimaRonda) {
+      this.service.guardarSesion({
+        perfilId: this.perfilId,
+        nivel: this.nivelActual,
+        piezasTotales: this.piezasObjetivoSesion,
+        piezasColocadas: this.piezasColocadasSesion,
+        rotaciones: this.rotacionesSesion,
+        piezasFallidas: this.fallidosSesion,
+        tiempoUsadoSegundos: this.tiempoUsadoSesion,
+        tiempoTotalSegundos: this.tiempoTotal * this.rondaActual,
+        puntosBonus: this.puntosBonusSesion,
+        completada: nuevoEstado === 'completado',
+        subioNivel: this.subioNivel
+      });
+    }
 
     if (!esUltimaRonda) {
       setTimeout(() => {
+        this.finalizandoRonda = false;
         this.rondaActual++;
         this.iniciarJuego(this.nivelActual, true);
       }, 2000);
