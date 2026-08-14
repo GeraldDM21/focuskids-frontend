@@ -3,6 +3,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import {
   AdminService, LogAuditoria, LogFiltros, LogPage, Usuario
 } from '../../../core/services/admin.service';
@@ -33,8 +34,11 @@ const TIPOS_ACCION = [
   <!-- ══ CABECERA ══ -->
   <div class="page-header">
     <div class="ph-left">
-      <h1 class="ph-title">📋 Logs de Auditoría</h1>
-      <p class="ph-sub">Registro inmutable de acciones administrativas · últimos 90 días</p>
+      <button class="btn-back" (click)="router.navigate(['/admin'])">← Volver</button>
+      <div>
+        <h1 class="ph-title">📋 Logs de Auditoría</h1>
+        <p class="ph-sub">Registro inmutable de acciones administrativas · últimos 90 días</p>
+      </div>
     </div>
     <div class="ph-right">
       <!-- CA-02: exportar CSV del filtro actual -->
@@ -183,6 +187,9 @@ const TIPOS_ACCION = [
 
     /* ── Cabecera ── */
     .page-header { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+    .btn-back { background:#f3f0ff; color:#5b21b6; border:none; border-radius:10px; padding:8px 14px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap; }
+    .btn-back:hover { background:#ede9fe; }
+    .ph-left { display:flex; align-items:flex-start; gap:14px; }
     .ph-title { font-size:22px; font-weight:900; color:#1E1B4B; }
     .ph-sub   { font-size:12px; color:#94A3B8; margin-top:4px; }
     .btn-export { background:linear-gradient(135deg,#4F46E5,#7C3AED); color:white;
@@ -309,7 +316,8 @@ export class AdminLogsComponent implements OnInit {
 
   constructor(
     private adminService: AdminService,
-    private cdr:          ChangeDetectorRef
+    private cdr:          ChangeDetectorRef,
+    public  router:       Router
   ) {}
 
   ngOnInit(): void {
