@@ -2,12 +2,13 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { ChildProfile, ChildProfileRequest, ActiveProfileState } from './child-profile.model';
+import { environment } from '../../../../environments/environment';
 
 // Servicio que se encarga de comunicarse con el backend para todo lo relacionado a perfiles de ninos
 @Injectable({ providedIn: 'root' })
 export class ChildProfileService {
 
-  private readonly API_URL = 'http://localhost:8080/api/perfil';
+  private readonly API_URL = `${environment.apiUrl}/perfil`;
 
   // Guarda cual perfil de nino esta activo en este momento (sin cerrar sesion del padre)
   private activeProfileSubject = new BehaviorSubject<ActiveProfileState>({
