@@ -1063,9 +1063,11 @@ export class HistorialSesionesComponent implements OnInit {
         this.exportandoExcel = false;
         this.cdr.detectChanges();
       },
-      error: () => {
+      error: (err) => {
         this.exportandoExcel = false;
         this.cdr.detectChanges();
+        console.error('Error exportando Excel:', err);
+        alert('Error al generar el Excel. Verificá que el backend esté corriendo y reconstruido con Maven (mvn clean install).');
       },
     });
   }
